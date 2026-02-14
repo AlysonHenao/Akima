@@ -18,9 +18,15 @@ from django.contrib import admin
 from django.urls import path
 from crochet import views as crochetViews
 
+from django.conf.urls.static import static
+from django.conf import settings
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',crochetViews.home),
-    path('owner/',crochetViews.owner),
-    path('employee/',crochetViews.employee)
+    path('owner/',crochetViews.owner,name='owner'),
+    path('employee/',crochetViews.employee),
+    path('toggle-product/<int:product_id>/', crochetViews.toggle_product_status, name='toggle_product_status')
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
