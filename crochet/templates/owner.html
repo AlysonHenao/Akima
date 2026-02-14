@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Owner Dashboard - Akima</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<div class="container py-5">
+
+
+    <div class="text-center mb-5">
+        <h1 class="fw-bold">Akima products Dashboard</h1>
+        
+    </div>
+
+
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-dark text-white">
+            <h4 class="mb-0">Add New Product</h4>
+        </div>
+
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+
+                <button type="submit" class="btn btn-primary mt-3">
+                    Create Product
+                </button>
+            </form>
+        </div>
+    </div>
+
+ 
+    <h3 class="mb-4">Created Products</h3>
+
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+
+                {% if product.image %}
+                <img src="{{ product.image.url }}" class="card-img-top" style="height: 250px; object-fit: cover;">
+                {% endif %}
+
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ product.name }}</h5>
+
+                    <p class="card-text text-muted small">
+                        {{ product.description|truncatechars:80 }}
+                    </p>
+
+                    <p class="fw-bold">${{ product.price }}</p>
+
+
+                    {% if product.is_active %}
+                        <span class="badge bg-success mb-2">Active</span>
+                        <a href="{% url 'toggle_product_status' product.id %}" 
+                           class="btn btn-danger btn-sm mt-auto">
+                           Deactivate
+                        </a>
+                    {% else %}
+                        <span class="badge bg-danger mb-2">Inactive</span>
+                        <a href="{% url 'toggle_product_status' product.id %}" 
+                           class="btn btn-success btn-sm mt-auto">
+                           Activate
+                        </a>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    No products created yet.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+</body>
+</html>
+
