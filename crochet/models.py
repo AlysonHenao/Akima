@@ -138,7 +138,7 @@ class MetodoPago(models.Model):
 class Pedido(models.Model):
     """ Órdenes de compra realizadas por clientes"""
     ESTADOS = [
-        ('Pendiente pago', 'Confirmación de pago pendiente'),
+        ('Pendiente confirmacion', 'Confirmación de pago pendiente'),
         ('Confirmado', 'Confirmado'),
         ('En producción', 'En producción'),
         ('Completado', 'Completado'),
@@ -169,6 +169,16 @@ class Pedido(models.Model):
 
 class PedidoDetalle(models.Model):
     """ Items específicos de cada pedido """
+    TALLA = [
+        ('XS', 'XS'),
+        ('S', 'S'),
+        ('M', 'M'),
+        ('L', 'L'),
+        ('XL', 'XL'),
+        ('XXL', 'XXL'),
+        ('Única', 'Talla Única'),
+    ]
+
     id_pedido = models.ForeignKey(
         Pedido, 
         on_delete=models.CASCADE, 
@@ -187,7 +197,7 @@ class PedidoDetalle(models.Model):
         verbose_name='Color',
         related_name='detalles_pedido'
     )
-    talla = models.CharField('Talla', max_length=10)
+    talla = models.CharField('Talla', choices=TALLA)
     cantidad = models.IntegerField('Cantidad', validators=[MinValueValidator(1)])
     precio_unitario = models.DecimalField('Precio Unitario', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     subtotal = models.DecimalField('Subtotal', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
@@ -229,3 +239,55 @@ class ComprobantePago(models.Model):
     def __str__(self):
         return f"Comprobante Pedido #{self.id_pedido.id} - ${self.monto}"
 
+class Insumo(models.Model):
+    """ Inventario de materiales para producción """
+    TIPOS = [
+        ('Hilo', 'Hilo'),
+        ('Botón', 'Botón'),
+        ('Argolla', 'Argolla'),
+        ('Otro', 'Otro'),
+    ]
+    
+    tipo = models.CharField('Tipo', choices=TIPOS)
+    marca = models.CharField('Marca', max_length=100)
+    referencia = models.CharField('Referencia', max_length=100)
+    color = models.CharField('Color', max_length=100)
+    id_color_general = models.ForeignKey(
+        ColorGeneral, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        verbose_name='Color General',
+        related_name='insumos'
+    )
+    codigo_hex = models.CharField('Código HEX', max_length=7, blank=True, null=True, help_text='Formato: #RRGGBB')
+    cantidad = models.DecimalField('Cantidad', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    precio = models.DecimalField('Precio', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    
+    class Meta:
+        db_table = 'insumo'
+        
+    def __str__(self):
+        return f"{self.tipo} - {self.marca} {self.referencia} ({self.color})"
+
+class ProductoColorInsumo(models.Model):
+    """ Insumos necesarios para cada variante de producto """
+    id_producto_color = models.ForeignKey(
+        ProductoColor, 
+        on_delete=models.CASCADE, 
+        verbose_name='Producto Color',
+        related_name='insumos_necesarios'
+    )
+    id_insumo = models.ForeignKey(
+        Insumo, 
+        on_delete=models.PROTECT, 
+        verbose_name='Insumo',
+        related_name='productos_utilizan'
+    )
+    cantidad_necesaria = models.DecimalField('Cantidad Necesaria', max_digits=10, decimal_places=3, validators=[MinValueValidator(Decimal('0.001'))])
+    
+    class Meta:
+        db_table = 'producto_color_insumo'
+    
+    def __str__(self):
+        return f"{self.id_producto_color} - {self.id_insumo} ({self.cantidad_necesaria})"

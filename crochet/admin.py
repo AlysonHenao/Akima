@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Producto, Usuario, ColorGeneral, ProductoColor, ProductoImagen, SetProducto, MetodoPago, Pedido, PedidoDetalle, ComprobantePago
+from .models import Producto, Usuario, ColorGeneral, ProductoColor, ProductoImagen, SetProducto, MetodoPago, Pedido, PedidoDetalle, ComprobantePago, Insumo, ProductoColorInsumo
 
 
 # Register your models here.
@@ -14,3 +14,5 @@ admin.site.register(MetodoPago)
 admin.site.register(Pedido)
 admin.site.register(PedidoDetalle)
 admin.site.register(ComprobantePago)
+admin.site.register(Insumo)
+admin.site.register(ProductoColorInsumo)

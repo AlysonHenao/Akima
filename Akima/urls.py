@@ -24,7 +24,8 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',crochetViews.home),
-    path('owner/',crochetViews.owner,name='owner'),
+    path('administrator/', crochetViews.administrator, name='administrator'),
+    path('new_product/',crochetViews.new_product,name='new_product'),
     path('employee/', crochetViews.employee),
     path('producto/toggle/<int:producto_id>/', crochetViews.toggle_producto, name='toggle_producto'),
 ]

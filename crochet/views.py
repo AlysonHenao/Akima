@@ -7,12 +7,16 @@ from .models import (
 from decimal import Decimal
 
 def home(request):
+
     """Página principal - Muestra productos activos"""
     productos = Producto.objects.filter(activo=True)
     return render(request, 'home.html', {'productos': productos})
 
+def administrator(request):
+    productos = Producto.objects.all()
+    return render(request, 'administrator.html', {'productos': productos})
 
-def owner(request):
+def new_product(request):
     """Panel de administración - Crear productos"""
     
     if request.method == 'POST':
@@ -64,7 +68,7 @@ def owner(request):
                         )
             
             messages.success(request, f'¡Producto "{producto.nombre}" creado exitosamente!')
-            return redirect('owner')
+            return redirect('new_product')
             
         except Exception as e:
             messages.error(request, f'Error al crear producto: {str(e)}')
@@ -80,8 +84,7 @@ def owner(request):
         'productos_individuales': Producto.objects.exclude(categoria='Set').filter(activo=True)
     }
     
-    return render(request, 'owner.html', context)
-
+    return render(request, 'new_product.html', context)
 
 def toggle_producto(request, producto_id):
     """Activar/desactivar producto"""
@@ -92,8 +95,7 @@ def toggle_producto(request, producto_id):
     estado = "activado" if producto.activo else "desactivado"
     messages.success(request, f'Producto "{producto.nombre}" {estado}.')
     
-    return redirect('owner')
-
+    return redirect('new_product')
 
 def employee(request):
     """Vista de empleados (por implementar)"""
