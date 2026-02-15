@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ producto.nombre }} - Akima</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-5">
+
+    <a href="/" class="btn btn-secondary mb-4">← Volver al catálogo</a>
+
+    <div class="row">
+
+        <div class="col-md-6">
+
+            <div id="carouselProducto" class="carousel slide" data-bs-ride="carousel">
+
+                <div class="carousel-inner">
+
+                    {% for img in producto.imagenes.all %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <img src="{{ img.url_imagen.url }}"
+                                 class="d-block w-100 rounded shadow"
+                                 style="max-height:500px; object-fit:cover;">
+                        </div>
+                    {% empty %}
+                        <div class="carousel-item active">
+                            <div class="bg-light p-5 text-center">
+                                Sin imágenes
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+                {% if producto.imagenes.count > 1 %}
+                <button class="carousel-control-prev" type="button"
+                        data-bs-target="#carouselProducto"
+                        data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+
+                <button class="carousel-control-next" type="button"
+                        data-bs-target="#carouselProducto"
+                        data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+      
+        <div class="col-md-6">
+
+            <h2>{{ producto.nombre }}</h2>
+            <p class="text-muted">{{ producto.categoria }}</p>
+
+            <h4 class="text-success mb-3">${{ producto.precio }}</h4>
+
+            <p>{{ producto.descripcion }}</p>
+
+            <hr>
+
+            <p><strong>Stock disponible:</strong> {{ producto.stock }}</p>
+
+            <p><strong>Tiempo de fabricación:</strong>
+                {{ producto.tiempo_fabricacion }} horas
+            </p>
+
+            
+            {% if producto.guia_tallas %}
+            <button type="button"
+                    class="btn btn-primary mt-3"
+                    data-bs-toggle="modal"
+                    data-bs-target="#guiaTallasModal">
+                Ver guía de tallas
+            </button>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% if producto.guia_tallas %}
+<div class="modal fade" id="guiaTallasModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Guía de Tallas</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body text-center">
+        <img src="{{ producto.guia_tallas.url }}"
+             class="img-fluid rounded shadow"
+             style="max-height:80vh; object-fit:contain;">
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

@@ -28,6 +28,8 @@ urlpatterns = [
     path('new_product/',crochetViews.new_product,name='new_product'),
     path('employee/', crochetViews.employee),
     path('producto/toggle/<int:producto_id>/', crochetViews.toggle_producto, name='toggle_producto'),
+    path('producto/<int:producto_id>/', crochetViews.producto_detalle, name='producto_detalle'),
+
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

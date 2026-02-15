@@ -13,40 +13,44 @@
   <div class="d-flex flex-wrap justify-content-center gap-4">
     {% for producto in productos %}
       <div class="mb-4 d-flex">
-        <div class="card shadow-sm" style="width: 300px;">
 
-          {% with img=producto.imagenes.first %}
-            {% if img %}
-              <img src="{{ img.url_imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}">
-            {% else %}
-              <div class="d-flex align-items-center justify-content-center bg-light" style="height: 220px;">
-                <span class="text-muted">Sin imagen</span>
-              </div>
-            {% endif %}
-          {% endwith %}
+        <!-- TODA LA CARD ES CLICKEABLE -->
+        <a href="{% url 'producto_detalle' producto.id %}" 
+           class="text-decoration-none text-dark">
 
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">{{ producto.nombre }}</h5>
+          <div class="card shadow-sm h-100" 
+               style="width: 300px; cursor: pointer; transition: 0.2s;">
 
-            <p class="card-text">
-              {{ producto.descripcion|truncatewords:20 }}
-            </p>
+            {% with img=producto.imagenes.first %}
+              {% if img %}
+                <img src="{{ img.url_imagen.url }}" 
+                     class="card-img-top" 
+                     alt="{{ producto.nombre }}"
+                     style="height: 220px; object-fit: cover;">
+              {% else %}
+                <div class="d-flex align-items-center justify-content-center bg-light" 
+                     style="height: 220px;">
+                  <span class="text-muted">Sin imagen</span>
+                </div>
+              {% endif %}
+            {% endwith %}
 
-            <p class="fw-bold mb-3">
-              ${{ producto.precio }}
-            </p>
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title">{{ producto.nombre }}</h5>
 
-            <div class="mt-auto">
-                {% if producto.guia_tallas %}
-                <a href="{{ producto.guia_tallas.url }}"
-                   class="badge bg-primary text-decoration-none"
-                   target="_blank" rel="noopener">
-                   Guía tallas
-                </a>
-                {% endif %}
+              <p class="card-text">
+                {{ producto.descripcion|truncatewords:20 }}
+              </p>
+
+              <p class="fw-bold mt-auto">
+                ${{ producto.precio }}
+              </p>
             </div>
+
           </div>
-        </div>
+
+        </a>
+
       </div>
     {% empty %}
       <p class="text-center">No hay productos disponibles.</p>

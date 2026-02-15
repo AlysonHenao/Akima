@@ -97,6 +97,21 @@ def toggle_producto(request, producto_id):
     
     return redirect('new_product')
 
+def producto_detalle(request, producto_id):
+    producto = get_object_or_404(
+        Producto.objects.prefetch_related(
+            'colores__id_color_general',
+            'imagenes'
+        ),
+        id=producto_id,
+        activo=True
+    )
+
+    return render(request, 'producto_detalle.html', {
+        'producto': producto
+    })
+
+
 def employee(request):
     """Vista de empleados (por implementar)"""
     return render(request, 'employee.html')
