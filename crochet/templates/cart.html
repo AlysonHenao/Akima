@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1 { color: #000; margin-bottom: 30px; }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #000;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .cart-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .item-details { flex: 1; }
+
+        .item-name { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+
+        .item-customization { color: #666; font-size: 14px; margin-bottom: 5px; }
+
+        .item-price { font-size: 16px; font-weight: bold; color: #000; }
+
+        .item-quantity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .qty-btn:hover { background-color: #f0f0f0; }
+
+        .qty-input {
+            width: 50px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        .remove-btn {
+            padding: 8px 16px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .cart-summary {
+            border-top: 2px solid #ddd;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .summary-total {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background-color: #000;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .cart-empty {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container" id="cart-container">
+    <a href="/" class="back-link">← Return to the store</a>
+    <h1>Shopping Cart</h1>
+
+    {% if cart.items.all %}
+        <div id="cart-items">
+        {% for item in cart.items.all %}
+        <div class="cart-item" id="cart-item-{{ item.id }}">
+            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+
+            <div class="item-details">
+                <div class="item-name">{{ item.product.name }}</div>
+                <div class="item-customization">
+                    Size: {{ item.size }} | Color: {{ item.color }}
+                </div>
+                <div class="item-price" id="price-{{ item.id }}">
+                    ${{ item.product.price }}
+                </div>
+            </div>
+
+            <div class="item-quantity">
+                <button class="qty-btn"
+                        data-item-id="{{ item.id }}"
+                        data-action="decrease">-</button>
+
+                <input type="number"
+                       class="qty-input"
+                       id="qty-{{ item.id }}"
+                       value="{{ item.quantity }}"
+                       readonly>
+
+                <button class="qty-btn"
+                        data-item-id="{{ item.id }}"
+                        data-action="increase">+</button>
+            </div>
+
+            <div class="item-price item-subtotal"
+                 id="subtotal-{{ item.id }}">
+                ${{ item.get_subtotal }}
+            </div>
+        </div>
+        {% endfor %}
+        </div>
+
+        <div class="cart-summary">
+            <div class="summary-row">
+                <span>Subtotal ({{ cart.get_item_count }} items):</span>
+                <span id="cart-total">${{ cart.get_total }}</span>
+            </div>
+
+            <div class="summary-row summary-total">
+                <span>Total:</span>
+                <span id="cart-total-bottom">${{ cart.get_total }}</span>
+            </div>
+
+            <button class="checkout-btn">Proceed to payment</button>
+        </div>
+
+    {% else %}
+        <div class="cart-empty">
+            <h2>Your cart is empty</h2>
+            <p>Add products to begin your purchase</p>
+            <br>
+            <a href="{% url 'home' %}" class="checkout-btn">
+                Return to catalog
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
+
+function checkIfCartEmpty() {
+    const items = document.querySelectorAll('.cart-item');
+    if (items.length === 0) {
+        document.getElementById('cart-container').innerHTML = `
+            <a href="/" class="back-link">← Return to the store</a>
+            <h1>Shopping Cart</h1>
+            <div class="cart-empty">
+                <h2>Your cart is empty</h2>
+                <p>Add products to begin your purchase</p>
+                <br>
+                <a href="/" class="checkout-btn">
+                    Return to catalog
+                </a>
+            </div>
+        `;
+    }
+}
+
+document.querySelectorAll('.qty-btn').forEach(button => {
+    button.addEventListener('click', function () {
+
+        const itemId = parseInt(this.dataset.itemId);
+        const qtyInput = document.getElementById(`qty-${itemId}`);
+        let currentQty = parseInt(qtyInput.value);
+        const action = this.dataset.action;
+
+        let newQuantity = action === 'increase'
+            ? currentQty + 1
+            : currentQty - 1;
+
+        updateQuantity(itemId, newQuantity);
+    });
+});
+
+async function updateQuantity(itemId, newQuantity) {
+
+    if (newQuantity < 1) {
+        if (!confirm('Do you want to remove this product?')) return;
+    }
+
+    const response = await fetch(`/cart/update/${itemId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ quantity: newQuantity })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+        alert('Error updating cart');
+        return;
+    }
+
+    if (newQuantity > 0) {
+        document.getElementById(`qty-${itemId}`).value = newQuantity;
+
+        const priceText = document
+            .getElementById(`price-${itemId}`)
+            .textContent.replace('$', '');
+
+        const price = parseFloat(priceText);
+        const newSubtotal = (price * newQuantity).toFixed(2);
+
+        document.getElementById(`subtotal-${itemId}`)
+            .textContent = `$${newSubtotal}`;
+
+    } else {
+        document.getElementById(`cart-item-${itemId}`).remove();
+        checkIfCartEmpty();
+    }
+
+    document.getElementById('cart-total')
+        .textContent = `$${data.cart_total.toFixed(2)}`;
+
+    document.getElementById('cart-total-bottom')
+        .textContent = `$${data.cart_total.toFixed(2)}`;
+}
+</script>
+
+</body>
+</html>

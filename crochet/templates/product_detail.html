@@ -29,7 +29,7 @@
         }
 
         .description {
-            color: #555;
+            color: #333;
             line-height: 1.5;
             margin-bottom: 15px;
         }
@@ -37,7 +37,7 @@
         .price {
             font-size: 28px;
             font-weight: bold;
-            color: #2c7a7b;
+            color: #000;
             margin: 15px 0;
         }
 
@@ -48,7 +48,7 @@
         .option-label {
             font-size: 14px;
             font-weight: bold;
-            color: #333;
+            color: #000;
             margin-bottom: 8px;
             display: block;
         }
@@ -65,12 +65,12 @@
         }
 
         .size-selector:hover {
-            border-color: #2c7a7b;
+            border-color: #333;
         }
 
         .size-selector:focus {
             outline: none;
-            border-color: #2c7a7b;
+            border-color: #333;
         }
 
         .color-options {
@@ -90,14 +90,14 @@
         }
 
         .color-option:hover {
-            border-color: #2c7a7b;
+            border-color: #333;
             transform: translateY(-2px);
         }
 
         .color-option.selected {
-            background-color: #2c7a7b;
+            background-color: #333;
             color: white;
-            border-color: #2c7a7b;
+            border-color: #333;
         }
 
         .buy-button {
@@ -106,7 +106,7 @@
             margin-top: 20px;
             border: none;
             border-radius: 8px;
-            background-color: #2c7a7b;
+            background-color: #000;
             color: white;
             font-size: 16px;
             font-weight: bold;
@@ -115,18 +115,46 @@
         }
 
         .buy-button:hover {
-            background-color: #205e5f;
+            background-color: #333;
             transform: translateY(-2px);
-            box-shadow: 0px 5px 15px rgba(44, 122, 123, 0.3);
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
         }
 
         .buy-button:active {
             transform: translateY(0);
         }
 
+        .buy-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message {
+            padding: 10px;
+            margin-top: 15px;
+            background-color: #e8e8e8;
+            color: #000;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message {
+            padding: 10px;
+            margin-top: 15px;
+            background-color: #e8e8e8;
+            color: #000;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+        }
+
         .stock-info {
             font-size: 13px;
-            color: #666;
+            color: #333;
             margin-top: 5px;
         }
     </style>
@@ -139,9 +167,9 @@
         <p class="price">${{ product.price }}</p>
         
         <div class="option-section">
-            <label class="option-label">Tamaño:</label>
+            <label class="option-label">Size:</label>
             <select class="size-selector" id="size-select">
-                <option value="">Selecciona un tamaño</option>
+                <option value="">Select a size</option>
                 {% for size in available_sizes %}
                     <option value="{{ size }}">{{ size }}</option>
                 {% endfor %}
@@ -160,10 +188,13 @@
         </div>
 
         <div class="stock-info">
-            Stock disponible: {{ product.stock }} unidades
+            Stock available: {{ product.stock }} units
         </div>
 
-        <button class="buy-button" onclick="buyProduct()">Comprar Ahora</button>
+        <button class="buy-button" id="add-to-cart-btn" data-product-id="{{ product.id }}" onclick="addToCart()">Add to Cart</button>
+        
+        <div class="success-message" id="success-message"></div>
+        <div class="error-message" id="error-message"></div>
     </div>
     
     <script>
@@ -177,6 +208,94 @@
                 selectedColor = this.dataset.color;
             });
         });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function showMessage(type, message) {
+            const successMsg = document.getElementById('success-message');
+            const errorMsg = document.getElementById('error-message');
+            
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
+            
+            if (type === 'success') {
+                successMsg.textContent = message;
+                successMsg.style.display = 'block';
+                setTimeout(() => {
+                    successMsg.style.display = 'none';
+                }, 3000);
+            } else {
+                errorMsg.textContent = message;
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        async function addToCart() {
+            const selectedSize = document.getElementById('size-select').value;
+            const addButton = document.getElementById('add-to-cart-btn');
+            const productId = addButton.dataset.productId;
+            
+            if (!selectedSize) {
+                showMessage('error', 'Please select a size');
+                return;
+            }
+            
+            if (!selectedColor) {
+                showMessage('error', 'Please select a color');
+                return;
+            }
+
+            addButton.disabled = true;
+            addButton.textContent = 'Adding...';
+
+            try {
+                const csrftoken = getCookie('csrftoken');
+                const response = await fetch('/cart/add/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        size: selectedSize,
+                        color: selectedColor,
+                        quantity: 1
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('success', data.message);
+                    addButton.textContent = '✓ Added';
+                    setTimeout(() => {
+                        addButton.textContent = 'Add to Cart';
+                    }, 2000);
+                } else {
+                    showMessage('error', data.message);
+                    addButton.textContent = 'Add to Cart';
+                }
+            } catch (error) {
+                showMessage('error', 'Error adding to cart');
+                addButton.textContent = 'Add to Cart';
+            } finally {
+                addButton.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>
