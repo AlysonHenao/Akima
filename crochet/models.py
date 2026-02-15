@@ -8,6 +8,15 @@ class Product(models.Model):
         ('skirt', 'Skirt'),
     ]
 
+    SIZE_CHOICES = [
+        ('XS', 'Extra Small'),
+        ('S', 'Small'),
+        ('M', 'Medium'),
+        ('L', 'Large'),
+        ('XL', 'Extra Large'),
+        ('XXL', 'Extra Extra Large'),
+    ]
+
     category = models.CharField(
         max_length=50,
         choices=CATEGORY_CHOICES
@@ -27,6 +36,19 @@ class Product(models.Model):
     )
 
     stock = models.PositiveIntegerField(default=0)
+
+    # Customization options
+    available_sizes = models.CharField(
+        max_length=200,
+        help_text="Comma-separated sizes (e.g., XS,S,M,L,XL)",
+        default="S,M,L"
+    )
+
+    available_colors = models.CharField(
+        max_length=200,
+        help_text="Comma-separated colors (e.g., Red,Blue,Green)",
+        default="White,Black,Blue"
+    )
 
     production_time = models.PositiveIntegerField(
         help_text="Time in days required to produce the product"
@@ -48,3 +70,9 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_available_sizes(self):
+        return [size.strip() for size in self.available_sizes.split(',') if size.strip()]
+
+    def get_available_colors(self):
+        return [color.strip() for color in self.available_colors.split(',') if color.strip()]

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title> {{ product.name }} </title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        
+        .card {
+            width: 450px;
+            margin: 60px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .product-image {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .product-title {
+            margin-top: 15px;
+            font-size: 24px;
+        }
+
+        .description {
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .price {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c7a7b;
+            margin: 15px 0;
+        }
+
+        .option-section {
+            margin: 20px 0;
+        }
+
+        .option-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .size-selector {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .size-selector:hover {
+            border-color: #2c7a7b;
+        }
+
+        .size-selector:focus {
+            outline: none;
+            border-color: #2c7a7b;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .color-option {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .color-option:hover {
+            border-color: #2c7a7b;
+            transform: translateY(-2px);
+        }
+
+        .color-option.selected {
+            background-color: #2c7a7b;
+            color: white;
+            border-color: #2c7a7b;
+        }
+
+        .buy-button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 8px;
+            background-color: #2c7a7b;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .buy-button:hover {
+            background-color: #205e5f;
+            transform: translateY(-2px);
+            box-shadow: 0px 5px 15px rgba(44, 122, 123, 0.3);
+        }
+
+        .buy-button:active {
+            transform: translateY(0);
+        }
+
+        .stock-info {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+        <h2 class="product-title">{{ product.name }}</h2>
+        <p class="description">{{ product.description }}</p>
+        <p class="price">${{ product.price }}</p>
+        
+        <div class="option-section">
+            <label class="option-label">Tamaño:</label>
+            <select class="size-selector" id="size-select">
+                <option value="">Selecciona un tamaño</option>
+                {% for size in available_sizes %}
+                    <option value="{{ size }}">{{ size }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="option-section">
+            <label class="option-label">Color:</label>
+            <div class="color-options" id="color-options">
+                {% for color in available_colors %}
+                    <div class="color-option" data-color="{{ color }}">
+                        {{ color }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="stock-info">
+            Stock disponible: {{ product.stock }} unidades
+        </div>
+
+        <button class="buy-button" onclick="buyProduct()">Comprar Ahora</button>
+    </div>
+    
+    <script>
+        const colorOptions = document.querySelectorAll('.color-option');
+        let selectedColor = null;
+
+        colorOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                colorOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedColor = this.dataset.color;
+            });
+        });
+    </script>
+</body>
+</html>

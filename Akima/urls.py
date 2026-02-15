@@ -26,7 +26,8 @@ urlpatterns = [
     path('',crochetViews.home),
     path('owner/',crochetViews.owner,name='owner'),
     path('employee/',crochetViews.employee),
-    path('toggle-product/<int:product_id>/', crochetViews.toggle_product_status, name='toggle_product_status')
+    path('toggle-product/<int:product_id>/', crochetViews.toggle_product_status, name='toggle_product_status'),
+    path('product/<int:product_id>/', crochetViews.product_detail, name='product_detail')
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
