@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import (
     Producto, ProductoColor, ProductoImagen, 
-    ColorGeneral, SetProducto
+    ColorGeneral, SetProducto, PedidoDetalle
 )
 from decimal import Decimal
 
@@ -107,8 +107,14 @@ def producto_detalle(request, producto_id):
         activo=True
     )
 
+    colores_disponibles = producto.colores.filter(disponible=True).select_related('id_color_general')
+
+    tallas = [codigo for codigo, _ in PedidoDetalle.TALLA]
+
     return render(request, 'producto_detalle.html', {
-        'producto': producto
+        'producto': producto,
+        'colores_disponibles': colores_disponibles,
+        'tallas': tallas,
     })
 
 

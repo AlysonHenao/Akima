@@ -175,8 +175,6 @@ class PedidoDetalle(models.Model):
         ('M', 'M'),
         ('L', 'L'),
         ('XL', 'XL'),
-        ('XXL', 'XXL'),
-        ('Única', 'Talla Única'),
     ]
 
     id_pedido = models.ForeignKey(
