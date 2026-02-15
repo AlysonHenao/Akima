@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.http import JsonResponse
 from .models import (
     Producto, ProductoColor, ProductoImagen, 
-    ColorGeneral, SetProducto, PedidoDetalle
+    ColorGeneral, SetProducto, PedidoDetalle,
+    CarritoCompra, CarritoItem
 )
 from decimal import Decimal
 
@@ -121,3 +123,138 @@ def producto_detalle(request, producto_id):
 def employee(request):
     """Vista de empleados (por implementar)"""
     return render(request, 'employee.html')
+
+
+def get_or_create_carrito(request):
+    """Obtiene o crea un carrito para la sesión actual"""
+    if not request.session.session_key:
+        request.session.create()
+    
+    session_key = request.session.session_key
+    carrito, created = CarritoCompra.objects.get_or_create(session_key=session_key)
+    return carrito
+
+
+def add_to_cart(request, producto_id):
+    """Agrega un producto personalizado al carrito"""
+    if request.method == 'POST':
+        producto = get_object_or_404(Producto, id=producto_id, activo=True)
+        
+        color_id = request.POST.get('color')
+        talla = request.POST.get('talla')
+        cantidad = int(request.POST.get('cantidad', 1))
+        
+        producto_color = get_object_or_404(
+            ProductoColor, 
+            id=color_id, 
+            id_producto=producto,
+            disponible=True
+        )
+        
+        carrito = get_or_create_carrito(request)
+        
+        item_existente = CarritoItem.objects.filter(
+            id_carrito=carrito,
+            id_producto=producto,
+            id_producto_color=producto_color,
+            talla=talla
+        ).first()
+        
+        if item_existente:
+            item_existente.cantidad += cantidad
+            item_existente.save()
+            messages.success(request, f'Se actualizó la cantidad de "{producto.nombre}" en el carrito.')
+        else:
+            CarritoItem.objects.create(
+                id_carrito=carrito,
+                id_producto=producto,
+                id_producto_color=producto_color,
+                talla=talla,
+                cantidad=cantidad,
+                precio_unitario=producto.precio
+            )
+            messages.success(request, f'"{producto.nombre}" agregado al carrito exitosamente.')
+        
+        return redirect('view_cart')
+    
+    return redirect('home')
+
+
+def view_cart(request):
+    """Muestra el contenido del carrito"""
+    carrito = get_or_create_carrito(request)
+    items = carrito.items.select_related(
+        'id_producto',
+        'id_producto_color__id_color_general'
+    ).prefetch_related('id_producto__imagenes')
+    
+    total = carrito.get_total()
+    
+    context = {
+        'carrito': carrito,
+        'items': items,
+        'total': total,
+    }
+    
+    return render(request, 'cart.html', context)
+
+
+def update_cart_item(request, item_id):
+    """Actualiza la cantidad de un item en el carrito"""
+    if request.method == 'POST':
+        carrito = get_or_create_carrito(request)
+        item = get_object_or_404(CarritoItem, id=item_id, id_carrito=carrito)
+        
+        import json
+        if request.content_type == 'application/json':
+            try:
+                data = json.loads(request.body)
+                nueva_cantidad = int(data.get('quantity', 1))
+            except:
+                nueva_cantidad = int(request.POST.get('cantidad', 1))
+        else:
+            nueva_cantidad = int(request.POST.get('cantidad', 1))
+        
+        if nueva_cantidad > 0:
+            item.cantidad = nueva_cantidad
+            item.save()
+            
+            if request.content_type == 'application/json':
+                return JsonResponse({
+                    'success': True,
+                    'subtotal': float(item.get_subtotal()),
+                    'cart_total': float(carrito.get_total())
+                })
+            messages.success(request, 'Cantidad actualizada.')
+        else:
+            item.delete()
+            
+            if request.content_type == 'application/json':
+                return JsonResponse({
+                    'success': True,
+                    'deleted': True,
+                    'cart_total': float(carrito.get_total())
+                })
+            messages.success(request, 'Producto eliminado del carrito.')
+    
+    return redirect('view_cart')
+
+
+def remove_cart_item(request, item_id):
+    """Elimina un item del carrito"""
+    carrito = get_or_create_carrito(request)
+    item = get_object_or_404(CarritoItem, id=item_id, id_carrito=carrito)
+    
+    nombre_producto = item.id_producto.nombre
+    item.delete()
+    
+    messages.success(request, f'"{nombre_producto}" eliminado del carrito.')
+    return redirect('view_cart')
+
+
+def empty_cart(request):
+    """Vacía todo el carrito"""
+    carrito = get_or_create_carrito(request)
+    carrito.items.all().delete()
+    messages.success(request, 'Carrito vaciado.')
+    return redirect('view_cart')

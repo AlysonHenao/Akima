@@ -29,7 +29,11 @@ urlpatterns = [
     path('employee/', crochetViews.employee),
     path('producto/toggle/<int:producto_id>/', crochetViews.toggle_producto, name='toggle_producto'),
     path('producto/<int:producto_id>/', crochetViews.producto_detalle, name='producto_detalle'),
-
+    path('add_to_cart/<int:producto_id>/', crochetViews.add_to_cart, name='add_to_cart'),
+    path('cart/', crochetViews.view_cart, name='view_cart'),
+    path('update_cart_item/<int:item_id>/', crochetViews.update_cart_item, name='update_cart_item'),
+    path('remove_cart_item/<int:item_id>/', crochetViews.remove_cart_item, name='remove_cart_item'),
+    path('empty_cart/', crochetViews.empty_cart, name='empty_cart'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

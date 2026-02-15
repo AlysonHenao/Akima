@@ -207,7 +207,6 @@ class PedidoDetalle(models.Model):
         return f"Pedido #{self.id_pedido.id} - {self.id_producto.nombre} x{self.cantidad}"
     
     def save(self, *args, **kwargs):
-        # Calcular subtotal automáticamente
         self.subtotal = self.precio_unitario * self.cantidad
         super().save(*args, **kwargs)
 
@@ -289,3 +288,73 @@ class ProductoColorInsumo(models.Model):
     
     def __str__(self):
         return f"{self.id_producto_color} - {self.id_insumo} ({self.cantidad_necesaria})"
+
+class CarritoCompra(models.Model):
+    """ Carrito de compras temporal para clientes """
+    id_usuario = models.ForeignKey(
+        Usuario, 
+        on_delete=models.CASCADE, 
+        verbose_name='Cliente',
+        related_name='carrito',
+        null=True,
+        blank=True
+    )
+    session_key = models.CharField('Session Key', max_length=40, null=True, blank=True)
+    fecha_creacion = models.DateTimeField('Fecha de Creación', auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField('Fecha de Actualización', auto_now=True)
+    
+    class Meta:
+        db_table = 'carrito_compra'
+    
+    def __str__(self):
+        if self.id_usuario:
+            return f"Carrito de {self.id_usuario.nombre} {self.id_usuario.apellido}"
+        return f"Carrito (Session: {self.session_key})"
+    
+    def get_total(self):
+        """Calcula el total del carrito"""
+        total = sum(item.get_subtotal() for item in self.items.all())
+        return total
+
+class CarritoItem(models.Model):
+    """ Items en el carrito de compras """
+    TALLA = [
+        ('XS', 'XS'),
+        ('S', 'S'),
+        ('M', 'M'),
+        ('L', 'L'),
+        ('XL', 'XL'),
+    ]
+    
+    id_carrito = models.ForeignKey(
+        CarritoCompra, 
+        on_delete=models.CASCADE, 
+        verbose_name='Carrito',
+        related_name='items'
+    )
+    id_producto = models.ForeignKey(
+        Producto, 
+        on_delete=models.CASCADE, 
+        verbose_name='Producto',
+        related_name='items_carrito'
+    )
+    id_producto_color = models.ForeignKey(
+        ProductoColor, 
+        on_delete=models.CASCADE, 
+        verbose_name='Color',
+        related_name='items_carrito'
+    )
+    talla = models.CharField('Talla', max_length=3, choices=TALLA)
+    cantidad = models.IntegerField('Cantidad', default=1, validators=[MinValueValidator(1)])
+    precio_unitario = models.DecimalField('Precio Unitario', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    fecha_agregado = models.DateTimeField('Fecha de Agregado', auto_now_add=True)
+    
+    class Meta:
+        db_table = 'carrito_item'
+    
+    def __str__(self):
+        return f"{self.id_producto.nombre} ({self.id_producto_color.id_color_general.nombre}, {self.talla}) x{self.cantidad}"
+    
+    def get_subtotal(self):
+        """Calcula el subtotal del item"""
+        return self.precio_unitario * self.cantidad
