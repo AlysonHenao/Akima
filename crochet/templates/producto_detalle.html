@@ -79,11 +79,31 @@
 
             <hr>
 
-            <p><strong>Stock disponible:</strong> {{ producto.stock }}</p>
+            <p><strong>Stock disponible:</strong> 
+                {% if producto.stock > 0 %}
+                    <span class="text-success">{{ producto.stock }} unidades</span>
+                {% else %}
+                    <span class="text-warning">Sin stock (Bajo pedido)</span>
+                {% endif %}
+            </p>
 
             <p><strong>Tiempo de fabricación:</strong>
                 {{ producto.tiempo_fabricacion }} horas
             </p>
+
+            {% if producto.stock <= 0 %}
+            <div class="alert alert-warning d-flex align-items-start" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                <div>
+                    <strong>Producto sin stock disponible</strong><br>
+                    <small>
+                        Puedes realizar tu pedido de todos modos. Ten en cuenta que al no tener stock disponible, 
+                        tu producto será fabricado bajo pedido, lo cual tomará aproximadamente 
+                        <strong>{{ producto.tiempo_fabricacion }} horas</strong> de fabricación.
+                    </small>
+                </div>
+            </div>
+            {% endif %}
 
             <hr>
 
@@ -125,7 +145,17 @@
 
                     <div class="mb-3">
                         <label for="cantidad" class="form-label"><strong>Cantidad</strong></label>
-                        <input type="number" id="cantidad" name="cantidad" class="form-control" value="1" min="1" max="{{ producto.stock }}" required>
+                        <input type="number" 
+                               id="cantidad" 
+                               name="cantidad" 
+                               class="form-control" 
+                               value="1" 
+                               min="1" 
+                               {% if producto.stock > 0 %}max="{{ producto.stock }}"{% endif %}
+                               required>
+                        {% if producto.stock <= 0 %}
+                        <small class="text-muted">Sin límite - Fabricación bajo pedido</small>
+                        {% endif %}
                     </div>
 
                     <div class="alert alert-secondary d-flex justify-content-between align-items-center">
@@ -134,7 +164,12 @@
                     </div>
 
                     <button type="submit" class="btn btn-success btn-lg w-100 mt-3">
-                        <i class="bi bi-cart-plus"></i> Añadir al carrito
+                        <i class="bi bi-cart-plus"></i> 
+                        {% if producto.stock <= 0 %}
+                            Ordenar bajo pedido
+                        {% else %}
+                            Añadir al carrito
+                        {% endif %}
                     </button>
                 </form>
             </div>
