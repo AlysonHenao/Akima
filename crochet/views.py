@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.utils import timezone
 from django.http import JsonResponse
 from .models import (
     Producto, ProductoColor, ProductoImagen, 
     ColorGeneral, SetProducto, PedidoDetalle,
-    CarritoCompra, CarritoItem
+    CarritoCompra, CarritoItem, Pedido, ComprobantePago,
 )
 from decimal import Decimal
 
@@ -14,7 +15,7 @@ def home(request):
     productos = Producto.objects.filter(activo=True)
     return render(request, 'home.html', {'productos': productos})
 
-def payment_methods(request):
+def payment(request):
     carrito = get_or_create_carrito(request)
 
     
@@ -282,3 +283,26 @@ def empty_cart(request):
     carrito.items.all().delete()
     messages.success(request, 'Carrito vaciado.')
     return redirect('view_cart')
+
+def orders(request):
+    pedidos = Pedido.objects.select_related('id_usuario').prefetch_related(
+        'comprobante__id_metodo_pago',
+        'detalles__id_producto',
+        'detalles__id_producto_color__id_color_general'
+    ).order_by('-fecha_pedido')
+    return render(request, 'orders.html', {'pedidos': pedidos})
+
+
+def confirm_payment(request, comprobante_id):
+    if request.method == 'POST':
+        comprobante = get_object_or_404(ComprobantePago, id=comprobante_id)
+        comprobante.confirmado = True
+        comprobante.fecha_confirmacion = timezone.now()
+        comprobante.save()
+
+        pedido = comprobante.id_pedido
+        pedido.estado = 'Confirmado'
+        pedido.save()
+
+        messages.success(request, f'Pago del Pedido #{pedido.id} confirmado exitosamente.')
+    return redirect('orders')

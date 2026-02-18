@@ -37,6 +37,8 @@
             <div class="card-body d-flex flex-column">
               <h5 class="card-title">{{ producto.nombre }}</h5>
 
+              <span class="badge bg-info mb-2">{{ producto.categoria }}</span>
+
               <p class="card-text">
                 {{ producto.descripcion|truncatewords:20 }}
               </p>
