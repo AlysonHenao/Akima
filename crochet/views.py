@@ -14,6 +14,30 @@ def home(request):
     productos = Producto.objects.filter(activo=True)
     return render(request, 'home.html', {'productos': productos})
 
+def payment_methods(request):
+    carrito = get_or_create_carrito(request)
+
+    
+    if request.method == "POST":
+        comprobante = request.FILES.get("comprobante")
+
+        if comprobante:
+            messages.success(request, "Comprobante enviado correctamente. Tu pedido será verificado.")
+            return redirect("home")
+
+    
+    items = carrito.items.select_related(
+        'id_producto',
+        'id_producto_color__id_color_general'
+    )
+
+    total = carrito.get_total()
+
+    return render(request, "payment_methods.html", {
+        "items": items,
+        "total": total,
+    })
+
 def administrator(request):
     productos = Producto.objects.all()
     return render(request, 'administrator.html', {'productos': productos})

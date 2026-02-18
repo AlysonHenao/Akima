@@ -21,8 +21,12 @@ from crochet import views as crochetViews
 from django.conf.urls.static import static
 from django.conf import settings
 
+
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('payment/', crochetViews.payment_methods, name='payment'),
     path('',crochetViews.home),
     path('administrator/', crochetViews.administrator, name='administrator'),
     path('new_product/',crochetViews.new_product,name='new_product'),

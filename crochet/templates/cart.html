@@ -220,7 +220,11 @@
                 <span id="cart-total-bottom">${{ total }}</span>
             </div>
 
-            <button class="checkout-btn">Proceder al pago</button>
+            <!-- ✅ BOTÓN CORREGIDO -->
+            <a href="{% url 'payment' %}" class="checkout-btn">
+                Proceder al pago
+            </a>
+
         </div>
 
     {% else %}
@@ -234,92 +238,3 @@
         </div>
     {% endif %}
 </div>
-
-<script>
-const csrftoken = document.querySelector('meta[name="csrf-token"]').content;
-
-function checkIfCartEmpty() {
-    const items = document.querySelectorAll('.cart-item');
-    if (items.length === 0) {
-        document.getElementById('cart-container').innerHTML = `
-            <a href="/" class="back-link">← Volver a la tienda</a>
-            <h1>Carrito de Compras</h1>
-            <div class="cart-empty">
-                <h2>Tu carrito está vacío</h2>
-                <p>Agrega productos para comenzar tu compra</p>
-                <br>
-                <a href="/" class="checkout-btn">
-                    Volver al catálogo
-                </a>
-            </div>
-        `;
-    }
-}
-
-document.querySelectorAll('.qty-btn').forEach(button => {
-    button.addEventListener('click', function () {
-        const itemId = parseInt(this.dataset.itemId);
-        const qtyInput = document.getElementById(`qty-${itemId}`);
-        let currentQty = parseInt(qtyInput.value);
-        const action = this.dataset.action;
-
-        let newQuantity = action === 'increase'
-            ? currentQty + 1
-            : currentQty - 1;
-
-        updateQuantity(itemId, newQuantity);
-    });
-});
-
-async function updateQuantity(itemId, newQuantity) {
-    if (newQuantity < 1) {
-        if (!confirm('¿Deseas eliminar este producto del carrito?')) return;
-    }
-
-    try {
-        const response = await fetch(`/update_cart_item/${itemId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
-            },
-            body: JSON.stringify({ quantity: newQuantity })
-        });
-
-        const data = await response.json();
-
-        if (!data.success) {
-            alert('Error al actualizar el carrito');
-            return;
-        }
-
-        if (newQuantity > 0 && !data.deleted) {
-            document.getElementById(`qty-${itemId}`).value = newQuantity;
-
-            const priceElement = document.getElementById(`price-${itemId}`);
-            const price = parseFloat(priceElement.dataset.price);
-            const newSubtotal = (price * newQuantity).toFixed(2);
-
-            document.getElementById(`subtotal-${itemId}`)
-                .textContent = `$${newSubtotal}`;
-
-        } else {
-            document.getElementById(`cart-item-${itemId}`).remove();
-            checkIfCartEmpty();
-        }
-
-        document.getElementById('cart-total')
-            .textContent = `$${data.cart_total.toFixed(2)}`;
-
-        document.getElementById('cart-total-bottom')
-            .textContent = `$${data.cart_total.toFixed(2)}`;
-
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error al actualizar el carrito');
-    }
-}
-</script>
-
-</body>
-</html>

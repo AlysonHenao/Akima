@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pago - Akima</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f4f4;
+    padding:30px;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    box-shadow:0px 10px 25px rgba(0,0,0,0.1);
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+.summary{
+    border-bottom:2px solid #ddd;
+    padding-bottom:20px;
+    margin-bottom:20px;
+}
+
+.product{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:8px;
+}
+
+.total{
+    font-size:22px;
+    font-weight:bold;
+    margin-top:10px;
+}
+
+.qr-section{
+    margin-top:25px;
+    text-align:center;
+}
+
+.qr-img{
+    width:200px;
+    transform: rotate(-90deg);
+}
+
+.qr-img{
+    width:350px;        /* tamaño grande */
+    border-radius:12px;
+    margin-top:15px;
+    box-shadow:0px 5px 15px rgba(0,0,0,0.15);
+}
+
+.upload{
+    margin-top:25px;
+}
+
+button{
+    margin-top:15px;
+    padding:12px;
+    width:100%;
+    background:black;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#333;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h1>Realizar pago</h1>
+
+<div class="summary">
+
+<h3>Productos:</h3>
+
+{% for item in items %}
+<div class="product">
+    <span>
+        {{ item.id_producto.nombre }}
+        ({{ item.id_producto_color.id_color_general.nombre }} - {{ item.talla }})
+        x {{ item.cantidad }}
+    </span>
+
+    <span>
+        ${{ item.get_subtotal|floatformat:0 }}
+    </span>
+</div>
+{% empty %}
+<p>No hay productos en el carrito</p>
+{% endfor %}
+
+
+<div class="total">
+Total a pagar: ${{ total }}
+</div>
+
+</div>
+
+<div class="qr-section">
+<h3>Escanea el QR para pagar</h3>
+
+<img src="/media/pagos/qr_Akima.jpeg" alt="QR de pago" class="qr-img">
+
+</div>
+
+<div class="upload">
+
+<h3>Sube el comprobante</h3>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="comprobante">
+    <button type="submit">Enviar comprobante</button>
+</form>
+
+</div>
+
+</div>
+
+</body>
+</html>
