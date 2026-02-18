@@ -216,11 +216,13 @@ def view_cart(request):
     ).prefetch_related('id_producto__imagenes')
     
     total = carrito.get_total()
+    total_unidades = sum(item.cantidad for item in items)
     
     context = {
         'carrito': carrito,
         'items': items,
         'total': total,
+        'total_unidades': total_unidades,
     }
     
     return render(request, 'cart.html', context)
