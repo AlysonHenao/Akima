@@ -127,6 +127,7 @@ class MetodoPago(models.Model):
     """ Métodos de pago configurados en el sistema """
     nombre = models.CharField('Nombre', max_length=100, unique=True)
     instrucciones = models.TextField('Instrucciones')
+    imagen_qr = models.ImageField('QR pago', upload_to='metodo_pago/', null=True, blank=True)
     activo = models.BooleanField('Activo', default=True)
     
     class Meta:
