@@ -14,12 +14,6 @@
         <a href="{% url 'administrator' %}" class="btn btn-outline-secondary btn-sm">← Volver</a>
     </div>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-success">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
-
     {% if pedidos %}
         {% for pedido in pedidos %}
         <div class="card mb-3">

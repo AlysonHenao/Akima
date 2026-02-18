@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse
 from .models import (
-    Producto, ProductoColor, ProductoImagen, 
+    Producto, ProductoColor, ProductoImagen, Pedido,
     ColorGeneral, SetProducto, PedidoDetalle,
     CarritoCompra, CarritoItem, MetodoPago, ComprobantePago,
 )
@@ -216,11 +216,13 @@ def view_cart(request):
     ).prefetch_related('id_producto__imagenes')
     
     total = carrito.get_total()
+    total_unidades = sum(item.cantidad for item in items)
     
     context = {
         'carrito': carrito,
         'items': items,
         'total': total,
+        'total_unidades': total_unidades,
     }
     
     return render(request, 'cart.html', context)

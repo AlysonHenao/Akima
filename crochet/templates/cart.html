@@ -5,236 +5,118 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carrito de Compras - Akima</title>
     <meta name="csrf-token" content="{{ csrf_token }}">
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0px 10px 25px rgba(0,0,0,0.1);
-        }
-
-        h1 { color: #000; margin-bottom: 30px; }
-
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #000;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .back-link:hover { text-decoration: underline; }
-
-        .cart-item {
-            display: flex;
-            gap: 20px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            align-items: center;
-        }
-
-        .cart-item img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-
-        .item-details { flex: 1; }
-
-        .item-name { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
-
-        .item-customization { color: #666; font-size: 14px; margin-bottom: 5px; }
-
-        .item-price { font-size: 16px; font-weight: bold; color: #000; }
-
-        .item-quantity {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .qty-btn {
-            width: 35px;
-            height: 35px;
-            border: 1px solid #ddd;
-            background: white;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-
-        .qty-btn:hover { background-color: #f0f0f0; }
-        .qty-btn:active { transform: scale(0.95); }
-
-        .qty-input {
-            width: 60px;
-            text-align: center;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 8px;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .cart-summary {
-            border-top: 2px solid #ddd;
-            padding-top: 20px;
-            margin-top: 20px;
-        }
-
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .summary-total {
-            font-size: 24px;
-            font-weight: bold;
-            color: #000;
-        }
-
-        .checkout-btn {
-            width: 100%;
-            padding: 15px;
-            margin-top: 20px;
-            background-color: #000;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            transition: background-color 0.2s;
-        }
-
-        .checkout-btn:hover { background-color: #333; }
-
-        .cart-empty {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-        }
-
-        .cart-empty h2 {
-            font-size: 28px;
-            margin-bottom: 15px;
-        }
-
-        .no-image {
-            width: 100px;
-            height: 100px;
-            background-color: #f0f0f0;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            font-size: 14px;
-        }
-
-        .item-subtotal {
-            min-width: 100px;
-            text-align: right;
-        }
+        .cart-item img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; }
+        .no-image { width: 100px; height: 100px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 14px; }
+        .qty-btn { width: 35px; height: 35px; }
+        .qty-input { width: 60px; text-align: center; }
     </style>
 </head>
 
-<body>
-<div class="container" id="cart-container">
-    <a href="/" class="back-link">← Volver a la tienda</a>
-    <h1>Carrito de Compras</h1>
+<body class="bg-light">
+<div class="container py-4">
+
+    <a href="/" class="btn btn-outline-secondary btn-sm mb-3">← Volver a la tienda</a>
+    <h1 class="mb-4">Carrito de Compras</h1>
 
     {% if items %}
         <div id="cart-items">
         {% for item in items %}
-        <div class="cart-item" id="cart-item-{{ item.id }}">
-            {% if item.id_producto.imagenes.first %}
-                <img src="{{ item.id_producto.imagenes.first.url_imagen.url }}" alt="{{ item.id_producto.nombre }}">
-            {% else %}
-                <div class="no-image">Sin imagen</div>
-            {% endif %}
+        <div class="card mb-3" id="cart-item-{{ item.id }}">
+            <div class="card-body d-flex align-items-center gap-3">
 
-            <div class="item-details">
-                <div class="item-name">{{ item.id_producto.nombre }}</div>
-                <div class="item-customization">
-                    Talla: {{ item.talla }} | Color: {{ item.id_producto_color.id_color_general.nombre }}
+                {% if item.id_producto.imagenes.first %}
+                    <img src="{{ item.id_producto.imagenes.first.url_imagen.url }}" alt="{{ item.id_producto.nombre }}" style="width: 200px; border-radius: 5px;">
+                {% else %}
+                    <div class="no-image">Sin imagen</div>
+                {% endif %}
+
+                <div class="flex-grow-1">
+                    <div class="fw-bold fs-5">{{ item.id_producto.nombre }}</div>
+                    <div class="text-muted small">Talla: {{ item.talla }} | Color: {{ item.id_producto_color.id_color_general.nombre }}</div>
+                    <div class="fw-bold">${{ item.precio_unitario }}</div>
                 </div>
-                <div class="item-price" id="price-{{ item.id }}" data-price="{{ item.precio_unitario }}">
-                    ${{ item.precio_unitario }}
+
+                <div class="d-flex align-items-center gap-2">
+                    <button class="qty-btn btn btn-outline-secondary" data-item-id="{{ item.id }}" data-action="decrease">−</button>
+                    <input type="number" class="qty-input form-control" id="qty-{{ item.id }}" value="{{ item.cantidad }}">
+                    <button class="qty-btn btn btn-outline-secondary" data-item-id="{{ item.id }}" data-action="increase">+</button>
                 </div>
-            </div>
 
-            <div class="item-quantity">
-                <button class="qty-btn"
-                        data-item-id="{{ item.id }}"
-                        data-action="decrease">−</button>
+                <div class="fw-bold text-end" style="min-width:100px" id="subtotal-{{ item.id }}">
+                    ${{ item.get_subtotal }}
+                </div>
 
-                <input type="number"
-                       class="qty-input"
-                       id="qty-{{ item.id }}"
-                       value="{{ item.cantidad }}"
-                       readonly>
-
-                <button class="qty-btn"
-                        data-item-id="{{ item.id }}"
-                        data-action="increase">+</button>
-            </div>
-
-            <div class="item-price item-subtotal"
-                 id="subtotal-{{ item.id }}">
-                ${{ item.get_subtotal }}
             </div>
         </div>
         {% endfor %}
         </div>
 
-        <div class="cart-summary">
-            <div class="summary-row">
-                <span>Subtotal ({{ items.count }} productos):</span>
+        <div class="border-top pt-3 mt-3">
+            <div class="d-flex justify-content-between mb-2">
+                <span>Subtotal (<span id="total-unidades">{{ total_unidades }}</span> productos):</span>
                 <span id="cart-total">${{ total }}</span>
             </div>
-
-            <div class="summary-row summary-total">
+            <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
                 <span>Total:</span>
                 <span id="cart-total-bottom">${{ total }}</span>
             </div>
-
-            <!-- ✅ BOTÓN CORREGIDO -->
-            <a href="{% url 'payment' %}" class="checkout-btn">
-                Proceder al pago
-            </a>
-
+            <a href="{% url 'payment' %}" class="btn btn-dark w-100 fs-5">Proceder al pago</a>
         </div>
 
     {% else %}
-        <div class="cart-empty">
-            <h2>Tu carrito está vacío</h2>
+        <div class="text-center text-muted py-5">
+            <h2 class="mb-3">Tu carrito está vacío</h2>
             <p>Agrega productos para comenzar tu compra</p>
-            <br>
-            <a href="/" class="checkout-btn">
-                Volver al catálogo
-            </a>
+            <a href="/" class="btn btn-dark mt-3">Volver al catálogo</a>
         </div>
     {% endif %}
+
 </div>
+
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    document.querySelectorAll('.qty-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const itemId = this.dataset.itemId;
+            const action = this.dataset.action;
+            const qtyInput = document.getElementById(`qty-${itemId}`);
+            let newQty = parseInt(qtyInput.value);
+
+            if (action === 'increase') newQty += 1;
+            if (action === 'decrease') newQty -= 1;
+
+            fetch(`/update_cart_item/${itemId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({ quantity: newQty })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.deleted) {
+                        document.getElementById(`cart-item-${itemId}`).remove();
+                    } else {
+                        qtyInput.value = newQty;
+                        document.getElementById(`subtotal-${itemId}`).textContent = `$${data.subtotal.toFixed(2)}`;
+                    }
+                    const total = `$${data.cart_total.toFixed(2)}`;
+                    document.getElementById('cart-total').textContent = total;
+                    document.getElementById('cart-total-bottom').textContent = total;
+
+                    const allInputs = document.querySelectorAll('.qty-input');
+                    let totalUnidades = 0;
+                    allInputs.forEach(input => totalUnidades += parseInt(input.value) || 0);
+                    document.getElementById('total-unidades').textContent = totalUnidades;
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
