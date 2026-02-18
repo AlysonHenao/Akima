@@ -5,78 +5,166 @@
 <title>Pago - Akima</title>
 
 <style>
-body{
+* {
+    box-sizing: border-box;
+}
+
+body {
     font-family: Arial, sans-serif;
-    background:#f4f4f4;
-    padding:30px;
+    background: #f4f4f4;
+    padding: 30px;
 }
 
-.container{
-    max-width:900px;
-    margin:auto;
-    background:white;
-    padding:30px;
-    border-radius:12px;
-    box-shadow:0px 10px 25px rgba(0,0,0,0.1);
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0px 10px 25px rgba(0,0,0,0.1);
 }
 
-h1{
-    margin-bottom:20px;
+h1 {
+    margin-bottom: 20px;
 }
 
-.summary{
-    border-bottom:2px solid #ddd;
-    padding-bottom:20px;
-    margin-bottom:20px;
+.summary {
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
 }
 
-.product{
-    display:flex;
-    justify-content:space-between;
-    margin-bottom:8px;
+.product {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
 }
 
-.total{
-    font-size:22px;
-    font-weight:bold;
-    margin-top:10px;
+.total {
+    font-size: 22px;
+    font-weight: bold;
+    margin-top: 10px;
 }
 
-.qr-section{
-    margin-top:25px;
-    text-align:center;
+/* ── Métodos de pago ── */
+.metodos-pago {
+    margin-top: 25px;
+    margin-bottom: 25px;
 }
 
-.qr-img{
-    width:200px;
-    transform: rotate(-90deg);
+.metodos-pago h3 {
+    margin-bottom: 14px;
 }
 
-.qr-img{
-    width:350px;        /* tamaño grande */
-    border-radius:12px;
-    margin-top:15px;
-    box-shadow:0px 5px 15px rgba(0,0,0,0.15);
+.metodo-btn {
+    width: 100%;
+    background: white;
+    color: black;
+    border: 2px solid black;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    transition: background 0.2s, color 0.2s;
 }
 
-.upload{
-    margin-top:25px;
+.metodo-btn:hover {
+    background: #f0f0f0;
 }
 
-button{
-    margin-top:15px;
-    padding:12px;
-    width:100%;
-    background:black;
-    color:white;
-    border:none;
-    border-radius:8px;
-    font-size:16px;
-    cursor:pointer;
+.metodo-btn.activo {
+    background: black;
+    color: white;
 }
 
-button:hover{
-    background:#333;
+.metodo-btn .arrow {
+    font-size: 12px;
+    transition: transform 0.3s;
+}
+
+.metodo-btn.activo .arrow {
+    transform: rotate(180deg);
+}
+
+.metodo-detalle {
+    display: none;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: -8px;
+    margin-bottom: 14px;
+    text-align: center;
+    animation: fadeIn 0.25s ease;
+}
+
+.metodo-detalle.visible {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.metodo-detalle p {
+    color: #555;
+    margin-bottom: 16px;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.metodo-detalle img {
+    width: 260px;
+    border-radius: 12px;
+    box-shadow: 0px 5px 15px rgba(0,0,0,0.15);
+    margin-top: 10px;
+}
+
+/* ── Seleccionado para el form ── */
+.metodo-seleccionado-label {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* ── Upload ── */
+.upload h3 {
+    margin-bottom: 12px;
+}
+
+.upload input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed #bbb;
+    border-radius: 8px;
+    background: #fafafa;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-enviar {
+    margin-top: 15px;
+    padding: 12px;
+    width: 100%;
+    background: black;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-enviar:hover {
+    background: #333;
 }
 </style>
 
@@ -85,55 +173,106 @@ button:hover{
 
 <div class="container">
 
-<h1>Realizar pago</h1>
+    <h1>Realizar pago</h1>
 
-<div class="summary">
+    <!-- Resumen de productos -->
+    <div class="summary">
+        <h3>Productos:</h3>
 
-<h3>Productos:</h3>
+        {% for item in items %}
+        <div class="product">
+            <span>
+                {{ item.id_producto.nombre }}
+                ({{ item.id_producto_color.id_color_general.nombre }} - {{ item.talla }})
+                x {{ item.cantidad }}
+            </span>
+            <span>${{ item.get_subtotal|floatformat:0 }}</span>
+        </div>
+        {% empty %}
+        <p>No hay productos en el carrito</p>
+        {% endfor %}
 
-{% for item in items %}
-<div class="product">
-    <span>
-        {{ item.id_producto.nombre }}
-        ({{ item.id_producto_color.id_color_general.nombre }} - {{ item.talla }})
-        x {{ item.cantidad }}
-    </span>
+        <div class="total">
+            Total a pagar: ${{ total }}
+        </div>
+    </div>
 
-    <span>
-        ${{ item.get_subtotal|floatformat:0 }}
-    </span>
+    <!-- Métodos de pago dinámicos -->
+    <div class="metodos-pago">
+        <h3>Selecciona un método de pago:</h3>
+
+        {% for metodo in metodos_pago %}
+        <button
+            type="button"
+            class="metodo-btn"
+            onclick="toggleMetodo({{ metodo.id }}, this)"
+            data-id="{{ metodo.id }}"
+            data-nombre="{{ metodo.nombre }}"
+        >
+            {{ metodo.nombre }}
+            <span class="arrow">▼</span>
+        </button>
+
+        <div class="metodo-detalle" id="detalle-{{ metodo.id }}">
+            <p>{{ metodo.instrucciones }}</p>
+            {% if metodo.imagen_qr %}
+            <img src="{{ metodo.imagen_qr.url }}" alt="QR {{ metodo.nombre }}">
+            {% endif %}
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <!-- Formulario de comprobante -->
+    <div class="upload">
+        <h3>Sube el comprobante</h3>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Campo oculto que guarda el método seleccionado -->
+            <input type="hidden" name="metodo_pago_id" id="metodo_pago_id" value="">
+
+            <span class="metodo-seleccionado-label" id="label-seleccionado">
+                Selecciona primero un método de pago arriba
+            </span>
+
+            <input type="file" name="comprobante" accept="image/*">
+            <button type="submit" class="btn-enviar">Enviar comprobante</button>
+        </form>
+    </div>
+
 </div>
-{% empty %}
-<p>No hay productos en el carrito</p>
-{% endfor %}
 
+<script>
+function toggleMetodo(id, btn) {
+    const detalle = document.getElementById('detalle-' + id);
+    const todosDetalles = document.querySelectorAll('.metodo-detalle');
+    const todosBtns = document.querySelectorAll('.metodo-btn');
 
-<div class="total">
-Total a pagar: ${{ total }}
-</div>
+    const estaAbierto = detalle.classList.contains('visible');
 
-</div>
+    // Cierra todos
+    todosDetalles.forEach(d => d.classList.remove('visible'));
+    todosBtns.forEach(b => b.classList.remove('activo'));
 
-<div class="qr-section">
-<h3>Escanea el QR para pagar</h3>
+    if (!estaAbierto) {
+        // Abre el seleccionado
+        detalle.classList.add('visible');
+        btn.classList.add('activo');
 
-<img src="/media/pagos/qr_Akima.jpeg" alt="QR de pago" class="qr-img">
-
-</div>
-
-<div class="upload">
-
-<h3>Sube el comprobante</h3>
-
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input type="file" name="comprobante">
-    <button type="submit">Enviar comprobante</button>
-</form>
-
-</div>
-
-</div>
+        // Actualiza el campo oculto y el label
+        document.getElementById('metodo_pago_id').value = id;
+        document.getElementById('label-seleccionado').textContent =
+            'Método seleccionado: ' + btn.dataset.nombre;
+    } else {
+        // Si lo cierra, limpia la selección
+        document.getElementById('metodo_pago_id').value = '';
+        document.getElementById('label-seleccionado').textContent =
+            ' Selecciona primero un método de pago arriba';
+    }
+}
+</script>
 
 </body>
 </html>

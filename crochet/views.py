@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from .models import (
     Producto, ProductoColor, ProductoImagen, 
     ColorGeneral, SetProducto, PedidoDetalle,
-    CarritoCompra, CarritoItem
+    CarritoCompra, CarritoItem, MetodoPago
 )
 from decimal import Decimal
 
@@ -32,10 +32,12 @@ def payment_methods(request):
     )
 
     total = carrito.get_total()
+    metodos_pago = MetodoPago.objects.filter(activo=True)
 
     return render(request, "payment_methods.html", {
         "items": items,
         "total": total,
+        "metodos_pago": metodos_pago,
     })
 
 def administrator(request):
