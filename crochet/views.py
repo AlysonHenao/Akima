@@ -35,7 +35,7 @@ def payment(request):
     total = carrito.get_total()
     metodos_pago = MetodoPago.objects.filter(activo=True)
 
-    return render(request, "payment_methods.html", {
+    return render(request, "payment.html", {
         "items": items,
         "total": total,
         "metodos_pago": metodos_pago,
