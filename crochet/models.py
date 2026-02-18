@@ -225,7 +225,7 @@ class ComprobantePago(models.Model):
         verbose_name='Método de Pago',
         related_name='comprobantes'
     )
-    comprobante = models.ImageField('Comprobante de Pago', upload_to='comprobantes/')
+    comprobante = models.ImageField('Comprobante de Pago', upload_to='comprobantes/', null=True, blank=True)
     monto = models.DecimalField('Monto', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     fecha_subida = models.DateTimeField('Fecha de Subida', auto_now_add=True)
     confirmado = models.BooleanField('Confirmado', default=False)
