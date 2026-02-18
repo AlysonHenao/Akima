@@ -26,7 +26,7 @@ from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('payment/', crochetViews.payment_methods, name='payment'),
+    path('payment/', crochetViews.payment, name='payment'),
     path('',crochetViews.home),
     path('administrator/', crochetViews.administrator, name='administrator'),
     path('new_product/',crochetViews.new_product,name='new_product'),
@@ -38,6 +38,8 @@ urlpatterns = [
     path('update_cart_item/<int:item_id>/', crochetViews.update_cart_item, name='update_cart_item'),
     path('remove_cart_item/<int:item_id>/', crochetViews.remove_cart_item, name='remove_cart_item'),
     path('empty_cart/', crochetViews.empty_cart, name='empty_cart'),
+    path('orders/', crochetViews.orders, name='orders'),
+    path('orders/confirm/<int:comprobante_id>/', crochetViews.confirm_payment, name='confirm_payment'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
