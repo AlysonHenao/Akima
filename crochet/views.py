@@ -174,6 +174,7 @@ def add_to_cart(request, producto_id):
                 precio_unitario=producto.precio
             )
             messages.success(request, f'"{producto.nombre}" agregado al carrito exitosamente.')
+            
         
         return redirect('view_cart')
     
