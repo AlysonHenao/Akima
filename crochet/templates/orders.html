@@ -101,6 +101,27 @@
                     </div>
 
                 </div>
+
+                <!-- Cambiar estado -->
+                <div class="row mt-3">
+                    <div class="col-md-5">
+                        <h6 class="text-muted mb-2">Cambiar estado</h6>
+                        <form method="POST" action="{% url 'update_estado_pedido' pedido.id %}">
+                            {% csrf_token %}
+                            <div class="input-group input-group-sm">
+                                <select name="estado" class="form-select">
+                                    {% for valor, etiqueta in pedido.ESTADOS %}
+                                        <option value="{{ valor }}" {% if pedido.estado == valor %}selected{% endif %}>
+                                            {{ etiqueta }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary">Actualizar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
             </div>
         </div>
         {% endfor %}

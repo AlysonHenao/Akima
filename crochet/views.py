@@ -358,3 +358,16 @@ def confirm_payment(request, comprobante_id):
 
         messages.success(request, f'Pago del Pedido #{pedido.id} confirmado exitosamente.')
     return redirect('orders')
+
+def update_estado_pedido(request, pedido_id):
+    if request.method == 'POST':
+        pedido = get_object_or_404(Pedido, id=pedido_id)
+        nuevo_estado = request.POST.get('estado')
+        estados_validos = [choice[0] for choice in Pedido.ESTADOS]
+        if nuevo_estado in estados_validos:
+            pedido.estado = nuevo_estado
+            pedido.save()
+            messages.success(request, f'Estado del Pedido #{pedido.id} actualizado a "{nuevo_estado}".')
+        else:
+            messages.error(request, 'Estado no válido.')
+    return redirect('orders')

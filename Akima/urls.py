@@ -40,6 +40,7 @@ urlpatterns = [
     path('empty_cart/', crochetViews.empty_cart, name='empty_cart'),
     path('orders/', crochetViews.orders, name='orders'),
     path('orders/confirm/<int:comprobante_id>/', crochetViews.confirm_payment, name='confirm_payment'),
+    path('orders/update-estado/<int:pedido_id>/', crochetViews.update_estado_pedido, name='update_estado_pedido'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
