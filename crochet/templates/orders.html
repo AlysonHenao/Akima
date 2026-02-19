@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Órdenes — Akima</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Panel de Órdenes</h2>
+        <a href="{% url 'administrator' %}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+    </div>
+
+    {% if pedidos %}
+        {% for pedido in pedidos %}
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><strong>Pedido #{{ pedido.id }}</strong> — {{ pedido.id_usuario.nombre }} {{ pedido.id_usuario.apellido }}</span>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-secondary">{{ pedido.get_estado_display }}</span>
+                    <small class="text-muted">{{ pedido.fecha_pedido|date:"d M Y, H:i" }}</small>
+                    <strong>${{ pedido.total }}</strong>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="row">
+
+                    <!-- Items -->
+                    <div class="col-md-7">
+                        <h6 class="text-muted mb-2">Items</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Color</th>
+                                    <th>Talla</th>
+                                    <th>Cant.</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detalle in pedido.detalles.all %}
+                                <tr>
+                                    <td>{{ detalle.id_producto.nombre }}</td>
+                                    <td>{{ detalle.id_producto_color.id_color_general.nombre }}</td>
+                                    <td>{{ detalle.talla }}</td>
+                                    <td>{{ detalle.cantidad }}</td>
+                                    <td>${{ detalle.subtotal }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-muted">Sin items</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        {% if pedido.nota_cliente %}
+                            <p class="text-muted small"><strong>Nota:</strong> {{ pedido.nota_cliente }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Comprobante -->
+                    <div class="col-md-5">
+                        <h6 class="text-muted mb-2">Comprobante de pago</h6>
+
+                        {% with comprobantes=pedido.comprobante.all %}
+                        {% if comprobantes %}
+                            {% for comprobante in comprobantes %}
+                            <ul class="list-unstyled small mb-2">
+                                <li><strong>Método:</strong> {{ comprobante.id_metodo_pago.nombre }}</li>
+                                <li><strong>Monto:</strong> ${{ comprobante.monto }}</li>
+                                <li><strong>Subido:</strong> {{ comprobante.fecha_subida|date:"d M Y, H:i" }}</li>
+                            </ul>
+
+                            <a href="{{ comprobante.comprobante.url }}" target="_blank" class="btn btn-outline-dark btn-sm mb-2">
+                                Ver comprobante
+                            </a>
+
+                            {% if comprobante.confirmado %}
+                                <div class="alert alert-success py-2 small mb-0">
+                                    ✓ Pago confirmado el {{ comprobante.fecha_confirmacion|date:"d M Y, H:i" }}
+                                </div>
+                            {% else %}
+                                <form method="POST" action="{% url 'confirm_payment' comprobante.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm w-100"
+                                        onclick="return confirm('¿Confirmar el pago del Pedido #{{ pedido.id }}?')">
+                                        ✓ Confirmar pago
+                                    </button>
+                                </form>
+                            {% endif %}
+                            {% endfor %}
+
+                        {% else %}
+                            <p class="text-muted small">Sin comprobante subido aún.</p>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+    {% else %}
+        <div class="text-center text-muted py-5">
+            <p>No hay órdenes registradas.</p>
+        </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

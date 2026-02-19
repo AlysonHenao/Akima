@@ -127,6 +127,7 @@ class MetodoPago(models.Model):
     """ Métodos de pago configurados en el sistema """
     nombre = models.CharField('Nombre', max_length=100, unique=True)
     instrucciones = models.TextField('Instrucciones')
+    imagen_qr = models.ImageField('QR pago', upload_to='metodo_pago/', null=True, blank=True)
     activo = models.BooleanField('Activo', default=True)
     
     class Meta:
@@ -224,7 +225,7 @@ class ComprobantePago(models.Model):
         verbose_name='Método de Pago',
         related_name='comprobantes'
     )
-    archivo_url = models.CharField('URL del Archivo', max_length=500)
+    comprobante = models.ImageField('Comprobante de Pago', upload_to='comprobantes/', null=True, blank=True)
     monto = models.DecimalField('Monto', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     fecha_subida = models.DateTimeField('Fecha de Subida', auto_now_add=True)
     confirmado = models.BooleanField('Confirmado', default=False)

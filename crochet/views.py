@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.utils import timezone
 from django.http import JsonResponse
 from .models import (
-    Producto, ProductoColor, ProductoImagen, 
-    ColorGeneral, SetProducto, PedidoDetalle,
-    CarritoCompra, CarritoItem
+    Producto, ProductoColor, ProductoImagen, Pedido,
+    ColorGeneral, SetProducto, PedidoDetalle, Usuario,
+    CarritoCompra, CarritoItem, MetodoPago, ComprobantePago,
 )
 from decimal import Decimal
 
@@ -13,6 +14,80 @@ def home(request):
     """Página principal - Muestra productos activos"""
     productos = Producto.objects.filter(activo=True)
     return render(request, 'home.html', {'productos': productos})
+
+def payment(request):
+    carrito = get_or_create_carrito(request)
+    items = carrito.items.select_related(
+        'id_producto',
+        'id_producto_color__id_color_general'
+    )
+    
+    if not items.exists():
+        messages.error(request, 'Tu carrito está vacío.')
+        return redirect('view_cart')
+
+    if request.method == 'POST':
+        comprobante = request.FILES.get('comprobante')
+        metodo_pago_id = request.POST.get('metodo_pago_id')
+
+        if not comprobante:
+            messages.error(request, 'Debes subir un comprobante.')
+            return redirect('payment')
+
+        if not metodo_pago_id:
+            messages.error(request, 'Debes seleccionar un método de pago.')
+            return redirect('payment')
+
+
+        metodo_pago = get_object_or_404(MetodoPago, id=metodo_pago_id)
+
+        usuario = Usuario.objects.first() 
+
+        total = carrito.get_total()
+        subtotal = total 
+
+        # 1. Crear pedido
+        pedido = Pedido.objects.create(
+            id_usuario=usuario,
+            subtotal=subtotal,
+            total=total,
+            estado='Pendiente confirmacion',
+        )
+
+        # 2. Crear detalles del pedido
+        for item in items:
+            PedidoDetalle.objects.create(
+                id_pedido=pedido,
+                id_producto=item.id_producto,
+                id_producto_color=item.id_producto_color,
+                talla=item.talla,
+                cantidad=item.cantidad,
+                precio_unitario=item.precio_unitario,
+            )
+
+        # 3. Guardar comprobante
+        ComprobantePago.objects.create(
+            id_pedido=pedido,
+            id_metodo_pago=metodo_pago,
+            comprobante=comprobante,  
+            monto=total,
+        )
+
+        # 4. Vaciar carrito
+        carrito.items.all().delete()
+
+        messages.success(request, '¡Comprobante enviado! Tu pedido será verificado.')
+        return redirect('/?pedido_confirmado=1')
+
+    
+    total = carrito.get_total()
+    metodos_pago = MetodoPago.objects.filter(activo=True)
+
+    return render(request, "payment.html", {
+        "items": items,
+        "total": total,
+        "metodos_pago": metodos_pago,
+    })
 
 def administrator(request):
     productos = Producto.objects.all()
@@ -190,11 +265,13 @@ def view_cart(request):
     ).prefetch_related('id_producto__imagenes')
     
     total = carrito.get_total()
+    total_unidades = sum(item.cantidad for item in items)
     
     context = {
         'carrito': carrito,
         'items': items,
         'total': total,
+        'total_unidades': total_unidades,
     }
     
     return render(request, 'cart.html', context)
@@ -259,3 +336,26 @@ def empty_cart(request):
     carrito.items.all().delete()
     messages.success(request, 'Carrito vaciado.')
     return redirect('view_cart')
+
+def orders(request):
+    pedidos = Pedido.objects.select_related('id_usuario').prefetch_related(
+        'comprobante__id_metodo_pago',
+        'detalles__id_producto',
+        'detalles__id_producto_color__id_color_general'
+    ).order_by('-fecha_pedido')
+    return render(request, 'orders.html', {'pedidos': pedidos})
+
+
+def confirm_payment(request, comprobante_id):
+    if request.method == 'POST':
+        comprobante = get_object_or_404(ComprobantePago, id=comprobante_id)
+        comprobante.confirmado = True
+        comprobante.fecha_confirmacion = timezone.now()
+        comprobante.save()
+
+        pedido = comprobante.id_pedido
+        pedido.estado = 'Confirmado'
+        pedido.save()
+
+        messages.success(request, f'Pago del Pedido #{pedido.id} confirmado exitosamente.')
+    return redirect('orders')

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pago - Akima</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .metodo-btn.activo { background: black; color: white; }
+        .metodo-detalle { display: none; }
+        .metodo-detalle.visible { display: block; }
+        .metodo-detalle img { width: 260px; border-radius: 12px; }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container py-4" style="max-width:900px">
+
+    <h1 class="mb-4">Realizar pago</h1>
+
+    <!-- Resumen -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Productos</h5>
+            {% for item in items %}
+            <div class="d-flex justify-content-between">
+                <span>{{ item.id_producto.nombre }} ({{ item.id_producto_color.id_color_general.nombre }} - {{ item.talla }}) x{{ item.cantidad }}</span>
+                <span>${{ item.get_subtotal|floatformat:0 }}</span>
+            </div>
+            {% empty %}
+            <p class="text-muted">No hay productos en el carrito</p>
+            {% endfor %}
+            <hr>
+            <div class="d-flex justify-content-between fw-bold fs-5">
+                <span>Total a pagar:</span>
+                <span>${{ total }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métodos de pago -->
+    <div class="mb-4">
+        <h5 class="mb-3">Selecciona un método de pago</h5>
+        {% for metodo in metodos_pago %}
+        <button type="button"
+            class="metodo-btn btn btn-outline-dark w-100 text-start d-flex justify-content-between mb-2"
+            onclick="toggleMetodo({{ metodo.id }}, this)"
+            data-id="{{ metodo.id }}"
+            data-nombre="{{ metodo.nombre }}">
+            {{ metodo.nombre }} <span>▼</span>
+        </button>
+        <div class="metodo-detalle card mb-3 text-center" id="detalle-{{ metodo.id }}">
+            <div class="card-body">
+                <p class="text-muted">{{ metodo.instrucciones }}</p>
+                {% if metodo.imagen_qr %}
+                <img src="{{ metodo.imagen_qr.url }}" alt="QR {{ metodo.nombre }}" class="mt-2">
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Formulario comprobante -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Sube el comprobante</h5>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="metodo_pago_id" id="metodo_pago_id" value="">
+                <p class="text-muted small" id="label-seleccionado">Selecciona primero un método de pago arriba</p>
+                <input type="file" name="comprobante" accept="image/*" class="form-control mb-3">
+                <button type="submit" class="btn btn-dark w-100">Enviar comprobante</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.querySelectorAll('.toast').forEach(el => {
+        setTimeout(() => new bootstrap.Toast(el).hide(), 3000);
+    });
+
+    function toggleMetodo(id, btn) {
+        const detalle = document.getElementById('detalle-' + id);
+        const estaAbierto = detalle.classList.contains('visible');
+
+        document.querySelectorAll('.metodo-detalle').forEach(d => d.classList.remove('visible'));
+        document.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('activo'));
+
+        if (!estaAbierto) {
+            detalle.classList.add('visible');
+            btn.classList.add('activo');
+            document.getElementById('metodo_pago_id').value = id;
+            document.getElementById('label-seleccionado').textContent = 'Método seleccionado: ' + btn.dataset.nombre;
+        } else {
+            document.getElementById('metodo_pago_id').value = '';
+            document.getElementById('label-seleccionado').textContent = 'Selecciona primero un método de pago arriba';
+        }
+    }
+</script>
+</body>
+</html>
