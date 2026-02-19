@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.http import JsonResponse
 from .models import (
     Producto, ProductoColor, ProductoImagen, Pedido,
-    ColorGeneral, SetProducto, PedidoDetalle,
+    ColorGeneral, SetProducto, PedidoDetalle, Usuario,
     CarritoCompra, CarritoItem, MetodoPago, ComprobantePago,
 )
 from decimal import Decimal
@@ -17,21 +17,69 @@ def home(request):
 
 def payment(request):
     carrito = get_or_create_carrito(request)
-
-    
-    if request.method == "POST":
-        comprobante = request.FILES.get("comprobante")
-
-        if comprobante:
-            messages.success(request, "Comprobante enviado correctamente. Tu pedido será verificado.")
-            return redirect("home")
-
-    
     items = carrito.items.select_related(
         'id_producto',
         'id_producto_color__id_color_general'
     )
+    
+    if not items.exists():
+        messages.error(request, 'Tu carrito está vacío.')
+        return redirect('view_cart')
 
+    if request.method == 'POST':
+        comprobante = request.FILES.get('comprobante')
+        metodo_pago_id = request.POST.get('metodo_pago_id')
+
+        if not comprobante:
+            messages.error(request, 'Debes subir un comprobante.')
+            return redirect('payment')
+
+        if not metodo_pago_id:
+            messages.error(request, 'Debes seleccionar un método de pago.')
+            return redirect('payment')
+
+
+        metodo_pago = get_object_or_404(MetodoPago, id=metodo_pago_id)
+
+        usuario = Usuario.objects.first() 
+
+        total = carrito.get_total()
+        subtotal = total 
+
+        # 1. Crear pedido
+        pedido = Pedido.objects.create(
+            id_usuario=usuario,
+            subtotal=subtotal,
+            total=total,
+            estado='Pendiente confirmacion',
+        )
+
+        # 2. Crear detalles del pedido
+        for item in items:
+            PedidoDetalle.objects.create(
+                id_pedido=pedido,
+                id_producto=item.id_producto,
+                id_producto_color=item.id_producto_color,
+                talla=item.talla,
+                cantidad=item.cantidad,
+                precio_unitario=item.precio_unitario,
+            )
+
+        # 3. Guardar comprobante
+        ComprobantePago.objects.create(
+            id_pedido=pedido,
+            id_metodo_pago=metodo_pago,
+            comprobante=comprobante,  
+            monto=total,
+        )
+
+        # 4. Vaciar carrito
+        carrito.items.all().delete()
+
+        messages.success(request, '¡Comprobante enviado! Tu pedido será verificado.')
+        return redirect('/?pedido_confirmado=1')
+
+    
     total = carrito.get_total()
     metodos_pago = MetodoPago.objects.filter(activo=True)
 
