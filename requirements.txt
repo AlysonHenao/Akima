@@ -1,0 +1,12 @@
+# =============================================================
+# Akima — Project dependencies
+# Developers: Alyson Henao, Samuel Moncada, Emily Cardona,
+#             Jose Miguel Sanchez, Juan Osorio
+# =============================================================
+# Install all dependencies with:
+#   pip install -r requirements.txt
+# =============================================================
+
+Django==6.0.2
+Pillow==10.3.0
+
