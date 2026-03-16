@@ -23,7 +23,7 @@
             <h5 class="card-title">Productos</h5>
             {% for item in items %}
             <div class="d-flex justify-content-between">
-                <span>{{ item.id_producto.nombre }} ({{ item.id_producto_color.id_color_general.nombre }} - {{ item.talla }}) x{{ item.cantidad }}</span>
+                <span>{{ item.product.name }} ({{ item.product_color.general_color.name }} - {{ item.size }}) x{{ item.quantity }}</span>
                 <span>${{ item.get_subtotal|floatformat:0 }}</span>
             </div>
             {% empty %}
@@ -40,19 +40,19 @@
     <!-- Métodos de pago -->
     <div class="mb-4">
         <h5 class="mb-3">Selecciona un método de pago</h5>
-        {% for metodo in metodos_pago %}
+        {% for method in payment_methods %}
         <button type="button"
             class="metodo-btn btn btn-outline-dark w-100 text-start d-flex justify-content-between mb-2"
-            onclick="toggleMetodo({{ metodo.id }}, this)"
-            data-id="{{ metodo.id }}"
-            data-nombre="{{ metodo.nombre }}">
-            {{ metodo.nombre }} <span>▼</span>
+            onclick="toggleMetodo({{ method.id }}, this)"
+            data-id="{{ method.id }}"
+            data-nombre="{{ method.name }}">
+            {{ method.name }} <span>▼</span>
         </button>
-        <div class="metodo-detalle card mb-3 text-center" id="detalle-{{ metodo.id }}">
+        <div class="metodo-detalle card mb-3 text-center" id="detalle-{{ method.id }}">
             <div class="card-body">
-                <p class="text-muted">{{ metodo.instrucciones }}</p>
-                {% if metodo.imagen_qr %}
-                <img src="{{ metodo.imagen_qr.url }}" alt="QR {{ metodo.nombre }}" class="mt-2">
+                <p class="text-muted">{{ method.instructions }}</p>
+                {% if method.qr_image %}
+                <img src="{{ method.qr_image.url }}" alt="QR {{ method.name }}" class="mt-2">
                 {% endif %}
             </div>
         </div>

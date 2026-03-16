@@ -4,34 +4,33 @@ from django.core.validators import MinValueValidator
 from decimal import Decimal
 
 
-class Usuario(models.Model):
-    
-    nombre = models.CharField('Nombre', max_length=100)
-    apellido = models.CharField('Apellido', max_length=100)
+class User(models.Model):
+    first_name = models.CharField('First Name', max_length=100)
+    last_name = models.CharField('Last Name', max_length=100)
     email = models.EmailField('Email', max_length=100, unique=True)
-    telefono = models.CharField('Teléfono', max_length=20)
-    direccion = models.CharField('Dirección', max_length=255)
-    ciudad = models.CharField('Ciudad', max_length=100)
-    
-    class Meta:
-        db_table = 'usuario'
-    
-    def __str__(self):
-        return f"{self.nombre} {self.apellido} - {self.email}"
+    password = models.CharField('Password', max_length=128)
+    role = models.CharField('Role', max_length=128)
+    phone = models.CharField('Phone', max_length=20)
+    address = models.CharField('Address', max_length=255)
+    city = models.CharField('City', max_length=100)
 
-class ColorGeneral(models.Model):
-    """ Catálogo de colores base del sistema"""
-    nombre = models.CharField('Nombre del Color', max_length=50, unique=True)
-    
     class Meta:
-        db_table = 'color_general'
-    
-    def __str__(self):
-        return self.nombre
+        db_table = 'user'
 
-class Producto(models.Model):
-    """ Catálogo de productos """
-    CATEGORIAS = [
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.email}"
+
+class GeneralColor(models.Model):
+    name = models.CharField('Color Name', max_length=50, unique=True)
+
+    class Meta:
+        db_table = 'general_color'
+
+    def __str__(self):
+        return self.name
+
+class Product(models.Model):
+    CATEGORIES = [
         ('Bikini', 'Bikini'),
         ('Top', 'Top'),
         ('Falda', 'Falda'),
@@ -44,101 +43,96 @@ class Producto(models.Model):
         ('Camisa', 'Camisa'),
         ('Otro', 'Otro'),
     ]
-    
-    categoria = models.CharField('Categoría', max_length=20, choices=CATEGORIAS)
-    nombre = models.CharField('Nombre', max_length=150)
-    descripcion = models.TextField('Descripción')
-    precio = models.DecimalField('Precio', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+
+    category = models.CharField('Category', max_length=20, choices=CATEGORIES)
+    name = models.CharField('Name', max_length=150)
+    description = models.TextField('Description')
+    price = models.DecimalField('Price', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     stock = models.IntegerField('Stock', default=0, validators=[MinValueValidator(0)])
-    tiempo_fabricacion = models.IntegerField('Tiempo de Fabricación (horas)', validators=[MinValueValidator(0)])
-    activo = models.BooleanField('Activo', default=True)
-    guia_fabricacion = models.FileField(upload_to='guias/fabricacion/', blank=True, null=True)
-    guia_tallas = models.ImageField(upload_to='guias/tallas/', blank=True, null=True)
-    
-    class Meta:
-        db_table = 'producto'
-    
-    def __str__(self):
-        return f"{self.nombre} ({self.categoria})"
+    manufacturing_time = models.IntegerField('Manufacturing Time (hours)', validators=[MinValueValidator(0)])
+    active = models.BooleanField('Active', default=True)
+    manufacturing_guide = models.FileField(upload_to='guias/fabricacion/', blank=True, null=True)
+    size_guide = models.ImageField(upload_to='guias/tallas/', blank=True, null=True)
 
-class ProductoColor(models.Model):
-    """ Variantes de color disponibles para cada producto """
-    id_producto = models.ForeignKey(
-        Producto, 
-        on_delete=models.CASCADE, 
-        verbose_name='Producto',
-        related_name='colores'
+    class Meta:
+        db_table = 'product'
+
+    def __str__(self):
+        return f"{self.name} ({self.category})"
+
+class ColorProduct(models.Model):
+    id_product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        verbose_name='Product',
+        related_name='colors'
     )
-    id_color_general = models.ForeignKey(
-        ColorGeneral, 
-        on_delete=models.PROTECT, 
+    id_general_color = models.ForeignKey(
+        GeneralColor,
+        on_delete=models.PROTECT,
         verbose_name='Color',
-        related_name='productos_color'
+        related_name='product_colors'
     )
-    disponible = models.BooleanField('Disponible', default=True)
-    
-    class Meta:
-        db_table = 'producto_color'
-    
-    def __str__(self):
-        return f"{self.id_producto.nombre} - {self.id_color_general.nombre}"
+    available = models.BooleanField('Available', default=True)
 
-class ProductoImagen(models.Model):
-    """ Galería de imágenes de productos """
-    id_producto = models.ForeignKey(
-        Producto, 
-        on_delete=models.CASCADE, 
-        verbose_name='Producto',
-        related_name='imagenes'
+    class Meta:
+        db_table = 'product_color'
+
+    def __str__(self):
+        return f"{self.id_product.name} - {self.id_general_color.name}"
+
+class ProductImage(models.Model):
+    id_product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        verbose_name='Product',
+        related_name='images'
     )
-    url_imagen = models.ImageField('Imagen', upload_to='productos/')
-    
-    class Meta:
-        db_table = 'producto_imagen'
-    
-    def __str__(self):
-        return f"Imagen de {self.id_producto.nombre}"
+    url_image = models.ImageField('Image', upload_to='products/')
 
-class SetProducto(models.Model):
-    """ Define qué productos componen un set y su precio dentro del set """
-    id_producto_set = models.ForeignKey(
-        Producto, 
-        on_delete=models.CASCADE, 
-        verbose_name='Producto Set',
-        related_name='componentes_set',
-        limit_choices_to={'categoria': 'Set'}
+    class Meta:
+        db_table = 'product_image'
+
+    def __str__(self):
+        return f"Image of {self.id_product.name}"
+
+class SetProduct(models.Model):
+    id_set_product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        verbose_name='Set Product',
+        related_name='set_components',
+        limit_choices_to={'category': 'Set'}
     )
-    id_producto_individual = models.ForeignKey(
-        Producto, 
-        on_delete=models.CASCADE, 
-        verbose_name='Producto Individual',
-        related_name='pertenece_a_sets'
+    id_individual_product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        verbose_name='Individual Product',
+        related_name='belongs_to_sets'
     )
-    cantidad = models.IntegerField('Cantidad', validators=[MinValueValidator(1)])
-    precio_set = models.DecimalField('Precio en Set', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], help_text='Precio con descuento aplicado')
-    
-    class Meta:
-        db_table = 'set_producto'
-    
-    def __str__(self):
-        return f"{self.id_producto_set.nombre} → {self.id_producto_individual.nombre} (x{self.cantidad})"
+    quantity = models.IntegerField('Quantity', validators=[MinValueValidator(1)])
+    set_price = models.DecimalField('Set Price', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], help_text='Discounted price')
 
-class MetodoPago(models.Model):
-    """ Métodos de pago configurados en el sistema """
-    nombre = models.CharField('Nombre', max_length=100, unique=True)
-    instrucciones = models.TextField('Instrucciones')
-    imagen_qr = models.ImageField('QR pago', upload_to='metodo_pago/', null=True, blank=True)
-    activo = models.BooleanField('Activo', default=True)
-    
     class Meta:
-        db_table = 'metodo_pago'
-    
-    def __str__(self):
-        return self.nombre
+        db_table = 'set_product'
 
-class Pedido(models.Model):
-    """ Órdenes de compra realizadas por clientes"""
-    ESTADOS = [
+    def __str__(self):
+        return f"{self.id_set_product.name} → {self.id_individual_product.name} (x{self.quantity})"
+
+class PaymentMethod(models.Model):
+    name = models.CharField('Name', max_length=100, unique=True)
+    instructions = models.TextField('Instructions')
+    qr_image = models.ImageField('Payment QR', upload_to='payment_method/', null=True, blank=True)
+    active = models.BooleanField('Active', default=True)
+
+    class Meta:
+        db_table = 'payment_method'
+
+    def __str__(self):
+        return self.name
+
+class Order(models.Model):
+    STATUS = [
         ('Pendiente confirmacion', 'Confirmación de pago pendiente'),
         ('Confirmado', 'Confirmado'),
         ('En producción', 'En producción'),
@@ -147,30 +141,29 @@ class Pedido(models.Model):
         ('Entregado', 'Entregado'),
         ('Cancelado', 'Cancelado'),
     ]
-    
-    id_usuario = models.ForeignKey(
-        Usuario, 
-        on_delete=models.PROTECT, 
-        verbose_name='Cliente',
-        related_name='pedidos'
-    )
-    fecha_pedido = models.DateTimeField('Fecha de Pedido', auto_now_add=True)
-    subtotal = models.DecimalField('Subtotal', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    descuento = models.DecimalField('Descuento', max_digits=10, decimal_places=2, blank=True, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
-    total = models.DecimalField('Total', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    estado = models.CharField('Estado', max_length=30, choices=ESTADOS, default='Pendiente pago')
-    nota_cliente = models.TextField('Nota del Cliente', blank=True, null=True)
-    
-    class Meta:
-        db_table = 'pedido'
-        ordering = ['-fecha_pedido']
-    
-    def __str__(self):
-        return f"Pedido #{self.id} - {self.id_usuario.nombre} {self.id_usuario.apellido} ({self.estado})"
 
-class PedidoDetalle(models.Model):
-    """ Items específicos de cada pedido """
-    TALLA = [
+    id_user = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        verbose_name='Customer',
+        related_name='orders'
+    )
+    order_date = models.DateTimeField('Order Date', auto_now_add=True)
+    subtotal = models.DecimalField('Subtotal', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    discount = models.DecimalField('Discount', max_digits=10, decimal_places=2, blank=True, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    total = models.DecimalField('Total', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    status = models.CharField('Status', max_length=30, choices=STATUS, default='Pendiente confirmacion')
+    customer_note = models.TextField('Customer Note', blank=True, null=True)
+
+    class Meta:
+        db_table = 'order'
+        ordering = ['-order_date']
+
+    def __str__(self):
+        return f"Order #{self.id} - {self.id_user.first_name} {self.id_user.last_name} ({self.status})"
+
+class OrderDetail(models.Model):
+    SIZE = [
         ('XS', 'XS'),
         ('S', 'S'),
         ('M', 'M'),
@@ -178,184 +171,177 @@ class PedidoDetalle(models.Model):
         ('XL', 'XL'),
     ]
 
-    id_pedido = models.ForeignKey(
-        Pedido, 
-        on_delete=models.CASCADE, 
-        verbose_name='Pedido',
-        related_name='detalles'
+    id_order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        verbose_name='Order',
+        related_name='details'
     )
-    id_producto = models.ForeignKey(
-        Producto, 
-        on_delete=models.PROTECT, 
-        verbose_name='Producto',
-        related_name='detalles_pedido'
+    id_product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        verbose_name='Product',
+        related_name='order_details'
     )
-    id_producto_color = models.ForeignKey(
-        ProductoColor, 
-        on_delete=models.PROTECT, 
+    id_product_color = models.ForeignKey(
+        ColorProduct,
+        on_delete=models.PROTECT,
         verbose_name='Color',
-        related_name='detalles_pedido'
+        related_name='order_details'
     )
-    talla = models.CharField('Talla', choices=TALLA)
-    cantidad = models.IntegerField('Cantidad', validators=[MinValueValidator(1)])
-    precio_unitario = models.DecimalField('Precio Unitario', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    size = models.CharField('Size', choices=SIZE)
+    quantity = models.IntegerField('Quantity', validators=[MinValueValidator(1)])
+    unit_price = models.DecimalField('Unit Price', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     subtotal = models.DecimalField('Subtotal', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    
+
     class Meta:
-        db_table = 'pedido_detalle'
-    
+        db_table = 'order_detail'
+
     def __str__(self):
-        return f"Pedido #{self.id_pedido.id} - {self.id_producto.nombre} x{self.cantidad}"
-    
+        return f"Order #{self.id_order.id} - {self.id_product.name} x{self.quantity}"
+
     def save(self, *args, **kwargs):
-        self.subtotal = self.precio_unitario * self.cantidad
+        self.subtotal = self.unit_price * self.quantity
         super().save(*args, **kwargs)
 
-class ComprobantePago(models.Model):
-    """ Evidencias de pagos realizados por clientes """
-    id_pedido = models.ForeignKey(
-        Pedido, 
-        on_delete=models.PROTECT, 
-        verbose_name='Pedido',
-        related_name='comprobante'
+class PaymentReceipt(models.Model):
+    id_order = models.ForeignKey(
+        Order,
+        on_delete=models.PROTECT,
+        verbose_name='Order',
+        related_name='receipt'
     )
-    id_metodo_pago = models.ForeignKey(
-        MetodoPago, 
-        on_delete=models.PROTECT, 
-        verbose_name='Método de Pago',
-        related_name='comprobantes'
+    id_payment_method = models.ForeignKey(
+        PaymentMethod,
+        on_delete=models.PROTECT,
+        verbose_name='Payment Method',
+        related_name='receipts'
     )
-    comprobante = models.ImageField('Comprobante de Pago', upload_to='comprobantes/', null=True, blank=True)
-    monto = models.DecimalField('Monto', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    fecha_subida = models.DateTimeField('Fecha de Subida', auto_now_add=True)
-    confirmado = models.BooleanField('Confirmado', default=False)
-    fecha_confirmacion = models.DateTimeField('Fecha de Confirmación', blank=True, null=True)
-    
-    class Meta:
-        db_table = 'comprobante_pago'
-    
-    def __str__(self):
-        return f"Comprobante Pedido #{self.id_pedido.id} - ${self.monto}"
+    receipt = models.ImageField('Payment Receipt', upload_to='receipts/', null=True, blank=True)
+    amount = models.DecimalField('Amount', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    upload_date = models.DateTimeField('Upload Date', auto_now_add=True)
+    confirm = models.BooleanField('Confirmed', default=False)
+    confirm_date = models.DateTimeField('Confirmation Date', blank=True, null=True)
 
-class Insumo(models.Model):
-    """ Inventario de materiales para producción """
-    TIPOS = [
+    class Meta:
+        db_table = 'payment_receipt'
+
+    def __str__(self):
+        return f"Receipt Order #{self.id_order.id} - ${self.amount}"
+
+class Supply(models.Model):
+    TYPES = [
         ('Hilo', 'Hilo'),
         ('Botón', 'Botón'),
         ('Argolla', 'Argolla'),
         ('Otro', 'Otro'),
     ]
-    
-    tipo = models.CharField('Tipo', choices=TIPOS)
-    marca = models.CharField('Marca', max_length=100)
-    referencia = models.CharField('Referencia', max_length=100)
+
+    type_supply = models.CharField('Type', choices=TYPES)
+    brand = models.CharField('Brand', max_length=100)
+    reference = models.CharField('Reference', max_length=100)
     color = models.CharField('Color', max_length=100)
-    id_color_general = models.ForeignKey(
-        ColorGeneral, 
-        on_delete=models.SET_NULL, 
-        null=True, 
+    id_general_color = models.ForeignKey(
+        GeneralColor,
+        on_delete=models.SET_NULL,
+        null=True,
         blank=True,
-        verbose_name='Color General',
-        related_name='insumos'
+        verbose_name='General Color',
+        related_name='supplies'
     )
-    codigo_hex = models.CharField('Código HEX', max_length=7, blank=True, null=True, help_text='Formato: #RRGGBB')
-    cantidad = models.DecimalField('Cantidad', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    precio = models.DecimalField('Precio', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    
-    class Meta:
-        db_table = 'insumo'
-        
-    def __str__(self):
-        return f"{self.tipo} - {self.marca} {self.referencia} ({self.color})"
+    hex_code = models.CharField('HEX Code', max_length=7, blank=True, null=True, help_text='Format: #RRGGBB')
+    quantity = models.DecimalField('Quantity', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    price = models.DecimalField('Price', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
 
-class ProductoColorInsumo(models.Model):
-    """ Insumos necesarios para cada variante de producto """
-    id_producto_color = models.ForeignKey(
-        ProductoColor, 
-        on_delete=models.CASCADE, 
-        verbose_name='Producto Color',
-        related_name='insumos_necesarios'
-    )
-    id_insumo = models.ForeignKey(
-        Insumo, 
-        on_delete=models.PROTECT, 
-        verbose_name='Insumo',
-        related_name='productos_utilizan'
-    )
-    cantidad_necesaria = models.DecimalField('Cantidad Necesaria', max_digits=10, decimal_places=3, validators=[MinValueValidator(Decimal('0.001'))])
-    
     class Meta:
-        db_table = 'producto_color_insumo'
-    
-    def __str__(self):
-        return f"{self.id_producto_color} - {self.id_insumo} ({self.cantidad_necesaria})"
+        db_table = 'supply'
 
-class CarritoCompra(models.Model):
-    """ Carrito de compras temporal para clientes """
-    id_usuario = models.ForeignKey(
-        Usuario, 
-        on_delete=models.CASCADE, 
-        verbose_name='Cliente',
-        related_name='carrito',
+    def __str__(self):
+        return f"{self.type_supply } - {self.brand} {self.reference} ({self.color})"
+
+class ProductColorSupply(models.Model):
+    id_product_color = models.ForeignKey(
+        ColorProduct,
+        on_delete=models.CASCADE,
+        verbose_name='Product Color',
+        related_name='required_supplies'
+    )
+    id_supply = models.ForeignKey(
+        Supply,
+        on_delete=models.PROTECT,
+        verbose_name='Supply',
+        related_name='used_in_products'
+    )
+    required_quantity = models.DecimalField('Required Quantity', max_digits=10, decimal_places=3, validators=[MinValueValidator(Decimal('0.001'))])
+
+    class Meta:
+        db_table = 'product_color_supply'
+
+    def __str__(self):
+        return f"{self.id_product_color} - {self.id_supply} ({self.required_quantity})"
+
+class ShoppingCart(models.Model):
+    id_user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Customer',
+        related_name='cart',
         null=True,
         blank=True
     )
     session_key = models.CharField('Session Key', max_length=40, null=True, blank=True)
-    fecha_creacion = models.DateTimeField('Fecha de Creación', auto_now_add=True)
-    fecha_actualizacion = models.DateTimeField('Fecha de Actualización', auto_now=True)
-    
+    created_date = models.DateTimeField('Created At', auto_now_add=True)
+    updated_date = models.DateTimeField('Updated At', auto_now=True)
+
     class Meta:
-        db_table = 'carrito_compra'
-    
+        db_table = 'shopping_cart'
+
     def __str__(self):
-        if self.id_usuario:
-            return f"Carrito de {self.id_usuario.nombre} {self.id_usuario.apellido}"
-        return f"Carrito (Session: {self.session_key})"
-    
+        if self.id_user:
+            return f"Cart of {self.id_user.first_name} {self.id_user.last_name}"
+        return f"Cart (Session: {self.session_key})"
+
     def get_total(self):
-        """Calcula el total del carrito"""
         total = sum(item.get_subtotal() for item in self.items.all())
         return total
 
-class CarritoItem(models.Model):
-    """ Items en el carrito de compras """
-    TALLA = [
+class ItemCart(models.Model):
+    SIZE = [
         ('XS', 'XS'),
         ('S', 'S'),
         ('M', 'M'),
         ('L', 'L'),
         ('XL', 'XL'),
     ]
-    
-    id_carrito = models.ForeignKey(
-        CarritoCompra, 
-        on_delete=models.CASCADE, 
-        verbose_name='Carrito',
+
+    id_cart = models.ForeignKey(
+        ShoppingCart,
+        on_delete=models.CASCADE,
+        verbose_name='Cart',
         related_name='items'
     )
-    id_producto = models.ForeignKey(
-        Producto, 
-        on_delete=models.CASCADE, 
-        verbose_name='Producto',
-        related_name='items_carrito'
+    id_product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        verbose_name='Product',
+        related_name='cart_items'
     )
-    id_producto_color = models.ForeignKey(
-        ProductoColor, 
-        on_delete=models.CASCADE, 
+    id_product_color = models.ForeignKey(
+        ColorProduct,
+        on_delete=models.CASCADE,
         verbose_name='Color',
-        related_name='items_carrito'
+        related_name='cart_items'
     )
-    talla = models.CharField('Talla', max_length=3, choices=TALLA)
-    cantidad = models.IntegerField('Cantidad', default=1, validators=[MinValueValidator(1)])
-    precio_unitario = models.DecimalField('Precio Unitario', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    fecha_agregado = models.DateTimeField('Fecha de Agregado', auto_now_add=True)
-    
+    size = models.CharField('Size', max_length=3, choices=SIZE)
+    quantity = models.IntegerField('Quantity', default=1, validators=[MinValueValidator(1)])
+    unit_price = models.DecimalField('Unit Price', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    addition_date = models.DateTimeField('Added At', auto_now_add=True)
+
     class Meta:
-        db_table = 'carrito_item'
-    
+        db_table = 'cart_item'
+
     def __str__(self):
-        return f"{self.id_producto.nombre} ({self.id_producto_color.id_color_general.nombre}, {self.talla}) x{self.cantidad}"
-    
+        return f"{self.id_product.name} ({self.id_product_color.id_general_color.name}, {self.size}) x{self.quantity}"
+
     def get_subtotal(self):
-        """Calcula el subtotal del item"""
-        return self.precio_unitario * self.cantidad
+        return self.unit_price * self.quantity

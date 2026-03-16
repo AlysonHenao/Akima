@@ -1,24 +1,24 @@
 from django.contrib import admin
 from .models import (
-    Producto, Usuario, ColorGeneral, ProductoColor, ProductoImagen, 
-    SetProducto, MetodoPago, Pedido, PedidoDetalle, ComprobantePago, 
-    Insumo, ProductoColorInsumo, CarritoCompra, CarritoItem
+    Product, User, GeneralColor, ColorProduct, ProductImage,
+    SetProduct, PaymentMethod, Order, OrderDetail, PaymentReceipt,
+    Supply, ProductColorSupply, ShoppingCart, ItemCart
 )
 
 
 # Register your models here.
 
-admin.site.register(Producto)
-admin.site.register(Usuario)
-admin.site.register(ColorGeneral)
-admin.site.register(ProductoColor)
-admin.site.register(ProductoImagen)
-admin.site.register(SetProducto)
-admin.site.register(MetodoPago)
-admin.site.register(Pedido)
-admin.site.register(PedidoDetalle)
-admin.site.register(ComprobantePago)
-admin.site.register(Insumo)
-admin.site.register(ProductoColorInsumo)
-admin.site.register(CarritoCompra)
-admin.site.register(CarritoItem)
+admin.site.register(Product)
+admin.site.register(User)
+admin.site.register(GeneralColor)
+admin.site.register(ColorProduct)
+admin.site.register(ProductImage)
+admin.site.register(SetProduct)
+admin.site.register(PaymentMethod)
+admin.site.register(Order)
+admin.site.register(OrderDetail)
+admin.site.register(PaymentReceipt)
+admin.site.register(Supply)
+admin.site.register(ProductColorSupply)
+admin.site.register(ShoppingCart)
+admin.site.register(ItemCart)

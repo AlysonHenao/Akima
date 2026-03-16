@@ -25,21 +25,21 @@
         <div class="card mb-3" id="cart-item-{{ item.id }}">
             <div class="card-body d-flex align-items-center gap-3">
 
-                {% if item.id_producto.imagenes.first %}
-                    <img src="{{ item.id_producto.imagenes.first.url_imagen.url }}" alt="{{ item.id_producto.nombre }}" style="width: 200px; border-radius: 5px;">
+                {% if item.product.images.first %}
+                    <img src="{{ item.product.images.first.image_url.url }}" alt="{{ item.product.name }}" style="width: 200px; border-radius: 5px;">
                 {% else %}
                     <div class="no-image">Sin imagen</div>
                 {% endif %}
 
                 <div class="flex-grow-1">
-                    <div class="fw-bold fs-5">{{ item.id_producto.nombre }}</div>
-                    <div class="text-muted small">Talla: {{ item.talla }} | Color: {{ item.id_producto_color.id_color_general.nombre }}</div>
-                    <div class="fw-bold">${{ item.precio_unitario }}</div>
+                    <div class="fw-bold fs-5">{{ item.product.name }}</div>
+                    <div class="text-muted small">Talla: {{ item.size }} | Color: {{ item.product_color.general_color.name }}</div>
+                    <div class="fw-bold">${{ item.unit_price }}</div>
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
                     <button class="qty-btn btn btn-outline-secondary" data-item-id="{{ item.id }}" data-action="decrease">−</button>
-                    <input type="number" class="qty-input form-control" id="qty-{{ item.id }}" value="{{ item.cantidad }}">
+                    <input type="number" class="qty-input form-control" id="qty-{{ item.id }}" value="{{ item.quantity }}">
                     <button class="qty-btn btn btn-outline-secondary" data-item-id="{{ item.id }}" data-action="increase">+</button>
                 </div>
 
@@ -54,7 +54,7 @@
 
         <div class="border-top pt-3 mt-3">
             <div class="d-flex justify-content-between mb-2">
-                <span>Subtotal (<span id="total-unidades">{{ total_unidades }}</span> productos):</span>
+                <span>Subtotal (<span id="total-unidades">{{ total_units }}</span> productos):</span>
                 <span id="cart-total">${{ total }}</span>
             </div>
             <div class="d-flex justify-content-between fw-bold fs-5 mb-3">

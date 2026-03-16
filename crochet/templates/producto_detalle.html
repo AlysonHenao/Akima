@@ -1,6 +1,6 @@
 {% extends 'header.html' %}
 
-{% block title %}{{ producto.nombre }} - Akima{% endblock %}
+{% block title %}{{ product.name }} - Akima{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -19,9 +19,9 @@
 
                 <div class="carousel-inner">
 
-                    {% for img in producto.imagenes.all %}
+                    {% for img in product.images.all %}
                         <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                            <img src="{{ img.url_imagen.url }}"
+                            <img src="{{ img.image_url.url }}"
                                  class="d-block w-100 rounded shadow"
                                  style="max-height:500px; object-fit:cover;">
                         </div>
@@ -35,7 +35,7 @@
 
                 </div>
 
-                {% if producto.imagenes.count > 1 %}
+                {% if product.images.count > 1 %}
                 <button class="carousel-control-prev" type="button"
                         data-bs-target="#carouselProducto"
                         data-bs-slide="prev">
@@ -56,8 +56,8 @@
       
         <div class="col-md-6">
 
-            <h2>{{ producto.nombre }}</h2>
-            <p class="text-muted">{{ producto.categoria }}</p>
+            <h2>{{ product.name }}</h2>
+            <p class="text-muted">{{ product.category }}</p>
 
             <h4 class="text-success mb-3">${{ producto.precio }}</h4>
 

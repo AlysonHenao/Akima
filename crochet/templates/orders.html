@@ -14,15 +14,15 @@
         <a href="{% url 'administrator' %}" class="btn btn-outline-secondary btn-sm">← Volver</a>
     </div>
 
-    {% if pedidos %}
-        {% for pedido in pedidos %}
+    {% if orders %}
+        {% for order in orders %}
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span><strong>Pedido #{{ pedido.id }}</strong> — {{ pedido.id_usuario.nombre }} {{ pedido.id_usuario.apellido }}</span>
+                <span><strong>Pedido #{{ order.id }}</strong> — {{ order.user.first_name }} {{ order.user.last_name }}</span>
                 <div class="d-flex align-items-center gap-3">
-                    <span class="badge bg-secondary">{{ pedido.get_estado_display }}</span>
-                    <small class="text-muted">{{ pedido.fecha_pedido|date:"d M Y, H:i" }}</small>
-                    <strong>${{ pedido.total }}</strong>
+                    <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                    <small class="text-muted">{{ order.order_date|date:"d M Y, H:i" }}</small>
+                    <strong>${{ order.total }}</strong>
                 </div>
             </div>
 
@@ -43,13 +43,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for detalle in pedido.detalles.all %}
+                                {% for detail in order.details.all %}
                                 <tr>
-                                    <td>{{ detalle.id_producto.nombre }}</td>
-                                    <td>{{ detalle.id_producto_color.id_color_general.nombre }}</td>
-                                    <td>{{ detalle.talla }}</td>
-                                    <td>{{ detalle.cantidad }}</td>
-                                    <td>${{ detalle.subtotal }}</td>
+                                    <td>{{ detail.product.name }}</td>
+                                    <td>{{ detail.product_color.general_color.name }}</td>
+                                    <td>{{ detail.size }}</td>
+                                    <td>{{ detail.quantity }}</td>
+                                    <td>${{ detail.subtotal }}</td>
                                 </tr>
                                 {% empty %}
                                 <tr><td colspan="5" class="text-muted">Sin items</td></tr>
@@ -57,7 +57,7 @@
                             </tbody>
                         </table>
 
-                        {% if pedido.nota_cliente %}
+                        {% if order.customer_note %}
                             <p class="text-muted small"><strong>Nota:</strong> {{ pedido.nota_cliente }}</p>
                         {% endif %}
                     </div>

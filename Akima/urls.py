@@ -31,16 +31,16 @@ urlpatterns = [
     path('administrator/', crochetViews.administrator, name='administrator'),
     path('new_product/',crochetViews.new_product,name='new_product'),
     path('employee/', crochetViews.employee),
-    path('producto/toggle/<int:producto_id>/', crochetViews.toggle_producto, name='toggle_producto'),
-    path('producto/<int:producto_id>/', crochetViews.producto_detalle, name='producto_detalle'),
-    path('add_to_cart/<int:producto_id>/', crochetViews.add_to_cart, name='add_to_cart'),
+    path('product/toggle/<int:product_id>/', crochetViews.toggle_product, name='toggle_product'),
+    path('product/<int:product_id>/', crochetViews.product_detail, name='product_detail'),
+    path('add_to_cart/<int:product_id>/', crochetViews.add_to_cart, name='add_to_cart'),
     path('cart/', crochetViews.view_cart, name='view_cart'),
     path('update_cart_item/<int:item_id>/', crochetViews.update_cart_item, name='update_cart_item'),
     path('remove_cart_item/<int:item_id>/', crochetViews.remove_cart_item, name='remove_cart_item'),
     path('empty_cart/', crochetViews.empty_cart, name='empty_cart'),
     path('orders/', crochetViews.orders, name='orders'),
-    path('orders/confirm/<int:comprobante_id>/', crochetViews.confirm_payment, name='confirm_payment'),
-    path('orders/update-estado/<int:pedido_id>/', crochetViews.update_estado_pedido, name='update_estado_pedido'),
+    path('orders/confirm/<int:receipt_id>/', crochetViews.confirm_payment, name='confirm_payment'),
+    path('orders/update-status/<int:order_id>/', crochetViews.update_order_status, name='update_order_status'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
