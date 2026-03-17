@@ -1,0 +1,138 @@
+{% extends 'shared/header.html' %}
+{% block title %}Gestión de Órdenes - Akima{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Gestión de Órdenes</h4>
+            <p class="text-muted small mb-0">Administra y da seguimiento a todas las órdenes de compra</p>
+        </div>
+        <a href="{% url 'administrator' %}" class="btn btn-outline-secondary btn-sm rounded-pill">Volver</a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <p class="fw-bold mb-1">Órdenes ({{ orders|length }})</p>
+        <p class="text-muted small mb-3">Lista completa de órdenes registradas</p>
+
+        {% if orders %}
+        {% for orden in orders %}
+        <div class="border rounded-4 p-3 mb-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="fw-bold me-2">ord-{{ orden.id }}</span>
+                    <span class="badge rounded-pill"
+                          style="background-color: var(--akima-pink); color: var(--akima-brown);">
+                        {{ orden.get_status_display }}
+                    </span>
+                    <p class="text-muted small mb-0 mt-1">
+                        <i class="bi bi-person me-1"></i>
+                        {% if orden.user %}{{ orden.user.first_name }} {{ orden.user.last_name }}{% else %}Invitado{% endif %}
+                    </p>
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-calendar me-1"></i>{{ orden.order_date|date:"d/m/Y" }}
+                    </p>
+                </div>
+                <div class="text-end">
+                    <p class="fw-bold mb-1" style="color: var(--akima-brown);">${{ orden.total }}</p>
+                    <p class="text-muted small mb-2">{{ orden.details.count }} producto(s)</p>
+                    <button class="btn btn-outline-secondary btn-sm rounded-pill"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#detalle-{{ orden.id }}">
+                        <i class="bi bi-eye me-1"></i>Ver detalles
+                    </button>
+                </div>
+            </div>
+
+            <div class="collapse mt-3" id="detalle-{{ orden.id }}">
+                <div class="row g-3">
+                    <div class="col-md-7">
+                        <p class="text-muted small fw-bold mb-2">Productos</p>
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Color</th>
+                                    <th>Talla</th>
+                                    <th>Cant.</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detalle in orden.details.all %}
+                                <tr>
+                                    <td>{{ detalle.product.name }}</td>
+                                    <td>{{ detalle.color_product.general_color.name }}</td>
+                                    <td>{{ detalle.size }}</td>
+                                    <td>{{ detalle.quantity }}</td>
+                                    <td>${{ detalle.subtotal }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-muted">Sin items</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="col-md-5">
+                        <p class="text-muted small fw-bold mb-2">Comprobante de pago</p>
+                        {% for comprobante in orden.receipts.all %}
+                        <p class="small mb-1"><strong>Método:</strong> {{ comprobante.payment_method.name }}</p>
+                        <p class="small mb-1"><strong>Monto:</strong> ${{ comprobante.amount }}</p>
+                        <p class="small mb-2"><strong>Subido:</strong> {{ comprobante.upload_date|date:"d/m/Y H:i" }}</p>
+
+                        {% if comprobante.receipt %}
+                        <a href="{{ comprobante.receipt.url }}" target="_blank"
+                           class="btn btn-outline-secondary btn-sm rounded-pill mb-2">
+                            <i class="bi bi-file-image me-1"></i>Ver comprobante
+                        </a>
+                        {% endif %}
+
+                        {% if comprobante.confirm %}
+                        <div class="alert alert-success small py-2 rounded-3">
+                            Pago confirmado el {{ comprobante.confirm_date|date:"d/m/Y H:i" }}
+                        </div>
+                        {% else %}
+                        <form method="POST" action="{% url 'confirm_payment' comprobante.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm w-100 rounded-pill"
+                                    style="background-color: var(--akima-brown); color: white;"
+                                    onclick="return confirm('¿Confirmar el pago del pedido #{{ orden.id }}?')">
+                                Confirmar pago
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% empty %}
+                        <p class="text-muted small">Sin comprobante subido aún.</p>
+                        {% endfor %}
+
+                        <div class="mt-3">
+                            <p class="text-muted small fw-bold mb-2">Cambiar estado</p>
+                            <form method="POST" action="{% url 'update_order_status' orden.id %}">
+                                {% csrf_token %}
+                                <div class="input-group input-group-sm">
+                                    <select name="status" class="form-select rounded-start-3">
+                                        {% for valor, etiqueta in orden.STATUS %}
+                                        <option value="{{ valor }}" {% if orden.status == valor %}selected{% endif %}>
+                                            {{ etiqueta }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-sm"
+                                            style="background-color: var(--akima-brown); color: white;">
+                                        Actualizar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="text-muted text-center py-4">No hay órdenes registradas.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

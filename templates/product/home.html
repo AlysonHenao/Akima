@@ -1,0 +1,66 @@
+{% extends 'shared/header.html' %}
+{% block title %}Inicio - Akima{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <div class="text-center mb-5">
+        <h1 class="fw-bold" style="color: var(--akima-brown);">Akima</h1>
+        <p class="text-muted">Somos un emprendimiento juvenil especializado en crear ropa única a crochet.</p>
+    </div>
+
+    <h4 class="fw-bold text-center mb-1">Nuestros Productos</h4>
+    <p class="text-center text-muted mb-4">Cada prenda es única y hecha con amor. Personalízala según tu estilo.</p>
+
+    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+        {% for product in products %}
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+                {% with img=product.images.first %}
+                    {% if img %}
+                        <img src="{{ img.url_image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 220px; object-fit: cover;">
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center bg-light" style="height: 220px;">
+                            <span class="text-muted">Sin imagen</span>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                <span class="badge position-absolute top-0 end-0 m-2" style="background-color: var(--akima-pink); color: var(--akima-brown);">
+                    {{ product.category }}
+                </span>
+                <div class="card-body">
+                    <h6 class="fw-bold mb-1">{{ product.name }}</h6>
+                    <p class="text-muted small mb-2">{{ product.description|truncatewords:12 }}</p>
+                    <p class="fw-bold mb-3" style="color: var(--akima-brown);">${{ product.price }}</p>
+                    <a href="{% url 'product_detail' product.id %}" class="btn btn-akima btn-sm w-100">Personalizar</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center text-muted py-5">
+            <p>No hay productos disponibles.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal pedido confirmado -->
+<div class="modal fade" id="modalPedido" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow rounded-4 text-center p-4">
+            <h5 class="fw-bold mb-3">¡Pedido Enviado!</h5>
+            <p class="text-muted mb-4">Tu comprobante ha sido recibido. Verificaremos tu pago pronto.</p>
+            <button type="button" class="btn btn-akima rounded-pill px-4" data-bs-dismiss="modal">Entendido</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    if (new URLSearchParams(window.location.search).get('pedido_confirmado') === '1') {
+        new bootstrap.Modal(document.getElementById('modalPedido')).show();
+        window.history.replaceState({}, '', '/');
+    }
+</script>
+{% endblock %}
