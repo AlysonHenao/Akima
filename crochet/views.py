@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse
+from django.core.mail import send_mail
 from .models import (
     Product, ColorProduct, ProductImage, Order,
     GeneralColor, SetProduct, OrderDetail, User,
@@ -300,6 +301,29 @@ def confirm_payment(request, receipt_id):
         order = receipt.id_order
         order.status = 'Confirmado'
         order.save()
+        if order.id_user and order.id_user.email:
+            recipient_email = order.id_user.email
+            recipient_name = order.id_user.first_name
+        elif order.guest_email:
+            recipient_email = order.guest_email
+            recipient_name = order.guest_name or 'Cliente'
+        else:
+            recipient_email = None
+            recipient_name = None
+
+        if recipient_email:
+            send_mail(
+                subject=f'Pedido #{order.id} confirmado - Akima',
+                message=(
+                    f'Hola {recipient_name},\n\n'
+                    f'Tu pago ha sido confirmado y tu pedido #{order.id} está en proceso.\n'
+                    f'Total: ${order.total}\n\n'
+                    f'Gracias por comprar en Akima.'
+                ),
+                from_email=None,
+                recipient_list=[recipient_email],
+                fail_silently=True,
+            )
         messages.success(request, f'Pago del pedido #{order.id} confirmado exitosamente.')
     return redirect('orders')
 
