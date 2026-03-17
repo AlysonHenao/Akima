@@ -2,61 +2,35 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Productos - Akima</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .image-preview {
-            max-width: 100px;
-            max-height: 100px;
-            object-fit: cover;
-            margin: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-    </style>
 </head>
-
 <body class="bg-light">
 
 <div class="container py-5">
-    <!-- Header -->
-    <div class="position-relative mb-5 text-center">
-
-        <a href="{% url 'administrator' %}" 
-        class="btn btn-outline-secondary btn-sm position-absolute start-0">
-            ← Volver
-        </a>
-
-        <h1 class="fw-bold">Panel de Productos Akima</h1>
-        <p class="text-muted">Gestión completa de productos tejidos a crochet</p>
-
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Gestion de Productos</h1>
+        <a href="{% url 'administrator' %}" class="btn btn-outline-secondary btn-sm">Volver</a>
     </div>
 
-
-    <!-- Formulario de Creación -->
     <div class="card shadow-sm mb-5">
         <div class="card-header bg-dark text-white">
-            <h4 class="mb-0">Crear Nuevo Producto</h4>
+            Crear Nuevo Producto
         </div>
-
         <div class="card-body">
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
 
-                <!-- Información Básica -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h5 class="border-bottom pb-2 mb-3">Información Básica</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" name="name" required>
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label for="name" class="form-label">Nombre del Producto *</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label for="category" class="form-label">Categoría *</label>
-                        <select class="form-select" id="category" name="category" required>
+                    <div class="col-md-6">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-select" name="category" required>
                             <option value="">Seleccione...</option>
                             <option value="Bikini">Bikini</option>
                             <option value="Top">Top</option>
@@ -65,291 +39,142 @@
                             <option value="Vestido">Vestido</option>
                             <option value="Short">Short</option>
                             <option value="Accesorio">Accesorio</option>
-                            <option value="Pantalon">Pantalón</option>
+                            <option value="Pantalón">Pantalon</option>
                             <option value="Camisa">Camisa</option>
                             <option value="Set">Set</option>
                             <option value="Otro">Otro</option>
                         </select>
                     </div>
 
-                    <div class="col-12 mb-3">
-                        <label for="descripcion" class="form-label">Descripción *</label>
-                        <textarea class="form-control" id="descripcion" name="descripcion" rows="3" required></textarea>
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label for="precio" class="form-label">Precio (COP) *</label>
-                        <input type="number" class="form-control" id="precio" name="precio" step="0.01" min="0" required>
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label for="stock" class="form-label">Stock</label>
-                        <input type="number" class="form-control" id="stock" name="stock" value="0" min="0">
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label for="tiempo_fabricacion" class="form-label">Horas de Fabricación *</label>
-                        <input type="number" class="form-control" id="tiempo_fabricacion" name="tiempo_fabricacion" min="0" required>
-                    </div>
-
-                    <div class="col-12 mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="activo" name="activo" checked>
-                            <label class="form-check-label" for="activo">
-                                Producto activo (visible en tienda)
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Archivos (Guías) -->
-                <div class="row mb-4">
                     <div class="col-12">
-                        <h5 class="border-bottom pb-2 mb-3">Guías y Documentos</h5>
+                        <label class="form-label">Descripcion</label>
+                        <textarea class="form-control" name="description" rows="3" required></textarea>
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label for="guia_fabricacion" class="form-label">Guía de Fabricación (PDF)</label>
-                        <input type="file" class="form-control" id="guia_fabricacion" name="guia_fabricacion" accept=".pdf">
-                        <small class="text-muted">Instrucciones de tejido en formato PDF</small>
+                    <div class="col-md-4">
+                        <label class="form-label">Precio</label>
+                        <input type="number" class="form-control" name="price" step="0.01" min="0" required>
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label for="guia_tallas" class="form-label">Guía de Tallas (Imagen)</label>
-                        <input type="file" class="form-control" id="guia_tallas" name="guia_tallas" accept="image/*">
-                        <small class="text-muted">Tabla de medidas en formato imagen</small>
+                    <div class="col-md-4">
+                        <label class="form-label">Stock</label>
+                        <input type="number" class="form-control" name="stock" value="0" min="0">
                     </div>
-                </div>
 
-                <!-- Colores Disponibles -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h5 class="border-bottom pb-2 mb-3">Colores Disponibles</h5>
-                        <p class="text-muted small">Selecciona los colores en los que estará disponible este producto</p>
+                    <div class="col-md-4">
+                        <label class="form-label">Horas de Fabricacion</label>
+                        <input type="number" class="form-control" name="manufacturing_time" min="0" required>
+                    </div>
+
+                    <div class="col-12 form-check mt-2">
+                        <input class="form-check-input" type="checkbox" id="active" name="active" checked>
+                        <label class="form-check-label" for="active">Producto activo</label>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Guia de Fabricacion (PDF)</label>
+                        <input type="file" class="form-control" name="manufacturing_guide" accept=".pdf">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Guia de Tallas (Imagen)</label>
+                        <input type="file" class="form-control" name="size_guide" accept="image/*">
                     </div>
 
                     <div class="col-12">
+                        <label class="form-label">Colores</label>
                         <div class="row">
-                            {% for color in colores %}
+                            {% for color in colors %}
                             <div class="col-md-3 mb-2">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" 
-                                           name="colores" value="{{ color.id }}" 
-                                           id="color_{{ color.id }}">
-                                    <label class="form-check-label" for="color_{{ color.id }}">
-                                        {{ color.nombre }}
-                                    </label>
+                                    <input class="form-check-input" type="checkbox" name="colors" value="{{ color.id }}" id="color_{{ color.id }}">
+                                    <label class="form-check-label" for="color_{{ color.id }}">{{ color.name }}</label>
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
                     </div>
-                </div>
 
-                <!-- Imágenes del Producto -->
-                <div class="row mb-4">
                     <div class="col-12">
-                        <h5 class="border-bottom pb-2 mb-3">Imágenes del Producto</h5>
-                        <p class="text-muted small">Puedes subir múltiples imágenes</p>
-                    </div>
-
-                    <div class="col-12 mb-3">
-                        <label for="imagenes" class="form-label">Seleccionar Imágenes</label>
-                        <input type="file" class="form-control" id="imagenes" 
-                            name="imagenes" accept="image/*" multiple>
-                        <small class="text-muted">Mantén presionado Ctrl (Windows) o Cmd (Mac) para seleccionar múltiples archivos</small>
-                    </div>
-                </div>
-
-                <!-- Composición de Set (solo llenar si categoría = Set) -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h5 class="border-bottom pb-2 mb-3">Composición del Set (opcional)</h5>
-                        <p class="text-muted small">Solo llenar si seleccionaste categoría "Set". Selecciona los productos que compondrán este set.</p>
+                        <label class="form-label">Imagenes del producto</label>
+                        <input type="file" class="form-control" name="images" accept="image/*" multiple>
                     </div>
 
                     <div class="col-12">
+                        <h6 class="mt-2">Composicion del Set (opcional)</h6>
                         <div class="row">
-                            {% for producto in productos_individuales %}
+                            {% for p in individual_products %}
                             <div class="col-md-6 mb-3">
                                 <div class="card">
                                     <div class="card-body">
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" 
-                                                name="set_productos" value="{{ producto.id }}" 
-                                                id="set_prod_{{ producto.id }}">
-                                            <label class="form-check-label fw-bold" for="set_prod_{{ producto.id }}">
-                                                {{ producto.nombre }}
-                                            </label>
+                                            <input class="form-check-input" type="checkbox" name="set_products" value="{{ p.id }}" id="set_prod_{{ p.id }}">
+                                            <label class="form-check-label" for="set_prod_{{ p.id }}">{{ p.name }}</label>
                                         </div>
-                                        
-                                        <div class="row">
+                                        <div class="row g-2">
                                             <div class="col-6">
-                                                <label class="form-label small">Cantidad</label>
-                                                <input type="number" class="form-control form-control-sm" 
-                                                    name="set_cantidad_{{ producto.id }}" 
-                                                    min="1" value="1">
+                                                <input type="number" class="form-control form-control-sm" name="set_quantity_{{ p.id }}" min="1" value="1" placeholder="Cantidad">
                                             </div>
                                             <div class="col-6">
-                                                <label class="form-label small">Precio en set</label>
-                                                <input type="number" class="form-control form-control-sm" 
-                                                    name="set_precio_{{ producto.id }}" 
-                                                    step="0.01" min="0" 
-                                                    placeholder="${{ producto.precio }}">
-                                                <small class="text-muted">Original: ${{ producto.precio|floatformat:0 }}</small>
+                                                <input type="number" class="form-control form-control-sm" name="set_price_{{ p.id }}" step="0.01" min="0" placeholder="Precio set">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            {% empty %}
-                            <div class="col-12">
-                                <div class="alert alert-warning">
-                                    No hay productos individuales creados aún. Crea primero los productos individuales antes de crear un set.
-                                </div>
-                            </div>
                             {% endfor %}
                         </div>
                     </div>
-                </div>
 
-                <!-- Botón de Envío -->
-                <div class="row">
                     <div class="col-12">
-                        <button type="submit" class="btn btn-primary btn-lg w-100">
-                            Crear Producto
-                        </button>
+                        <button type="submit" class="btn btn-primary w-100">Crear Producto</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
-</div>
 
-<!-- Lista de Productos Creados -->
-    <div class="container mt-5 mb-5">
-        <div class="card-header">
-            <h4 class="mb-5">Productos Creados ({{ productos|length }})</h4>
-        </div>
-
+    <div class="card shadow-sm">
+        <div class="card-header">Productos Creados ({{ products|length }})</div>
         <div class="card-body">
-            <div class="d-flex flex-wrap justify-content-center gap-4">
-                {% for producto in productos %}
-                <div class="mb-4 d-flex">
-                    <div class="card h-100 shadow-sm" style="width: 300px;">
-                        <!-- Imagen principal -->
-                        {% if producto.imagenes.all %}
-                            {% with producto.imagenes.first as primera_imagen %}
-                            <img src="{{ primera_imagen.url_imagen.url }}" 
-                                 class="card-img-top" 
-                                 style="height: 200px; object-fit: cover;"
-                                 alt="{{ producto.nombre }}">
-                            {% endwith %}
+            <div class="row g-3">
+                {% for product in products %}
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        {% if product.images.first %}
+                        <img src="{{ product.images.first.url_image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ product.name }}">
                         {% else %}
-                            <div class="bg-secondary d-flex align-items-center justify-content-center" 
-                                 style="height: 200px;">
-                                <span class="text-white">Sin imagen</span>
-                            </div>
+                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">Sin imagen</div>
                         {% endif %}
-
                         <div class="card-body">
-                            <h5 class="card-title">{{ producto.nombre }}</h5>
-                            <span class="badge bg-info mb-2">{{ producto.categoria }}</span>
-                            
-                            <p class="card-text text-muted small">
-                                {{ producto.descripcion|truncatechars:80 }}
-                            </p>
-
-                            <div class="mb-2">
-                                <strong>Precio:</strong> ${{ producto.precio|floatformat:0 }}
-                            </div>
-
-                            <div class="mb-2">
-                                <strong>Stock:</strong> {{ producto.stock }}
-                            </div>
-
-                            <div class="mb-2">
-                                <strong>Fabricación:</strong> {{ producto.tiempo_fabricacion }} horas
-                            </div>
-
-                            <!-- Colores disponibles -->
-                            {% if producto.colores.all %}
-                            <div class="mb-2">
-                                <strong>Colores:</strong><br>
-                                {% for pc in producto.colores.all %}
-                                    <span class="badge bg-light text-dark border">
-                                        {{ pc.id_color_general.nombre }}
-                                    </span>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-
-                            <!-- Imágenes adicionales -->
-                            {% if producto.imagenes.all|length > 1 %}
-                            <div class="mb-2">
-                                <strong>Imágenes:</strong> {{ producto.imagenes.all|length }}
-                            </div>
-                            {% endif %}
-
-                            <!-- Guías -->
-                            <div class="mb-2">
-                                {% if producto.guia_fabricacion %}
-                                <a href="{{ producto.guia_fabricacion.url }}" class="badge bg-success" target="_blank">
-                                Guía fabricación
-                                </a>
-                                {% endif %}
-                                {% if producto.guia_tallas %}
-                                <a href="{{ producto.guia_tallas.url }}" class="badge bg-primary" target="_blank">
-                                Guía tallas
-                                </a>
-                                {% endif %}
-                            </div>
-
-                            <!-- Si es set, mostrar composición -->
-                            {% if producto.categoria == 'Set' and producto.componentes_set.all %}
-                            <div class="mb-2">
-                                <strong>Incluye:</strong>
-                                <ul class="small mb-0">
-                                    {% for item in producto.componentes_set.all %}
-                                    <li>{{ item.cantidad }}x {{ item.id_producto_individual.nombre }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            {% endif %}
-
-                            <!-- Estado -->
-                            <div class="mt-3">
-                                {% if producto.activo %}
-                                    <span class="badge bg-success">Activo</span>
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <span class="badge bg-info mb-2">{{ product.category }}</span>
+                            <p class="card-text small text-muted">{{ product.description|truncatechars:100 }}</p>
+                            <div><strong>Precio:</strong> ${{ product.price }}</div>
+                            <div><strong>Stock:</strong> {{ product.stock }}</div>
+                            <div><strong>Fabricacion:</strong> {{ product.manufacturing_time }} horas</div>
+                            <div class="mt-2">
+                                {% if product.active %}
+                                <span class="badge bg-success">Activo</span>
                                 {% else %}
-                                    <span class="badge bg-danger">Inactivo</span>
+                                <span class="badge bg-danger">Inactivo</span>
                                 {% endif %}
                             </div>
                         </div>
-
                         <div class="card-footer bg-transparent">
-                            <div class="d-flex gap-2">
-                                <a href="{% url 'toggle_producto' producto.id %}" 
-                                   class="btn btn-sm btn-outline-secondary flex-fill">
-                                    {% if producto.activo %}
-                                        Desactivar
-                                    {% else %}
-                                        Activar
-                                    {% endif %}
-                                </a>
-                            </div>
+                            <a href="{% url 'toggle_product' product.id %}" class="btn btn-sm btn-outline-secondary w-100">
+                                {% if product.active %}Desactivar{% else %}Activar{% endif %}
+                            </a>
                         </div>
                     </div>
                 </div>
                 {% empty %}
-                <div class="col-12">
-                    <div class="alert alert-info text-center">
-                        <h5>No hay productos aún</h5>
-                    </div>
-                </div>
+                <div class="col-12 text-center text-muted">No hay productos aun.</div>
                 {% endfor %}
             </div>
         </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>

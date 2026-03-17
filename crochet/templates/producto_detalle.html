@@ -21,7 +21,7 @@
 
                     {% for img in product.images.all %}
                         <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                            <img src="{{ img.image_url.url }}"
+                            <img src="{{ img.url_image.url }}"
                                  class="d-block w-100 rounded shadow"
                                  style="max-height:500px; object-fit:cover;">
                         </div>
@@ -59,25 +59,25 @@
             <h2>{{ product.name }}</h2>
             <p class="text-muted">{{ product.category }}</p>
 
-            <h4 class="text-success mb-3">${{ producto.precio }}</h4>
+            <h4 class="text-success mb-3">${{ product.price }}</h4>
 
-            <p>{{ producto.descripcion }}</p>
+            <p>{{ product.description }}</p>
 
             <hr>
 
             <p><strong>Stock disponible:</strong> 
-                {% if producto.stock > 0 %}
-                    <span class="text-success">{{ producto.stock }} unidades</span>
+                {% if product.stock > 0 %}
+                    <span class="text-success">{{ product.stock }} unidades</span>
                 {% else %}
                     <span class="text-warning">Sin stock (Bajo pedido)</span>
                 {% endif %}
             </p>
 
             <p><strong>Tiempo de fabricación:</strong>
-                {{ producto.tiempo_fabricacion }} horas
+                {{ product.manufacturing_time }} horas
             </p>
 
-            {% if producto.stock <= 0 %}
+            {% if product.stock <= 0 %}
             <div class="alert alert-warning d-flex align-items-start" role="alert">
                 <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
                 <div>
@@ -85,7 +85,7 @@
                     <small>
                         Puedes realizar tu pedido de todos modos. Ten en cuenta que al no tener stock disponible, 
                         tu producto será fabricado bajo pedido, lo cual tomará aproximadamente 
-                        <strong>{{ producto.tiempo_fabricacion }} horas</strong> de fabricación.
+                        <strong>{{ product.manufacturing_time }} horas</strong> de fabricación.
                     </small>
                 </div>
             </div>
@@ -96,13 +96,13 @@
             <div class="mt-3">
                 <h5>Personaliza tu producto</h5>
 
-                <form method="POST" action="{% url 'add_to_cart' producto.id %}" id="formCarrito">
+                <form method="POST" action="{% url 'add_to_cart' product.id %}" id="formCarrito">
                     {% csrf_token %}
                     
                     <div class="mb-3">
                         <label class="form-label"><strong>Color</strong></label>
                         <div class="d-flex flex-wrap gap-2">
-                            {% for pc in colores_disponibles %}
+                            {% for pc in available_colors %}
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input" type="radio"
                                            name="color"
@@ -111,7 +111,7 @@
                                            {% if forloop.first %}checked{% endif %}
                                            required>
                                     <label class="form-check-label badge bg-light text-dark" for="color_{{ pc.id }}">
-                                        {{ pc.id_color_general.nombre }}
+                                        {{ pc.id_general_color.name }}
                                     </label>
                                 </div>
                             {% empty %}
@@ -121,37 +121,37 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="talla" class="form-label"><strong>Talla</strong></label>
-                        <select id="talla" name="talla" class="form-select" required>
-                            {% for talla in tallas %}
-                                <option value="{{ talla }}">{{ talla }}</option>
+                        <label for="size" class="form-label"><strong>Talla</strong></label>
+                        <select id="size" name="size" class="form-select" required>
+                            {% for size in sizes %}
+                                <option value="{{ size }}">{{ size }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <label for="cantidad" class="form-label"><strong>Cantidad</strong></label>
+                        <label for="quantity" class="form-label"><strong>Cantidad</strong></label>
                         <input type="number" 
-                               id="cantidad" 
-                               name="cantidad" 
+                               id="quantity" 
+                               name="quantity" 
                                class="form-control" 
                                value="1" 
                                min="1" 
-                               {% if producto.stock > 0 %}max="{{ producto.stock }}"{% endif %}
+                               {% if product.stock > 0 %}max="{{ product.stock }}"{% endif %}
                                required>
-                        {% if producto.stock <= 0 %}
+                        {% if product.stock <= 0 %}
                         <small class="text-muted">Sin límite - Fabricación bajo pedido</small>
                         {% endif %}
                     </div>
 
                     <div class="alert alert-secondary d-flex justify-content-between align-items-center">
-                        <span>Seleccionado: <strong id="resumenSeleccion">Color: {% if colores_disponibles %}{{ colores_disponibles.first.id_color_general.nombre }}{% else %}-{% endif %}, Talla: {% if tallas %}{{ tallas.0 }}{% else %}-{% endif %}</strong></span>
-                        <span class="text-success fw-bold">Precio: ${{ producto.precio }}</span>
+                        <span>Seleccionado: <strong id="resumenSeleccion">Color: {% if available_colors %}{{ available_colors.first.id_general_color.name }}{% else %}-{% endif %}, Talla: {% if sizes %}{{ sizes.0 }}{% else %}-{% endif %}</strong></span>
+                        <span class="text-success fw-bold">Precio: ${{ product.price }}</span>
                     </div>
 
                     <button type="submit" class="btn btn-success btn-lg w-100 mt-3">
                         <i class="bi bi-cart-plus"></i> 
-                        {% if producto.stock <= 0 %}
+                        {% if product.stock <= 0 %}
                             Ordenar bajo pedido
                         {% else %}
                             Añadir al carrito
@@ -161,7 +161,7 @@
             </div>
 
             
-            {% if producto.guia_tallas %}
+                {% if product.size_guide %}
             <button type="button"
                     class="btn btn-primary mt-3"
                     data-bs-toggle="modal"
@@ -176,7 +176,7 @@
 
 </div>
 
-{% if producto.guia_tallas %}
+{% if product.size_guide %}
 <div class="modal fade" id="guiaTallasModal" tabindex="-1">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content">
@@ -187,7 +187,7 @@
       </div>
 
       <div class="modal-body text-center">
-        <img src="{{ producto.guia_tallas.url }}"
+                <img src="{{ product.size_guide.url }}"
              class="img-fluid rounded shadow"
              style="max-height:80vh; object-fit:contain;">
       </div>
@@ -202,7 +202,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const colorRadios = document.querySelectorAll('input[name="color"]');
-    const tallaSelect = document.getElementById('talla');
+    const tallaSelect = document.getElementById('size');
     const resumen = document.getElementById('resumenSeleccion');
 
     function actualizarResumen() {

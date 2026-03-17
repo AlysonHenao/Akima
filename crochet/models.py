@@ -146,7 +146,9 @@ class Order(models.Model):
         User,
         on_delete=models.PROTECT,
         verbose_name='Customer',
-        related_name='orders'
+        related_name='orders',
+        null=True,
+        blank=True,
     )
     order_date = models.DateTimeField('Order Date', auto_now_add=True)
     subtotal = models.DecimalField('Subtotal', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
@@ -160,7 +162,11 @@ class Order(models.Model):
         ordering = ['-order_date']
 
     def __str__(self):
-        return f"Order #{self.id} - {self.id_user.first_name} {self.id_user.last_name} ({self.status})"
+        if self.id_user:
+            customer = f"{self.id_user.first_name} {self.id_user.last_name}"
+        else:
+            customer = 'Invitado'
+        return f"Order #{self.id} - {customer} ({self.status})"
 
 class OrderDetail(models.Model):
     SIZE = [

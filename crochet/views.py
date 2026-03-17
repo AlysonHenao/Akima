@@ -16,32 +16,33 @@ def home(request):
 def payment(request):
     cart = get_or_create_cart(request)
     items = cart.items.select_related(
-        'product',
-        'product_color__general_color'
+        'id_product',
+        'id_product_color__id_general_color'
     )
     if not items.exists():
         messages.error(request, 'Tu carrito está vacío.')
         return redirect('view_cart')
 
     if request.method == 'POST':
-        receipt = request.FILES.get('receipt')
-        payment_method_id = request.POST.get('payment_method_id')
+        receipt = request.FILES.get('comprobante') or request.FILES.get('receipt')
+        payment_method_id = request.POST.get('metodo_pago_id') or request.POST.get('payment_method_id')
 
-        if not comprobante:
+        if not receipt:
             messages.error(request, 'Debes subir un comprobante.')
             return redirect('payment')
 
-        if not metodo_pago_id:
+        if not payment_method_id:
             messages.error(request, 'Debes seleccionar un método de pago.')
             return redirect('payment')
 
         payment_method = get_object_or_404(PaymentMethod, id=payment_method_id)
-        user = User.objects.first()
+        user = cart.id_user
+
         total = cart.get_total()
         subtotal = total
 
         order = Order.objects.create(
-            user=user,
+            id_user=user,
             subtotal=subtotal,
             total=total,
             status='Pendiente confirmacion',
@@ -50,8 +51,8 @@ def payment(request):
         for item in items:
             OrderDetail.objects.create(
                 id_order=order,
-                id_product=item.product,
-                id_product_color=item.product_color,
+                id_product=item.id_product,
+                id_product_color=item.id_product_color,
                 size=item.size,
                 quantity=item.quantity,
                 unit_price=item.unit_price,
@@ -66,7 +67,7 @@ def payment(request):
 
         cart.items.all().delete()
         messages.success(request, 'Comprobante enviado! Tu pedido será verificado.')
-        return redirect('/pedido_confirmado=1')
+        return redirect('/?pedido_confirmado=1')
 
     total = cart.get_total()
     payment_methods = PaymentMethod.objects.filter(active=True)
@@ -157,7 +158,7 @@ def product_detail(request, product_id):
     )
     available_colors = product.colors.filter(available=True).select_related('id_general_color')
     sizes = [code for code, _ in OrderDetail.SIZE]
-    return render(request, 'product_detail.html', {
+    return render(request, 'producto_detalle.html', {
         'product': product,
         'available_colors': available_colors,
         'sizes': sizes,
@@ -282,7 +283,7 @@ def empty_cart(request):
     return redirect('view_cart')
 
 def orders(request):
-    orders = Order.objects.select_related('user').prefetch_related(
+    orders = Order.objects.select_related('id_user').prefetch_related(
         'receipt__id_payment_method',
         'details__id_product',
         'details__id_product_color__id_general_color'
@@ -293,11 +294,11 @@ def orders(request):
 def confirm_payment(request, receipt_id):
     if request.method == 'POST':
         receipt = get_object_or_404(PaymentReceipt, id=receipt_id)
-        receipt.confirmed = True
-        receipt.confirmation_date = timezone.now()
+        receipt.confirm = True
+        receipt.confirm_date = timezone.now()
         receipt.save()
-        order = receipt.order
-        order.status = 'Confirmed'
+        order = receipt.id_order
+        order.status = 'Confirmado'
         order.save()
         messages.success(request, f'Pago del pedido #{order.id} confirmado exitosamente.')
     return redirect('orders')

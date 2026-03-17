@@ -14,7 +14,7 @@
 
             {% with img=product.images.first %}
               {% if img %}
-                <img src="{{ img.image_url.url }}" 
+                <img src="{{ img.url_image.url }}" 
                      class="card-img-top" 
                      alt="{{ product.name }}"
                      style="height: 220px; object-fit: cover;">
