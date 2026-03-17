@@ -1,12 +1,9 @@
-import json
 from decimal import Decimal
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
-from django.http import JsonResponse
 from django.core.mail import send_mail
-from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
 
 from .models import (
     Order, OrderDetail, ShoppingCart, ItemCart,
@@ -54,62 +51,39 @@ def add_to_cart(request, product_id):
             messages.success(request, f'"{product.name}" agregado al carrito exitosamente.')
 
         referer = request.META.get('HTTP_REFERER', '/')
-        parsed = urlparse(referer)
-        return redirect(f"{parsed.path}?carrito=abierto")
+        path = referer.split('?')[0]
+        return redirect(path + '?carrito=abierto')
 
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
 def update_cart_item(request, item_id):
-    if request.method == 'POST':
-        cart = get_or_create_cart(request)
-        item = get_object_or_404(ItemCart, id=item_id, cart=cart)
+    cart = get_or_create_cart(request)
+    item = get_object_or_404(ItemCart, id=item_id, cart=cart)
+    nueva_cantidad = int(request.GET.get('cantidad', 1))
+    next_url = request.GET.get('next', '/')
 
-        if request.content_type == 'application/json':
-            try:
-                data = json.loads(request.body)
-                new_quantity = int(data.get('quantity', 1))
-            except (json.JSONDecodeError, ValueError):
-                return JsonResponse({'success': False, 'error': 'Datos inválidos.'}, status=400)
-        else:
-            new_quantity = int(request.POST.get('quantity', 1))
+    if nueva_cantidad > 0:
+        item.quantity = nueva_cantidad
+        item.save()
+    else:
+        item.delete()
 
-        if new_quantity > 0:
-            item.quantity = new_quantity
-            item.save()
-            if request.content_type == 'application/json':
-                return JsonResponse({
-                    'success': True,
-                    'subtotal': float(item.get_subtotal()),
-                    'cart_total': float(cart.get_total())
-                })
-            messages.success(request, 'Cantidad actualizada en el carrito.')
-        else:
-            item.delete()
-            if request.content_type == 'application/json':
-                return JsonResponse({
-                    'success': True,
-                    'deleted': True,
-                    'cart_total': float(cart.get_total())
-                })
-            messages.success(request, 'Producto eliminado del carrito.')
-    return redirect('view_cart')
+    return redirect(next_url + '?carrito=abierto')
 
 
 def remove_cart_item(request, item_id):
     cart = get_or_create_cart(request)
     item = get_object_or_404(ItemCart, id=item_id, cart=cart)
-    product_name = item.product.name
     item.delete()
-    messages.success(request, f'"{product_name}" eliminado del carrito.')
-    return redirect('view_cart')
-
+    referer = request.META.get('HTTP_REFERER', '/').split('?')[0]
+    return redirect(referer + '?carrito=abierto')
 
 def empty_cart(request):
     cart = get_or_create_cart(request)
     cart.items.all().delete()
     messages.success(request, 'Carrito vaciado.')
-    return redirect('view_cart')
+    return redirect('/?carrito=abierto')
 
 
 def payment(request):
@@ -118,7 +92,7 @@ def payment(request):
 
     if not items.exists():
         messages.error(request, 'Tu carrito está vacío.')
-        return redirect('view_cart')
+        return redirect('/?carrito=abierto')
 
     if request.method == 'POST':
         receipt_file = request.FILES.get('receipt')

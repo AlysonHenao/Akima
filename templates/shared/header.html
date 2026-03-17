@@ -74,7 +74,20 @@
                             <p class="text-muted small mb-0">
                                 {{ item.color_product.general_color.name }} - {{ item.size }}
                             </p>
-                            <p class="text-muted small mb-0">x{{ item.quantity }}</p>
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <form method="POST" action="{% url 'remove_cart_item' item.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0"
+                                            style="font-size: 11px;">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                                <a href="{% url 'update_cart_item' item.id %}?cantidad={{ item.quantity|add:'-1' }}&next={{ request.path }}"
+                                class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0">−</a>
+                                <span class="small fw-bold">{{ item.quantity }}</span>
+                                <a href="{% url 'update_cart_item' item.id %}?cantidad={{ item.quantity|add:'1' }}&next={{ request.path }}"
+                                class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0">+</a>
+                            </div>
                         </div>
                         <p class="fw-bold small mb-0" style="color: var(--akima-brown);">
                             ${{ item.get_subtotal }}
