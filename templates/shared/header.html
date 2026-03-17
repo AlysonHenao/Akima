@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Akima{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { --akima-pink: #f9e4ed; --akima-brown: #482b01; --akima-accent: #c84b6e; }
+        body { font-family: 'Segoe UI', sans-serif; }
+        .navbar-akima { background-color: var(--akima-pink); }
+        .btn-akima { background-color: var(--akima-brown); color: white; border-radius: 20px; }
+        .btn-akima:hover { background-color: #5a3a0a; color: white; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-white">
+
+<nav class="navbar navbar-akima px-4 py-3">
+    <a class="navbar-brand fw-bold" href="{% url 'home' %}" style="color: var(--akima-brown);">
+        Akima
+    </a>
+    <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'home' %}" class="text-decoration-none" style="color: var(--akima-brown);">Inicio</a>
+        <a href="{% url 'home' %}" class="text-decoration-none" style="color: var(--akima-brown);">Productos</a>
+        <button class="btn btn-akima btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#carritoOffcanvas">
+            <i class="bi bi-cart"></i> Carrito
+        </button>
+    </div>
+</nav>
+
+{% with messages=messages %}
+{% if messages %}
+<div class="container mt-2">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Carrito offcanvas lado derecho -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="carritoOffcanvas" aria-labelledby="carritoOffcanvasLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="carritoOffcanvasLabel">Carrito de compras</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+    </div>
+
+    <div class="offcanvas-body d-flex flex-column">
+        <div class="flex-grow-1">
+            {% if carrito_items %}
+                {% for item in carrito_items %}
+                <div class="card border-0 bg-light rounded-3 mb-3 p-2">
+                    <div class="d-flex align-items-center gap-2">
+                        {% if item.product.images.first %}
+                        <img src="{{ item.product.images.first.url_image.url }}"
+                             class="rounded-2" style="width: 60px; height: 60px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-2 bg-white d-flex align-items-center justify-content-center"
+                             style="width: 60px; height: 60px;">
+                            <i class="bi bi-image text-muted"></i>
+                        </div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <p class="fw-bold small mb-0">{{ item.product.name }}</p>
+                            <p class="text-muted small mb-0">
+                                {{ item.color_product.general_color.name }} - {{ item.size }}
+                            </p>
+                            <p class="text-muted small mb-0">x{{ item.quantity }}</p>
+                        </div>
+                        <p class="fw-bold small mb-0" style="color: var(--akima-brown);">
+                            ${{ item.get_subtotal }}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-cart-x fs-1 d-block mb-2"></i>
+                    <p class="small">Tu carrito está vacío</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="border-top pt-3 mt-3">
+            <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
+                <span>Total:</span>
+                <span style="color: var(--akima-brown);">${{ carrito_total }}</span>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <a href="{% url 'home' %}" class="btn btn-outline-secondary w-100 rounded-pill">
+                    Continuar comprando
+                </a>
+                <a href="{% url 'payment' %}" class="btn btn-akima w-100 rounded-pill">
+                    Realizar pedido
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}
+<script>
+    if (new URLSearchParams(window.location.search).get('carrito') === 'abierto') {
+        new bootstrap.Offcanvas(document.getElementById('carritoOffcanvas')).show();
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+</script>
+{% endblock %}
+</body>
+</html>

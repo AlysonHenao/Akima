@@ -1,0 +1,83 @@
+{% extends 'shared/header.html' %}
+{% block title %}Pago - Akima{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 700px;">
+    <h4 class="fw-bold mb-4">Realizar pago</h4>
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3">
+        <h6 class="fw-bold mb-3">Resumen del pedido</h6>
+        {% for item in items %}
+        <div class="d-flex justify-content-between text-muted small mb-1">
+            <span>{{ item.product.name }} ({{ item.color_product.general_color.name }} - {{ item.size }}) x{{ item.quantity }}</span>
+            <span>${{ item.get_subtotal }}</span>
+        </div>
+        {% empty %}
+        <p class="text-muted small">No hay productos.</p>
+        {% endfor %}
+        <hr>
+        <div class="d-flex justify-content-between fw-bold">
+            <span>Total a pagar:</span>
+            <span style="color: var(--akima-brown);">${{ total }}</span>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <h6 class="fw-bold mb-3">Selecciona un método de pago</h6>
+        {% for metodo in payment_methods %}
+        <button type="button"
+                class="btn btn-outline-secondary w-100 text-start mb-2 rounded-3 metodo-btn"
+                data-id="{{ metodo.id }}" data-nombre="{{ metodo.name }}">
+            {{ metodo.name }}
+            <i class="bi bi-chevron-down float-end"></i>
+        </button>
+        <div class="card border-0 bg-light rounded-3 mb-3 p-3 metodo-detalle d-none" id="detalle-{{ metodo.id }}">
+            <p class="text-muted small mb-2">{{ metodo.instructions }}</p>
+            {% if metodo.qr_image %}
+            <img src="{{ metodo.qr_image.url }}" alt="QR {{ metodo.name }}" class="rounded-3" style="width: 200px;">
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <h6 class="fw-bold mb-3">Sube el comprobante</h6>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="payment_method_id" id="payment_method_id" value="">
+            <p class="text-muted small" id="metodo-seleccionado">Selecciona primero un método de pago</p>
+            <input type="file" name="receipt" accept="image/*" class="form-control mb-3" required>
+            <button type="submit" class="btn btn-akima w-100 rounded-pill">Enviar comprobante</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.metodo-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const id = this.dataset.id;
+        const detalle = document.getElementById(`detalle-${id}`);
+        const abierto = !detalle.classList.contains('d-none');
+
+        document.querySelectorAll('.metodo-detalle').forEach(d => d.classList.add('d-none'));
+        document.querySelectorAll('.metodo-btn').forEach(b => {
+            b.classList.remove('btn-dark', 'text-white');
+            b.classList.add('btn-outline-secondary');
+        });
+
+        if (!abierto) {
+            detalle.classList.remove('d-none');
+            this.classList.remove('btn-outline-secondary');
+            this.classList.add('btn-dark', 'text-white');
+            document.getElementById('payment_method_id').value = id;
+            document.getElementById('metodo-seleccionado').textContent = `Método seleccionado: ${this.dataset.nombre}`;
+        } else {
+            document.getElementById('payment_method_id').value = '';
+            document.getElementById('metodo-seleccionado').textContent = 'Selecciona primero un método de pago';
+        }
+    });
+});
+</script>
+{% endblock %}

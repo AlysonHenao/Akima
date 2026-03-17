@@ -1,0 +1,273 @@
+{% extends 'shared/header.html' %}
+{% load static %}
+{% block title %}Gestión de Productos - Akima{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Gestión de Productos</h4>
+            <p class="text-muted small mb-0">Administra el catálogo de productos de Akima</p>
+        </div>
+        <button class="btn btn-sm rounded-pill px-3"
+                style="background-color: var(--akima-brown); color: white;"
+                data-bs-toggle="modal" data-bs-target="#modalNuevoProducto">
+            <i class="bi bi-plus-lg me-1"></i> Nuevo Producto
+        </button>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3">
+                <p class="text-muted small mb-1">Total Productos</p>
+                <h4 class="fw-bold mb-0">{{ products|length }}</h4>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3">
+                <p class="text-muted small mb-1">Productos Activos</p>
+                <h4 class="fw-bold mb-0">{{ products|length }}</h4>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3">
+                <p class="text-muted small mb-1">Colores Disponibles</p>
+                <h4 class="fw-bold mb-0">{{ colors|length }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Catálogo -->
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <p class="fw-bold mb-1">Catálogo de Productos</p>
+        <p class="text-muted small mb-3">{{ products|length }} productos disponibles</p>
+
+        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-3">
+            {% for product in products %}
+            <div class="col">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                    {% with img=product.images.first %}
+                    {% if img %}
+                    <img src="{{ img.url_image.url }}" class="card-img-top"
+                         alt="{{ product.name }}" style="height: 180px; object-fit: cover;">
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center bg-light"
+                         style="height: 180px;">
+                        <i class="bi bi-image text-muted fs-2"></i>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+
+                    <span class="badge position-absolute top-0 end-0 m-2"
+                          style="background-color: var(--akima-pink); color: var(--akima-brown);">
+                        {{ product.category }}
+                    </span>
+
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-1">{{ product.name }}</h6>
+                        <p class="fw-bold mb-2" style="color: var(--akima-brown);">${{ product.price }}</p>
+                        <p class="text-muted small mb-3">Stock: {{ product.stock }}</p>
+                        <form method="POST" action="{% url 'toggle_product' product.id %}">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="btn btn-sm w-100 rounded-pill
+                                    {% if product.active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                                {% if product.active %}Desactivar{% else %}Activar{% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center text-muted py-5">
+                <i class="bi bi-box-seam fs-1 d-block mb-2"></i>
+                <p>No hay productos creados aún.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Form oculto para agregar color (fuera del modal) -->
+<form method="POST" action="{% url 'create_color' %}" id="formAgregarColor" class="d-none">
+    {% csrf_token %}
+    <input type="text" name="name" id="inputNuevoColorHidden">
+</form>
+
+<!-- Modal nuevo producto -->
+<div class="modal fade" id="modalNuevoProducto" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content rounded-4 border-0">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Nuevo Producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Nombre</label>
+                            <input type="text" name="name" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Categoría</label>
+                            <select name="category" class="form-select rounded-3" id="selectCategoria" required>
+                                <option value="">Selecciona...</option>
+                                <option value="Bikini">Bikini</option>
+                                <option value="Top">Top</option>
+                                <option value="Falda">Falda</option>
+                                <option value="Buzo">Buzo</option>
+                                <option value="Vestido">Vestido</option>
+                                <option value="Short">Short</option>
+                                <option value="Set">Set</option>
+                                <option value="Accesorio">Accesorio</option>
+                                <option value="Pantalón">Pantalón</option>
+                                <option value="Camisa">Camisa</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">Descripción</label>
+                            <textarea name="description" class="form-control rounded-3" rows="3" required></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Precio</label>
+                            <input type="number" name="price" class="form-control rounded-3" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Stock</label>
+                            <input type="number" name="stock" class="form-control rounded-3" min="0" value="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small">Tiempo fabricación (horas)</label>
+                            <input type="number" name="manufacturing_time" class="form-control rounded-3" min="0" required>
+                        </div>
+
+                        <!-- Colores existentes -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">Colores disponibles</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for color in colors %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                           name="colors" value="{{ color.id }}" id="color_{{ color.id }}">
+                                    <label class="form-check-label small" for="color_{{ color.id }}">
+                                        {{ color.name }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Agregar color nuevo -->
+                        <div class="col-12">
+                            <p class="fw-bold small mb-2">¿El color no está en la lista? Agrégalo</p>
+                            <div class="input-group">
+                                <input type="text" id="inputNuevoColor"
+                                       class="form-control rounded-start-3"
+                                       placeholder="Nombre del color (ej: Rosa palo)">
+                                <button type="button"
+                                        class="btn btn-outline-secondary rounded-end-3"
+                                        onclick="agregarColor()">
+                                    <i class="bi bi-plus-lg"></i> Agregar color
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Imágenes (máx. 5)</label>
+                            <input type="file" name="images" class="form-control rounded-3"
+                                   accept="image/*" multiple>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small">Guía de fabricación</label>
+                            <input type="file" name="manufacturing_guide" class="form-control rounded-3">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small">Guía de tallas</label>
+                            <input type="file" name="size_guide" class="form-control rounded-3" accept="image/*">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                       name="active" id="activo" checked>
+                                <label class="form-check-label small" for="activo">Producto activo</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Sets -->
+                    <div id="seccionSet" class="d-none mt-3">
+                        <hr>
+                        <p class="fw-bold small mb-2">Productos que componen el set</p>
+                        <div class="row g-2">
+                            {% for p in individual_products %}
+                            <div class="col-md-6">
+                                <div class="card border rounded-3 p-2">
+                                    <div class="form-check mb-1">
+                                        <input class="form-check-input" type="checkbox"
+                                               name="set_products" value="{{ p.id }}"
+                                               id="set_{{ p.id }}"
+                                               onchange="toggleSetFields('{{ p.id }}', this.checked)">
+                                        <label class="form-check-label small fw-bold" for="set_{{ p.id }}">
+                                            {{ p.name }}
+                                        </label>
+                                    </div>
+                                    <div id="campos_set_{{ p.id }}" class="d-none row g-1 ms-1">
+                                        <div class="col-6">
+                                            <input type="number" name="set_quantity_{{ p.id }}"
+                                                   class="form-control form-control-sm rounded-3"
+                                                   placeholder="Cantidad" min="1">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" name="set_price_{{ p.id }}"
+                                                   class="form-control form-control-sm rounded-3"
+                                                   placeholder="Precio" step="0.01" min="0">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill"
+                                data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn rounded-pill px-4"
+                                style="background-color: var(--akima-brown); color: white;">
+                            Crear Producto
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('selectCategoria').addEventListener('change', function() {
+        const seccion = document.getElementById('seccionSet');
+        seccion.classList.toggle('d-none', this.value !== 'Set');
+    });
+
+    function toggleSetFields(id, checked) {
+        document.getElementById(`campos_set_${id}`).classList.toggle('d-none', !checked);
+    }
+
+    function agregarColor() {
+        const input = document.getElementById('inputNuevoColor');
+        const nombre = input.value.trim();
+        if (!nombre) return;
+        document.getElementById('inputNuevoColorHidden').value = nombre;
+        document.getElementById('formAgregarColor').submit();
+    }
+</script>
+{% endblock %}
