@@ -27,7 +27,6 @@
                 <strong>{{ preselected_detail.product.name }}</strong> —
                 {{ preselected_detail.color_product.general_color.name }},
                 Talla {{ preselected_detail.size }},
-                x{{ preselected_detail.quantity }}
             </span>
             <a href="{% url 'production_panel' %}" class="ms-auto small" style="color: var(--akima-brown);">
                 <i class="bi bi-x"></i> Limpiar
@@ -63,11 +62,6 @@
                            value="{{ preselected_detail.product.name }} — {{ preselected_detail.color_product.general_color.name }}"
                            disabled>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold small" style="color: var(--akima-brown);">Cantidad</label>
-                    <input type="number" name="quantity" class="form-control rounded-3"
-                           min="1" value="{{ preselected_detail.quantity }}" required>
-                </div>
                 {% else %}
                 <div class="col-md-4">
                     <label class="form-label fw-bold small" style="color: var(--akima-brown);">Producto</label>
@@ -92,11 +86,6 @@
                         <option value="L">L</option>
                         <option value="XL">XL</option>
                     </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold small" style="color: var(--akima-brown);">Cantidad</label>
-                    <input type="number" name="quantity" class="form-control rounded-3"
-                           min="1" value="1" required>
                 </div>
                 {% endif %}
                 <div class="col-12">
