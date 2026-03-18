@@ -1,5 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.core.mail import send_mail
+from django.db.models import Case, When, IntegerField
+
 
 from .models import ProductionTask, EmployeeInventory
 from account.models import User
@@ -39,10 +42,16 @@ def production_panel(request):
     if filter_status:
         tasks = tasks.filter(status=filter_status)
 
-    tasks = tasks.order_by(
-        'status',
-        '-assignment_date'
-    )
+    tasks = tasks.annotate(
+        status_order=Case(
+            When(status='En progreso', then=0),
+            When(status='Pendiente', then=1),
+            When(status='Completada', then=2),
+            When(status='Cancelada', then=3),
+            default=4,
+            output_field=IntegerField()
+        )
+    ).order_by('status_order', '-assignment_date')
 
     pending_orders = Order.objects.filter(
         status='Confirmado'
@@ -67,7 +76,6 @@ def assign_task(request):
     if request.method == 'POST':
         employee_id = request.POST.get('employee_id')
         color_product_id = request.POST.get('color_product_id')
-        quantity = int(request.POST.get('quantity', 1))
         order_detail_id = request.POST.get('order_detail_id') or None
         final_date = request.POST.get('final_date') or None
         specification = request.POST.get('specification', '').strip()
@@ -81,11 +89,27 @@ def assign_task(request):
         ProductionTask.objects.create(
             employee=employee,
             product=color_product,
-            quantity=quantity,
             order_detail=order_detail,
-            final_date=final_date,
             specification=specification,
             status='Pendiente'
         )
+
+        if employee.email:
+            send_mail(
+                subject=f'Nueva tarea asignada - Akima',
+                message=(
+                    f'Hola {employee.first_name},\n\n'
+                    f'Se te ha asignado una nueva tarea de producción:\n'
+                    f'Producto: {color_product.product.name} — {color_product.general_color.name}\n'
+                    f'{"Especificación: " + specification + chr(10) if specification else ""}'
+                    f'{"Orden relacionada: #" + str(order_detail.order.id) + chr(10) if order_detail else ""}'
+                    f'\nPor favor ingresa al sistema para ver los detalles.\n\n'
+                    f'Akima'
+                ),
+                from_email=None,
+                recipient_list=[employee.email],
+                fail_silently=True,
+            )
+
         messages.success(request, f'Tarea asignada a {employee.first_name} exitosamente.')
     return redirect('production_panel')
