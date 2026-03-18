@@ -79,6 +79,7 @@ def remove_cart_item(request, item_id):
     referer = request.META.get('HTTP_REFERER', '/').split('?')[0]
     return redirect(referer + '?carrito=abierto')
 
+
 def empty_cart(request):
     cart = get_or_create_cart(request)
     cart.items.all().delete()
@@ -114,6 +115,7 @@ def payment(request):
             total=total,
             status='Pendiente confirmacion',
         )
+
         for item in items:
             OrderDetail.objects.create(
                 order=order,
@@ -123,18 +125,21 @@ def payment(request):
                 quantity=item.quantity,
                 unit_price=item.unit_price,
             )
+
         PaymentReceipt.objects.create(
             order=order,
             payment_method=payment_method,
             receipt=receipt_file,
             amount=total,
         )
+
         cart.items.all().delete()
         messages.success(request, '¡Comprobante enviado! Tu pedido será verificado.')
         return redirect('home')
 
     total = cart.get_total()
     payment_methods = PaymentMethod.objects.filter(active=True)
+
     return render(request, 'order/payment.html', {
         'items': items,
         'total': total,
@@ -148,6 +153,7 @@ def orders(request):
         'details__product',
         'details__color_product__general_color'
     ).order_by('-order_date')
+
     return render(request, 'order/orders.html', {'orders': all_orders})
 
 
@@ -175,7 +181,9 @@ def confirm_payment(request, receipt_id):
                 recipient_list=[order.user.email],
                 fail_silently=True,
             )
+
         messages.success(request, f'Pago del pedido #{order.id} confirmado exitosamente.')
+
     return redirect('orders')
 
 
@@ -184,10 +192,31 @@ def update_order_status(request, order_id):
         order = get_object_or_404(Order, id=order_id)
         new_status = request.POST.get('status')
         valid_statuses = [choice[0] for choice in Order.STATUS]
+
         if new_status in valid_statuses:
             order.status = new_status
             order.save()
             messages.success(request, f'Estado del Pedido #{order.id} actualizado a "{new_status}".')
         else:
             messages.error(request, 'Estado no válido.')
+
     return redirect('orders')
+
+
+def view_assigned_products(request):
+    orders = Order.objects.prefetch_related(
+        'details__product',
+        'details__color_product__general_color'
+    )
+
+    return render(request, 'order/assigned_products.html', {
+        'orders': orders
+    })
+
+
+def view_status_of_orders(request):
+    orders = Order.objects.all().order_by('-order_date')
+
+    return render(request, 'order/order_status.html', {
+        'orders': orders
+    })
