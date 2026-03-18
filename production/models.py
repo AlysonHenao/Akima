@@ -71,14 +71,14 @@ class EmployeeInventory(models.Model):
         verbose_name='Supply',
         related_name='employee_inventory'
     )
-    quantity = models.DecimalField('Quantity', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    assigned_date = models.DateTimeField('Assigned Date', auto_now_add=True)
+    available_quantity = models.DecimalField('Available Quantity', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    last_update = models.DateTimeField('Last Update', auto_now=True)
 
     class Meta:
         db_table = 'employee_inventory'
 
     def __str__(self):
-        return f"{self.employee} - {self.supply} ({self.quantity})"
+        return f"{self.employee} - {self.supply} ({self.available_quantity})"
 
 
 class ProductionTask(models.Model):
@@ -89,32 +89,40 @@ class ProductionTask(models.Model):
         ('Cancelada', 'Cancelada'),
     ]
 
+    order_detail = models.ForeignKey(
+        'order.OrderDetail',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Order Detail',
+        related_name='tasks'
+    )
     employee = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
         verbose_name='Employee',
         related_name='tasks'
     )
-    color_product = models.ForeignKey(
+    product = models.ForeignKey(
         ColorProduct,
         on_delete=models.PROTECT,
-        verbose_name='Product Color',
+        verbose_name='Product',
         related_name='tasks'
     )
-    quantity = models.IntegerField('Quantity', validators=[MinValueValidator(1)])
-    assigned_date = models.DateTimeField('Assigned Date', auto_now_add=True)
-    due_date = models.DateTimeField('Due Date', null=True, blank=True)
-    status = models.CharField('Status', max_length=20, choices=STATUS, default='Pendiente')
-    notes = models.TextField('Notes', blank=True, null=True)
+    assignment_date = models.DateTimeField('Fecha de asignación', auto_now_add=True)
+    initial_date = models.DateTimeField('Fecha inicio', null=True, blank=True)
+    final_date = models.DateTimeField('Fecha fin', null=True, blank=True)
+    status = models.CharField('Estado', max_length=20, choices=STATUS, default='Pendiente')
+    specification = models.TextField('Especificación', blank=True, null=True)
 
     class Meta:
         db_table = 'production_task'
 
     def __str__(self):
-        return f"Task #{self.id} - {self.employee} - {self.color_product} ({self.status})"
+        return f"Tarea #{self.id} - {self.employee} ({self.status})"
 
 
-class TaskSupply(models.Model):
+class SupplyTask(models.Model):
     task = models.ForeignKey(
         ProductionTask,
         on_delete=models.CASCADE,
@@ -127,11 +135,11 @@ class TaskSupply(models.Model):
         verbose_name='Supply',
         related_name='task_supplies'
     )
-    delivered_quantity = models.DecimalField('Delivered Quantity', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    returned_quantity = models.DecimalField('Returned Quantity', max_digits=10, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    initial_quantity = models.DecimalField('Initial Quantity', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    final_quantity = models.DecimalField('Final Quantity', max_digits=10, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
 
     class Meta:
-        db_table = 'task_supply'
+        db_table = 'supply_task'
 
     def __str__(self):
-        return f"Task #{self.task.id} - {self.supply}"
+        return f"Tarea #{self.task.id} - {self.supply}"

@@ -199,21 +199,36 @@ class FinancialMovement(models.Model):
     CATEGORIES = [
         ('Venta', 'Venta'),
         ('Compra de insumos', 'Compra de insumos'),
-        ('Pago empleados', 'Pago empleados'),
+        ('Pago a empleados', 'Pago a empleados'),
         ('Otro', 'Otro'),
     ]
 
-    type_movement = models.CharField('Type', max_length=10, choices=TYPES)
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Orden',
+        related_name='financial_movements'
+    )
+    user = models.ForeignKey(
+        'account.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Usuario',
+        related_name='financial_movements'
+    )
     category = models.CharField('Category', max_length=20, choices=CATEGORIES)
+    type = models.CharField('Type', max_length=10, choices=TYPES)
+    concept = models.CharField('Concept', max_length=255)
     amount = models.DecimalField('Amount', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    concept = models.TextField('Concept', blank=True, null=True)
-    date = models.DateTimeField('Date', auto_now_add=True)
-    receipt = models.ImageField('Receipt', upload_to='media/comprobantes/', null=True, blank=True)
+    movement_date = models.DateTimeField('Date of Movement', auto_now_add=True)
+    receipt = models.ImageField('Receipt', upload_to='financial_receipts/', null=True, blank=True)
     note = models.TextField('Note', blank=True, null=True)
-    
 
     class Meta:
         db_table = 'financial_movement'
 
     def __str__(self):
-        return f"{self.type_movement} - {self.category} - ${self.amount}"
+        return f"{self.type} - {self.category} - ${self.amount}"
