@@ -1,0 +1,208 @@
+{% extends 'shared/header_admin.html' %}
+{% block title %}Producción - Akima{% endblock %}
+{% block nav_production %}active{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-5">
+
+    <div class="mb-4">
+        <h4 class="fw-bold mb-0">Gestión de Producción</h4>
+        <p class="text-muted small mb-0">Asigna y consulta tareas de tejido</p>
+    </div>
+
+    <div class="rounded-4 p-4 mb-5" style="background-color: #eee;">
+
+        <h5 class="fw-bold mb-3" style="color: var(--akima-brown);">
+            {% if preselected_detail %}
+                Asignar desde Orden #{{ preselected_detail.order.id }}
+            {% else %}
+                Nueva asignación
+            {% endif %}
+        </h5>
+
+        {% if preselected_detail %}
+        <div class="rounded-3 px-3 py-2 mb-3 d-flex align-items-center gap-2 bg-white">
+            <i class="bi bi-link-45deg" style="color: var(--akima-brown);"></i>
+            <span class="small" style="color: var(--akima-brown);">
+                <strong>{{ preselected_detail.product.name }}</strong> —
+                {{ preselected_detail.color_product.general_color.name }},
+                Talla {{ preselected_detail.size }},
+                x{{ preselected_detail.quantity }}
+            </span>
+            <a href="{% url 'production_panel' %}" class="ms-auto small" style="color: var(--akima-brown);">
+                <i class="bi bi-x"></i> Limpiar
+            </a>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'assign_task' %}">
+            {% csrf_token %}
+
+            {% if preselected_detail %}
+            <input type="hidden" name="order_detail_id" value="{{ preselected_detail.id }}">
+            <input type="hidden" name="color_product_id" value="{{ preselected_detail.color_product.id }}">
+            {% else %}
+            <input type="hidden" name="order_detail_id" value="">
+            {% endif %}
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small" style="color: var(--akima-brown);">Empleada</label>
+                    <select name="employee_id" class="form-select rounded-3" required>
+                        <option value="">Selecciona...</option>
+                        {% for emp in employees %}
+                        <option value="{{ emp.id }}">{{ emp.first_name }} {{ emp.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {% if preselected_detail %}
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small" style="color: var(--akima-brown);">Producto</label>
+                    <input type="text" class="form-control rounded-3"
+                           value="{{ preselected_detail.product.name }} — {{ preselected_detail.color_product.general_color.name }}"
+                           disabled>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small" style="color: var(--akima-brown);">Cantidad</label>
+                    <input type="number" name="quantity" class="form-control rounded-3"
+                           min="1" value="{{ preselected_detail.quantity }}" required>
+                </div>
+                {% else %}
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small" style="color: var(--akima-brown);">Producto</label>
+                    <select name="product_id" class="form-select rounded-3" id="selectProduct">
+                        <option value="">Selecciona...</option>
+                        {% for product in products %}
+                        <optgroup label="{{ product.name }}">
+                            {% for cp in product.colors.all %}
+                            <option value="color_{{ cp.id }}">{{ product.name }} — {{ cp.general_color.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        {% endfor %}
+                    </select>
+                    <input type="hidden" name="color_product_id" id="hiddenColorProduct">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small" style="color: var(--akima-brown);">Talla</label>
+                    <select name="size" class="form-select rounded-3">
+                        <option value="XS">XS</option>
+                        <option value="S">S</option>
+                        <option value="M">M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small" style="color: var(--akima-brown);">Cantidad</label>
+                    <input type="number" name="quantity" class="form-control rounded-3"
+                           min="1" value="1" required>
+                </div>
+                {% endif %}
+                <div class="col-12">
+                    <label class="form-label fw-bold small" style="color: var(--akima-brown);">Especificación</label>
+                    <textarea name="specification" class="form-control rounded-3" rows="2"
+                              placeholder="Instrucciones adicionales..."></textarea>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn rounded-pill px-4"
+                        style="background-color: var(--akima-pink); color: var(--akima-brown);">
+                    <i class="bi bi-plus-lg me-1"></i>Asignar tarea
+                </button>
+                {% if preselected_detail %}
+                <a href="{% url 'production_panel' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                    Cancelar
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div>
+        <h5 class="fw-bold mb-3">Asignaciones</h5>
+
+        <form method="GET" action="{% url 'production_panel' %}" class="row g-2 mb-4">
+            <div class="col-md-4">
+                <select name="filter_employee" class="form-select form-select-sm rounded-3">
+                    <option value="">Todas las empleadas</option>
+                    {% for emp in employees %}
+                    <option value="{{ emp.id }}"
+                            {% if filter_employee == emp.id|stringformat:"s" %}selected{% endif %}>
+                        {{ emp.first_name }} {{ emp.last_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="filter_status" class="form-select form-select-sm rounded-3">
+                    <option value="">Todos los estados</option>
+                    {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if filter_status == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-sm rounded-pill w-100"
+                        style="background-color: var(--akima-brown); color: white;">
+                    Filtrar
+                </button>
+            </div>
+            {% if filter_employee or filter_status %}
+            <div class="col-md-2">
+                <a href="{% url 'production_panel' %}" class="btn btn-sm btn-outline-secondary rounded-pill w-100">
+                    Limpiar
+                </a>
+            </div>
+            {% endif %}
+        </form>
+
+        {% if tasks %}
+        {% for task in tasks %}
+        <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+            <div>
+                <p class="fw-bold small mb-0">
+                    {{ task.product.product.name }} — {{ task.product.general_color.name }}
+                </p>
+                <p class="text-muted small mb-0">
+                    {{ task.employee.first_name }} {{ task.employee.last_name }} ·
+                    {{ task.assignment_date|date:"d/m/Y" }}
+                    {% if task.final_date %}· Entrega: {{ task.final_date|date:"d/m/Y" }}{% endif %}
+                    {% if task.order_detail %}· Orden #{{ task.order_detail.order.id }}{% endif %}
+                </p>
+                {% if task.specification %}
+                <p class="text-muted small mb-0 fst-italic">{{ task.specification }}</p>
+                {% endif %}
+            </div>
+            <span class="badge rounded-pill px-3" style="background-color: var(--akima-pink); color: var(--akima-brown);">
+                {{ task.status }}
+            </span>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="text-muted small">No hay asignaciones que coincidan con los filtros.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const selectProduct = document.getElementById('selectProduct');
+const hiddenColor = document.getElementById('hiddenColorProduct');
+if (selectProduct) {
+    selectProduct.addEventListener('change', function() {
+        const val = this.value;
+        if (val.startsWith('color_')) {
+            hiddenColor.value = val.replace('color_', '');
+        } else {
+            hiddenColor.value = '';
+        }
+    });
+}
+</script>
+{% endblock %}
