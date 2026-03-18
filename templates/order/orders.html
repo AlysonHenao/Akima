@@ -56,6 +56,7 @@
                                     <th>Talla</th>
                                     <th>Cant.</th>
                                     <th>Subtotal</th>
+                                    <th>Asignar</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -66,6 +67,13 @@
                                     <td>{{ detalle.size }}</td>
                                     <td>{{ detalle.quantity }}</td>
                                     <td>${{ detalle.subtotal }}</td>
+                                    <td>
+                                        <a href="{% url 'production_panel' %}?order_detail={{ detalle.id }}"
+                                        class="btn btn-sm rounded-pill"
+                                        style="background-color: var(--akima-pink); color: var(--akima-brown);">
+                                            <i class="bi bi-person-plus"></i> Asignar
+                                        </a>
+                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr><td colspan="5" class="text-muted">Sin items</td></tr>
