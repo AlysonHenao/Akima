@@ -1,5 +1,23 @@
 {% extends 'shared/header_client.html' %}
 {% block title %}Inicio - Akima{% endblock %}
+{% block extra_css %}
+<style>
+    .btn-contact {
+        border: 1px solid #f0b6cf;
+        color: #df7faa;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background-color: #fff;
+    }
+
+    .btn-contact:hover {
+        color: #fff;
+        background-color: #eaa0bf;
+        border-color: #eaa0bf;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 
@@ -29,6 +47,7 @@
                 {% endwith %}
                 <span class="badge position-absolute top-0 end-0 m-2"
                       style="background-color: var(--akima-pink); color: var(--akima-brown);">
+                  
                     {{ product.category }}
                 </span>
                 <div class="card-body">
@@ -47,9 +66,61 @@
         </div>
         {% endfor %}
     </div>
+
+    <section class="contact-section mt-5" aria-label="Canales de comunicacion">
+        <h3 class="text-center fw-bold mb-2" style="color: var(--akima-brown);">Contáctanos</h3>
+        <p class="text-center mb-4" style="color: #8b7a85; font-size: 0.95rem;">¿Tienes alguna pregunta? ¡Nos encantaria
+            escucharte!</p>
+        <div class="row g-4 justify-content-center">
+            <div class="col-12 col-md-4">
+                <div class="text-center p-4 h-100 d-flex flex-column justify-content-center rounded-4 bg-white shadow-sm"
+                    style="min-height: 195px; border: 1px solid #f3d8e5;">
+                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3"
+                        style="width: 36px; height: 36px; background-color: #fdeef5;">
+                        <i class="bi bi-instagram" style="color: #e58ab0; font-size: 1rem;"></i>
+                    </span>
+                    <h6 class="fw-bold mb-1" style="color: var(--akima-brown);">Instagram</h6>
+                    <p class="mb-3" style="color: #867783; font-size: 0.92rem;">@by.akima</p>
+                    <div>
+                        <a href="https://www.instagram.com/by.akima/" target="_blank" rel="noopener noreferrer"
+                            class="btn btn-contact">Síguenos</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="text-center p-4 h-100 d-flex flex-column justify-content-center rounded-4 bg-white shadow-sm"
+                    style="min-height: 195px; border: 1px solid #f3d8e5;">
+                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3"
+                        style="width: 36px; height: 36px; background-color: #fdeef5;">
+                        <i class="bi bi-whatsapp" style="color: #e58ab0; font-size: 1rem;"></i>
+                    </span>
+                    <h6 class="fw-bold mb-1" style="color: var(--akima-brown);">WhatsApp</h6>
+                    <p class="mb-3" style="color: #867783; font-size: 0.92rem;">+57 300 1439 962 </p>
+                    <div>
+                        <a href="https://wa.me/573001439962" target="_blank" rel="noopener noreferrer"
+                            class="btn btn-contact">Chatear</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="text-center p-4 h-100 d-flex flex-column justify-content-center rounded-4 bg-white shadow-sm"
+                    style="min-height: 195px; border: 1px solid #f3d8e5;">
+                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3"
+                        style="width: 36px; height: 36px; background-color: #fdeef5;">
+                        <i class="bi bi-facebook" style="color: #e58ab0; font-size: 1rem;"></i>
+                    </span>
+                    <h6 class="fw-bold mb-1" style="color: var(--akima-brown);">Correo</h6>
+                    <p class="mb-3" style="color: #867783; font-size: 0.92rem;">AkimaCrochet@gmail.com</p>
+                    <div>
+                        <a href="https://www.gmail.com/" target="_blank" rel="noopener noreferrer"
+                            class="btn btn-contact">Visitar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
 
-<!-- Modal pedido confirmado -->
 <div class="modal fade" id="modalPedido" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow rounded-4 text-center p-4">
