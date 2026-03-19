@@ -1,0 +1,116 @@
+{% extends 'shared/header_employee.html' %}
+{% block title %}Panel Empleada - Akima{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div>
+            <h3 class="fw-bold mb-1" style="color: var(--akima-brown);">Mis asignaciones</h3>
+            <p class="text-muted mb-0">Consulta los productos y pedidos que tienes asignados.</p>
+        </div>
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm rounded-pill">Volver al inicio</a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-8">
+                <label class="form-label fw-semibold" style="color: var(--akima-brown);">Empleada</label>
+                <select name="employee_id" class="form-select rounded-4" required>
+                    <option value="">Selecciona una empleada</option>
+                    {% for employee in employees %}
+                        <option value="{{ employee.id }}"
+                                {% if selected_employee and selected_employee.id == employee.id %}selected{% endif %}>
+                            {{ employee.first_name }} {{ employee.last_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn w-100 rounded-pill"
+                        style="background-color: var(--akima-brown); color: white;">
+                    Ver asignaciones
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if selected_employee %}
+        <div class="mb-3">
+            <h5 class="fw-bold mb-1" style="color: var(--akima-brown);">
+                {{ selected_employee.first_name }} {{ selected_employee.last_name }}
+            </h5>
+            <p class="text-muted small mb-0">{{ selected_employee.email }}</p>
+        </div>
+
+        {% if tasks %}
+            <div class="d-flex flex-column gap-3">
+                {% for task in tasks %}
+                    <div class="card border-0 shadow-sm rounded-4 p-4">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                            <div>
+                                <h6 class="fw-bold mb-1" style="color: var(--akima-brown);">
+                                    {{ task.product.product.name }} - {{ task.product.general_color.name }}
+                                </h6>
+                                <p class="text-muted small mb-0">
+                                    Asignada el {{ task.assignment_date|date:"d/m/Y H:i" }}
+                                </p>
+                            </div>
+
+                            <span class="badge rounded-pill px-3 py-2"
+                                  style="background-color: var(--akima-pink); color: var(--akima-brown);">
+                                {{ task.status }}
+                            </span>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="bg-light rounded-4 p-3 h-100">
+                                    <p class="fw-semibold mb-2">Información del pedido</p>
+
+                                    {% if task.order_detail %}
+                                        <p class="small mb-1"><strong>Orden:</strong> #{{ task.order_detail.order.id }}</p>
+                                        <p class="small mb-1"><strong>Producto:</strong> {{ task.order_detail.product.name }}</p>
+                                        <p class="small mb-1"><strong>Color:</strong> {{ task.order_detail.color_product.general_color.name }}</p>
+                                        <p class="small mb-1"><strong>Talla:</strong> {{ task.order_detail.size }}</p>
+                                        <p class="small mb-0"><strong>Cantidad:</strong> {{ task.order_detail.quantity }}</p>
+                                    {% else %}
+                                        <p class="text-muted small mb-0">Esta tarea no está relacionada con una orden.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="bg-light rounded-4 p-3 h-100">
+                                    <p class="fw-semibold mb-2">Detalle de la tarea</p>
+                                    <p class="small mb-1"><strong>Estado:</strong> {{ task.status }}</p>
+
+                                    {% if task.initial_date %}
+                                        <p class="small mb-1"><strong>Fecha inicio:</strong> {{ task.initial_date|date:"d/m/Y H:i" }}</p>
+                                    {% endif %}
+
+                                    {% if task.final_date %}
+                                        <p class="small mb-1"><strong>Fecha fin:</strong> {{ task.final_date|date:"d/m/Y H:i" }}</p>
+                                    {% endif %}
+
+                                    <p class="small mb-0">
+                                        <strong>Especificación:</strong>
+                                        {{ task.specification|default:"Sin especificaciones adicionales." }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <p class="text-muted mb-0">Esta empleada no tiene tareas asignadas.</p>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <p class="text-muted mb-0">Selecciona una empleada para ver sus asignaciones.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
