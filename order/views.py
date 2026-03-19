@@ -8,7 +8,7 @@ from django.conf import settings
 
 from .models import (
     Order, OrderDetail, ShoppingCart, ItemCart,
-    PaymentMethod, PaymentReceipt,
+    PaymentMethod, PaymentReceipt, User
 )
 from product.models import Product, ColorProduct
 
@@ -221,20 +221,23 @@ def update_order_status(request, order_id):
     return redirect('orders')
 
 
-def view_assigned_products(request):
-    orders = Order.objects.prefetch_related(
-        'details__product',
-        'details__color_product__general_color'
-    )
+def customer_orders_panel(request):
+    customers = User.objects.filter(role='cliente').order_by('first_name', 'last_name')
+    selected_customer_id = request.GET.get('user_id')
+    selected_customer = None
+    orders = Order.objects.none()
 
-    return render(request, 'order/assigned_products.html', {
-        'orders': orders
-    })
+    if selected_customer_id:
+        selected_customer = get_object_or_404(User, id=selected_customer_id, role='cliente')
+        orders = Order.objects.filter(
+            user=selected_customer
+        ).prefetch_related(
+            'details__product',
+            'details__color_product__general_color'
+        ).order_by('-order_date')
 
-
-def view_status_of_orders(request):
-    orders = Order.objects.all().order_by('-order_date')
-
-    return render(request, 'order/order_status.html', {
-        'orders': orders
+    return render(request, 'order/customer_orders_panel.html', {
+        'customers': customers,
+        'selected_customer': selected_customer,
+        'orders': orders,
     })
