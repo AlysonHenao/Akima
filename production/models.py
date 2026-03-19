@@ -71,7 +71,7 @@ class EmployeeInventory(models.Model):
         verbose_name='Supply',
         related_name='employee_inventory'
     )
-    available_quantity = models.DecimalField('Available Quantity', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    available_quantity = models.DecimalField('Available Quantity', max_digits=10, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     last_update = models.DateTimeField('Last Update', auto_now=True)
 
     class Meta:
@@ -107,7 +107,9 @@ class ProductionTask(models.Model):
         ColorProduct,
         on_delete=models.PROTECT,
         verbose_name='Product',
-        related_name='tasks'
+        related_name='tasks',
+        null=True,
+        blank=True
     )
     assignment_date = models.DateTimeField('Fecha de asignación', auto_now_add=True)
     initial_date = models.DateTimeField('Fecha inicio', null=True, blank=True)

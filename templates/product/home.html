@@ -30,6 +30,33 @@
     <h4 class="fw-bold text-center mb-1">Nuestros Productos</h4>
     <p class="text-center text-muted mb-4">Cada prenda es única y hecha con amor. Personalízala según tu estilo.</p>
 
+    <!-- Rf-02: Search product catalog -->
+    <form method="GET" action="" class="d-flex justify-content-center mb-4">
+        <div class="input-group" style="max-width: 420px;">
+            <input type="text"
+                   name="q"
+                   value="{{ query }}"
+                   class="form-control rounded-start-pill border-end-0"
+                   placeholder="Buscar producto por nombre..."
+                   style="border-color: var(--akima-pink);">
+            <button class="btn border border-start-0 rounded-end-pill"
+                    type="submit"
+                    style="border-color: var(--akima-pink); color: var(--akima-brown); background: white;">
+                <i class="bi bi-search"></i>
+            </button>
+            {% if query %}
+            <a href="/" class="btn btn-link ms-2 text-decoration-none small"
+               style="color: var(--akima-brown);">Limpiar</a>
+            {% endif %}
+        </div>
+    </form>
+    {% if query %}
+    <p class="text-center text-muted small mb-3">
+        {{ products|length }} resultado{{ products|length|pluralize }} para
+        "<strong>{{ query }}</strong>"
+    </p>
+    {% endif %}
+
     <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
         {% for product in products %}
         <div class="col">
@@ -62,7 +89,13 @@
         </div>
         {% empty %}
         <div class="col-12 text-center text-muted py-5">
+            {% if query %}
+            <i class="bi bi-search fs-1 d-block mb-2"></i>
+            <p>No se encontraron productos con el nombre "<strong>{{ query }}</strong>".</p>
+            <a href="/" class="btn btn-sm btn-outline-secondary rounded-pill">Ver todos los productos</a>
+            {% else %}
             <p>No hay productos disponibles.</p>
+            {% endif %}
         </div>
         {% endfor %}
     </div>

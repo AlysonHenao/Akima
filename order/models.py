@@ -221,7 +221,7 @@ class FinancialMovement(models.Model):
     )
     category = models.CharField('Category', max_length=20, choices=CATEGORIES)
     type = models.CharField('Type', max_length=10, choices=TYPES)
-    concept = models.CharField('Concept', max_length=255)
+    concept = models.CharField('Concept', max_length=255, default='')
     amount = models.DecimalField('Amount', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     movement_date = models.DateTimeField('Date of Movement', auto_now_add=True)
     receipt = models.ImageField('Receipt', upload_to='financial_receipts/', null=True, blank=True)
