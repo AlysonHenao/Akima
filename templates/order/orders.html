@@ -76,13 +76,52 @@
                                     </td>
                                 </tr>
                                 {% empty %}
-                                <tr><td colspan="5" class="text-muted">Sin items</td></tr>
+                                <tr><td colspan="6" class="text-muted">Sin items</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
 
                     <div class="col-md-5">
+
+                        <button class="btn btn-sm rounded-pill mb-2"
+                                style="background-color: var(--akima-pink); color: var(--akima-brown);"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#cliente-{{ orden.id }}">
+                            <i class="bi bi-person-lines-fill me-1"></i>Ver info del cliente
+                        </button>
+
+                        <div class="collapse mb-2" id="cliente-{{ orden.id }}">
+                            <div class="border rounded-3 p-2 bg-light">
+                                {% if orden.user %}
+                                <p class="small mb-1">
+                                    <i class="bi bi-person me-1"></i>
+                                    <strong>Nombre:</strong> {{ orden.user.first_name }} {{ orden.user.last_name }}
+                                </p>
+                                <p class="small mb-1">
+                                    <i class="bi bi-envelope me-1"></i>
+                                    <strong>Email:</strong> {{ orden.user.email }}
+                                </p>
+                                <p class="small mb-1">
+                                    <i class="bi bi-telephone me-1"></i>
+                                    <strong>Teléfono:</strong> {{ orden.user.phone }}
+                                </p>
+                                <p class="small mb-1">
+                                    <i class="bi bi-geo-alt me-1"></i>
+                                    <strong>Dirección:</strong> {{ orden.user.address }}, {{ orden.user.city }}
+                                </p>
+                                {% if orden.customer_note %}
+                                <p class="small mb-0">
+                                    <i class="bi bi-chat-left-text me-1"></i>
+                                    <strong>Nota:</strong> {{ orden.customer_note }}
+                                </p>
+                                {% endif %}
+                                {% else %}
+                                <p class="text-muted small mb-0">Cliente invitado (sin cuenta).</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
                         <p class="text-muted small fw-bold mb-2">Comprobante de pago</p>
                         {% for comprobante in orden.receipts.all %}
                         <p class="small mb-1"><strong>Método:</strong> {{ comprobante.payment_method.name }}</p>

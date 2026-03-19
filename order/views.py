@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
 from django.core.mail import send_mail
+from django.conf import settings
 
 from .models import (
     Order, OrderDetail, ShoppingCart, ItemCart,
@@ -131,6 +132,23 @@ def payment(request):
             payment_method=payment_method,
             receipt=receipt_file,
             amount=total,
+        )
+
+        cliente_nombre = f"{order.user.first_name} {order.user.last_name}" if order.user else "Cliente invitado"
+
+        send_mail(
+            subject=f'Nuevo comprobante de pago - Pedido #{order.id}',
+            message=(
+                f'El cliente {cliente_nombre} '
+                f'ha subido un comprobante de pago.\n\n'
+                f'Pedido: #{order.id}\n'
+                f'Total: ${order.total}\n'
+                f'Método de pago: {payment_method.name}\n\n'
+                f'Ingresa al panel de administración para confirmarlo.'
+            ),
+            from_email=None,
+            recipient_list=[settings.ADMIN_EMAIL],
+            fail_silently=True,
         )
 
         cart.items.all().delete()

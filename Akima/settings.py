@@ -127,6 +127,7 @@ STATIC_URL = 'static/'
 
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+ADMIN_EMAIL = 'emilycarcas0428@gmail.com'
 # Para producción hay que reemplazar esto despues 
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.gmail.com'
