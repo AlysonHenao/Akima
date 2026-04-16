@@ -4,9 +4,9 @@ from decimal import Decimal
 
 from .models import Product, ColorProduct, ProductImage, GeneralColor, SetProduct
 from order.models import OrderDetail
+from account.views import require_role
 
 
-# ── Rf-01: Display product catalog  /  Rf-02: Search product catalog ─────────
 
 def display_product_catalog(request):
     """Rf-01 — Muestra el catálogo de productos activos.
@@ -23,7 +23,6 @@ def display_product_catalog(request):
     })
 
 
-# ── Rf-04: Show product details ───────────────────────────────────────────────
 
 def show_product_details(request, product_id):
     """Rf-04 — Muestra el detalle de un producto con colores y tallas disponibles"""
@@ -41,15 +40,14 @@ def show_product_details(request, product_id):
     })
 
 
-# ── Panel administración (soporte Rf-28, Rf-29) ───────────────────────────────
 
+@require_role('administrador')
 def administrator(request):
     """Soporte — Panel de administración general de productos"""
     products = Product.objects.all()
     return render(request, 'product/administrator.html', {'products': products})
 
 
-# ── Rf-05: Customize product ──────────────────────────────────────────────────
 
 def customize_product(product, post_data, files):
     """Rf-05 — Agrega colores, imágenes y composición de set a un producto."""
@@ -90,8 +88,8 @@ def customize_product(product, post_data, files):
                 )
 
 
-# ── Rf-28: Create product ─────────────────────────────────────────────────────
 
+@require_role('administrador')
 def create_product(request):
     if request.method == 'POST':
         try:
@@ -127,8 +125,8 @@ def create_product(request):
     return render(request, 'product/new_product.html', context)
 
 
-# ── Rf-29: Edit product ───────────────────────────────────────────────────────
 
+@require_role('administrador')
 def edit_product(request, product_id):
     product = get_object_or_404(
         Product.objects.prefetch_related('colors__general_color', 'images'),
@@ -196,7 +194,6 @@ def edit_product(request, product_id):
 
     return redirect('new_product')
 
-# ── Rf-29 (soporte): Toggle activo/inactivo ───────────────────────────────────
 
 def toggle_product(request, product_id):
     """Rf-29 (soporte) — Activa o desactiva un producto rápidamente desde el listado"""
@@ -208,7 +205,6 @@ def toggle_product(request, product_id):
     return redirect('new_product')
 
 
-# ── Rf-28 (soporte): Create general color ────────────────────────────────────
 
 def create_general_color(request):
     """Rf-28 (soporte) — Crea un nuevo color en el catálogo general"""

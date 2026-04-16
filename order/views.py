@@ -11,9 +11,9 @@ from .models import (
     PaymentMethod, PaymentReceipt, User
 )
 from product.models import Product, ColorProduct
+from account.views import require_role
 
 
-# ── Helper interno ────────────────────────────────────────────────────────────
 
 def get_or_create_cart(request):
     """Helper — Obtiene o crea un carrito para la sesión actual"""
@@ -24,7 +24,6 @@ def get_or_create_cart(request):
     return cart
 
 
-# ── Rf-06: Add product to cart ────────────────────────────────────────────────
 
 def add_product_to_cart(request, product_id):
     """Rf-06 — Agrega un producto con color, talla y cantidad al carrito"""
@@ -97,7 +96,6 @@ def empty_cart(request):
     return redirect('/?carrito=abierto')
 
 
-# ── Rf-08: Display payment methods ───────────────────────────────────────────
 
 def display_payment_methods(cart, items):
     """Rf-08 — Construye el contexto con métodos de pago activos y resumen del carrito.
@@ -109,7 +107,6 @@ def display_payment_methods(cart, items):
     }
 
 
-# ── Rf-07: Place order ────────────────────────────────────────────────────────
 
 def place_order(cart, items):
     """Rf-07 — Crea el Order con sus OrderDetail y vacía el carrito.
@@ -135,7 +132,6 @@ def place_order(cart, items):
     return order
 
 
-# ── Rf-09: Upload payment proof ───────────────────────────────────────────────
 
 def upload_payment_proof(order, payment_method, receipt_file):
     """Rf-09 — Guarda el comprobante de pago vinculado al pedido.
@@ -148,7 +144,6 @@ def upload_payment_proof(order, payment_method, receipt_file):
     )
 
 
-# ── Rf-26: Notify administrator of payment ───────────────────────────────────
 
 def notify_administrator_of_payment(order, payment_method):
     """Rf-26 — Notifica al administrador cuando un cliente sube un comprobante.
@@ -173,13 +168,17 @@ def notify_administrator_of_payment(order, payment_method):
     )
 
 
-# ── Coordinador: página de pago (Rf-08 GET / Rf-07 + Rf-09 + Rf-26 POST) ─────
 
 def payment_page(request):
     """Coordinador HTTP para la página de pago.
     GET  → llama a display_payment_methods (Rf-08).
     POST → llama a place_order (Rf-07), upload_payment_proof (Rf-09)
            y notify_administrator_of_payment (Rf-26) en secuencia."""
+    # Verificar que el usuario sea cliente
+    if request.session.get('user_role') != 'cliente':
+        messages.error(request, 'No tienes permiso para acceder a esta página.')
+        return redirect('login')
+    
     cart = get_or_create_cart(request)
     items = cart.items.select_related('product', 'color_product__general_color')
 
@@ -217,8 +216,8 @@ def payment_page(request):
     return render(request, 'order/payment.html', context)
 
 
-# ── Rf-30: View order information ─────────────────────────────────────────────
 
+@require_role('administrador')
 def view_order_information(request):
     """Rf-30 — Lista todos los pedidos con sus detalles para el administrador"""
     all_orders = Order.objects.select_related('user').prefetch_related(
@@ -229,7 +228,6 @@ def view_order_information(request):
     return render(request, 'order/orders.html', {'orders': all_orders})
 
 
-# ── Rf-10: Notify customer of order ──────────────────────────────────────────
 
 def notify_customer_of_order(order):
     """Rf-10 — Envía un correo al cliente notificando que su pago fue confirmado.
@@ -249,11 +247,14 @@ def notify_customer_of_order(order):
         )
 
 
-# ── Rf-27: Confirm payment ────────────────────────────────────────────────────
-
 def confirm_payment(request, receipt_id):
     """Rf-27 — Confirma el comprobante de pago y actualiza el estado del pedido.
     Tras confirmar llama a notify_customer_of_order (Rf-10)."""
+    # Solo admins pueden confirmar pagos
+    if request.session.get('user_role') != 'administrador':
+        messages.error(request, 'No tienes permiso para acceder a esta acción.')
+        return redirect('login')
+    
     if request.method == 'POST':
         receipt = get_object_or_404(PaymentReceipt, id=receipt_id)
         receipt.confirm = True
@@ -271,8 +272,7 @@ def confirm_payment(request, receipt_id):
     return redirect('orders')
 
 
-# ── Rf-36: Modify order status ────────────────────────────────────────────────
-
+@require_role('administrador')
 def modify_order_status(request, order_id):
     """Rf-36 — Modifica el estado de un pedido existente"""
     if request.method == 'POST':
@@ -288,8 +288,7 @@ def modify_order_status(request, order_id):
     return redirect('orders')
 
 
-# ── Rf-11: Check order status ─────────────────────────────────────────────────
-
+@require_role('administrador')
 def check_order_status(request):
     """Rf-11 — Muestra el panel de pedidos por cliente para que el administrador
     pueda consultar el estado de los pedidos de cada cliente."""

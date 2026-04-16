@@ -28,6 +28,23 @@
         <a href="{% url 'home' %}" class="nav-link">Inicio</a>
         <a href="{% url 'home' %}" class="nav-link">Productos</a>
         <a href="{% url 'customer_orders_panel' %}" class="nav-link">Órdenes</a>
+
+        {% if request.session.user_id %}
+            <span class="text-muted small ms-2 me-1">
+                <i class="bi bi-person-circle me-1"></i>{{ request.session.user_name }}
+            </span>
+            <a href="{% url 'logout' %}" class="btn btn-outline-secondary btn-sm rounded-pill ms-1">
+                Cerrar sesión
+            </a>
+        {% else %}
+            <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm rounded-pill ms-2">
+                Iniciar sesión
+            </a>
+            <a href="{% url 'register' %}" class="btn btn-akima btn-sm ms-1">
+                Registrarse
+            </a>
+        {% endif %}
+
         <button class="btn btn-akima btn-sm ms-2" type="button"
                 data-bs-toggle="offcanvas" data-bs-target="#carritoOffcanvas">
             <i class="bi bi-cart"></i> Carrito
