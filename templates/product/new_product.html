@@ -1,5 +1,6 @@
 {% extends 'shared/header_admin.html' %}
 {% load static %}
+{% load humanize %}
 {% block title %}Gestión de Productos - Akima{% endblock %}
 
 {% block content %}
@@ -67,7 +68,7 @@
 
                     <div class="card-body">
                         <h6 class="fw-bold mb-1">{{ product.name }}</h6>
-                        <p class="fw-bold mb-2" style="color: var(--akima-brown);">${{ product.price }}</p>
+                        <p class="fw-bold mb-2" style="color: var(--akima-brown);">${{ product.price|floatformat:0|intcomma }}</p>
                         <p class="text-muted small mb-3">Stock: {{ product.stock }}</p>
                         <div class="d-flex gap-2">
                             <!-- Rf-29: Editar producto -->
@@ -156,7 +157,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold small">Precio</label>
-                            <input type="number" name="price" class="form-control rounded-3" step="0.01" min="0" required>
+                            <input type="number" name="price" class="form-control rounded-3" step="100" min="0" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold small">Stock</label>
@@ -198,19 +199,31 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small">Imágenes (máx. 5)</label>
-                            <input type="file" name="images" class="form-control rounded-3"
-                                   accept="image/*" multiple>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold small">Guía de fabricación</label>
-                            <input type="file" name="manufacturing_guide" class="form-control rounded-3">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold small">Guía de tallas</label>
-                            <input type="file" name="size_guide" class="form-control rounded-3" accept="image/*">
-                        </div>
+                       <div class="col-md-6">
+    <label class="form-label fw-bold small">Imágenes (máx. 5)</label>
+    <label class="file-btn w-100">
+        <input type="file" name="images" id="imagesInput" multiple hidden>
+        <span class="form-control rounded-3 text-center">Seleccionar imágenes</span>
+    </label>
+</div>
+
+<div class="col-md-3">
+    <label class="form-label fw-bold small">Guía de fabricación</label>
+    <label class="file-btn w-100">
+        <input type="file" name="manufacturing_guide" hidden
+               onchange="this.nextElementSibling.innerText = this.files[0]?.name || 'Subir guía'">
+        <span class="form-control rounded-3 text-center">Subir guía</span>
+    </label>
+</div>
+
+<div class="col-md-3">
+    <label class="form-label fw-bold small">Guía de tallas</label>
+    <label class="file-btn w-100">
+        <input type="file" name="size_guide" hidden
+               onchange="this.nextElementSibling.innerText = this.files[0]?.name || 'Subir talla'">
+        <span class="form-control rounded-3 text-center">Subir talla</span>
+    </label>
+</div>
                         <div class="col-12">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox"
@@ -341,27 +354,36 @@
                             <div class="d-flex flex-wrap gap-2" id="edit_current_images"></div>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-bold small">
-                                Agregar nuevas imágenes
-                                <span class="text-muted fw-normal">(máx. 5)</span>
-                            </label>
-                            <input type="file" name="new_images" class="form-control rounded-3"
-                                   accept="image/*" multiple>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small">
-                                Nueva guía de fabricación
-                                <span class="text-muted fw-normal">(reemplaza la actual)</span>
-                            </label>
-                            <input type="file" name="manufacturing_guide" class="form-control rounded-3">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small">
-                                Nueva guía de tallas
-                                <span class="text-muted fw-normal">(reemplaza la actual)</span>
-                            </label>
-                            <input type="file" name="size_guide" class="form-control rounded-3" accept="image/*">
-                        </div>
+    <label class="form-label fw-bold small">
+        Agregar nuevas imágenes (máx. 5)
+    </label>
+    <label class="file-btn w-100">
+        <input type="file" name="new_images" id="editImagesInput" multiple hidden>
+        <span class="form-control rounded-3 text-center">Seleccionar imágenes</span>
+    </label>
+</div>
+
+<div class="col-md-6">
+    <label class="form-label fw-bold small">
+        Nueva guía de fabricación
+    </label>
+    <label class="file-btn w-100">
+        <input type="file" name="manufacturing_guide" hidden
+               onchange="this.nextElementSibling.innerText = this.files[0]?.name || 'Subir guía'">
+        <span class="form-control rounded-3 text-center">Subir guía</span>
+    </label>
+</div>
+
+<div class="col-md-6">
+    <label class="form-label fw-bold small">
+        Nueva guía de tallas
+    </label>
+    <label class="file-btn w-100">
+        <input type="file" name="size_guide" hidden
+               onchange="this.nextElementSibling.innerText = this.files[0]?.name || 'Subir talla'">
+        <span class="form-control rounded-3 text-center">Subir talla</span>
+    </label>
+</div>
                         <div class="col-12">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox"
@@ -388,6 +410,25 @@
 
 {% block extra_js %}
 <script>
+    // Nuevo producto
+document.getElementById('imagesInput').addEventListener('change', function() {
+    if (this.files.length > 5) {
+        alert('Máximo 5 imágenes');
+        this.value = '';
+    } else {
+        this.nextElementSibling.innerText = this.files.length + ' imágenes seleccionadas';
+    }
+});
+
+// Editar producto
+document.getElementById('editImagesInput').addEventListener('change', function() {
+    if (this.files.length > 5) {
+        alert('Máximo 5 imágenes');
+        this.value = '';
+    } else {
+        this.nextElementSibling.innerText = this.files.length + ' imágenes seleccionadas';
+    }
+});
     // ── Modal Nuevo Producto ──────────────────────────────────────────────────
     document.getElementById('selectCategoria').addEventListener('change', function() {
         const seccion = document.getElementById('seccionSet');
