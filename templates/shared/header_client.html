@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        :root { --akima-pink: #f9e4ed; --akima-brown: #3a270de0; }
+        :root { --akima-pink: #f9e4ed; --akima-brown: #391E10; }
         body { font-family: 'Segoe UI', sans-serif; background-color: #f7f7f7; }
         .btn-akima { background-color: var(--akima-brown); color: white; border-radius: 20px; }
         .btn-akima:hover { background-color: #5a3a0a; color: white; }
@@ -26,7 +26,6 @@
     </a>
     <div class="d-flex align-items-center gap-1">
         <a href="{% url 'home' %}" class="nav-link">Inicio</a>
-        <a href="{% url 'home' %}" class="nav-link">Productos</a>
         <a href="{% url 'customer_orders_panel' %}" class="nav-link">Órdenes</a>
         <button class="btn btn-akima btn-sm ms-2" type="button"
                 data-bs-toggle="offcanvas" data-bs-target="#carritoOffcanvas">
