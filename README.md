@@ -5,7 +5,6 @@ Built with Django 6.0.2.
 
 Developers: Alyson Henao, Samuel Moncada, Emily Cardona, Jose Miguel Sanchez, Juan Osorio
 
----
 
 ## System requirements
 
@@ -13,61 +12,62 @@ Developers: Alyson Henao, Samuel Moncada, Emily Cardona, Jose Miguel Sanchez, Ju
 - pip (comes with Python)
 - Git (to clone the repository)
 
----
-
-Installation
+## Installation
 
 Run the following commands in order:
 
-## 1. Clone the repository
-git clone <repository-url>
+**1. Clone the repository**
 
-## 2. Navigate into the project folder
-cd Akima-main
+`git clone https://github.com/AlysonHenao/Akima/`
 
-## 3. Create a virtual environment
-python -m venv venv
+**2. Navigate into the project folder**
 
-## 4. Activate the virtual environment
-source venv/bin/activate        # Linux / Mac
-venv\Scripts\activate           # Windows
+`cd Akima`
 
-## 5. Install dependencies
-pip install -r requirements.txt
+**3. Create a virtual environment**
 
-## 6. Apply database migrations
-python manage.py migrate
+`python -m venv venv`
 
----
+**4. Activate the virtual environment**
 
-Running the project
+- Linux / Mac: `source venv/bin/activate`        
+
+- Windows: `venv\Scripts\activate`
+
+**5. Install dependencies**
+
+`pip install -r requirements.txt`
+
+**6. Apply database migrations**
+
+`python manage.py migrate`
+
+
+## Running the project
 
 Start the development server:
 
-python manage.py runserver
+`python manage.py runserver`
 
 Open in browser:
 http://127.0.0.1:8000
 
----
 
-Initial setup
+## Initial setup
 
-Currently, the application does not include authentication, so products must be created manually before using the main store features.
-
-Step 1: Access administrator view
+**Step 1:** Access administrator view
 
 Go to:
 
 http://127.0.0.1:8000/administrator/
 
-Step 2: Create products
+**Step 2:** Create products
 
 - Add new products from the administrator interface
 - Fill in required fields (name, price, etc.)
 - Save each product
 
-Step 3: Use the application
+**Step 3:** Use the application
 
 Once products are created, you can:
 
@@ -77,32 +77,4 @@ Once products are created, you can:
 - View existing orders
 
 Without creating products first, the store will appear empty.
-
----
-
-Project structure
-
-Akima-main/
-│
-├── Akima/                  
-│   ├── settings.py         
-│   ├── urls.py             
-│   ├── wsgi.py             
-│   └── asgi.py             
-│
-├── product/                
-├── account/                
-├── order/                  
-├── production/             
-│
-├── templates/              
-│   └── header.html
-│
-├── media/                  
-├── requirements.txt        
-├── manage.py               
-└── db.sqlite3
-```
-
-
 
