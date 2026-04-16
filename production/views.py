@@ -128,7 +128,7 @@ def assign_products_to_employees(request):
     return redirect('production_panel')
 
 
-@require_role('administrador')
+@require_role('empleada')
 def view_assigned_products(request):
     """Rf-17 — Muestra los productos asignados a un empleado específico"""
     employees = User.objects.filter(role='empleada').order_by('first_name', 'last_name')
