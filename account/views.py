@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import HttpResponseForbidden
+from django.core.mail import send_mail
 from functools import wraps
 import hashlib
 from .models import User
@@ -83,6 +84,19 @@ def register(request):
             phone=phone,
             address=address,
             city=city,
+        )
+
+        send_mail(
+            subject='Bienvenida a Akima',
+            message=(
+                f'Hola {user.first_name},\n\n'
+                f'Tu cuenta ha sido creada exitosamente en Akima.\n'
+                f'Correo: {user.email}\n\n'
+                f'Gracias por unirte a nuestra comunidad.\n\nAkima'
+            ),
+            from_email=None,
+            recipient_list=[user.email],
+            fail_silently=True,
         )
 
         request.session['user_id'] = user.id

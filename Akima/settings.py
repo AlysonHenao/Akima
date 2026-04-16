@@ -126,14 +126,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# Email configuration
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-ADMIN_EMAIL = 'emilycarcas0428@gmail.com'
-# Para producción hay que reemplazar esto despues 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'tu_correo@gmail.com'
-# EMAIL_HOST_PASSWORD = 'tu_contraseña_de_aplicacion'
-# DEFAULT_FROM_EMAIL = 'tu_correo@gmail.com'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'akimastorea@gmail.com'
+EMAIL_HOST_PASSWORD = 'iwfe nkcr tkug wzca'
+DEFAULT_FROM_EMAIL = 'akimastorea@gmail.com'
+ADMIN_EMAIL = 'akimastorea@gmail.com'
