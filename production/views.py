@@ -5,19 +5,18 @@ from django.db.models import Case, When, IntegerField
 
 from .models import ProductionTask, EmployeeInventory
 from account.models import User
+from account.views import require_role
 from product.models import Product, ColorProduct
 from order.models import Order, OrderDetail
 
 
-# ── Rf-31: View employee information ─────────────────────────────────────────
-
+@require_role('empleada')
 def view_employee_information(request):
     """Rf-31 — Muestra el panel del empleado"""
     return render(request, 'production/employee.html')
 
 
-# ── Rf-34: Display manufacturing process ─────────────────────────────────────
-
+@require_role('administrador')
 def display_manufacturing_process(request):
     """Rf-34 — Muestra el panel de producción con tareas, filtros y pedidos confirmados"""
     employees = User.objects.filter(role='empleada')
@@ -77,8 +76,6 @@ def display_manufacturing_process(request):
     })
 
 
-# ── Rf-18: Notify employee of assignment ─────────────────────────────────────
-
 def notify_employee_of_assignment(employee, color_product, order_detail, specification):
     """Rf-18 — Notifica al empleado por correo cuando se le asigna una tarea.
     Función interna llamada desde assign_products_to_employees (Rf-25)."""
@@ -100,8 +97,7 @@ def notify_employee_of_assignment(employee, color_product, order_detail, specifi
     )
 
 
-# ── Rf-25: Assign products to employees ──────────────────────────────────────
-
+@require_role('administrador')
 def assign_products_to_employees(request):
     """Rf-25 — Asigna un producto a un empleado creando una tarea de producción.
     Tras asignar llama a notify_employee_of_assignment (Rf-18) para notificar."""
@@ -132,8 +128,7 @@ def assign_products_to_employees(request):
     return redirect('production_panel')
 
 
-# ── Rf-17: View assigned products ────────────────────────────────────────────
-
+@require_role('administrador')
 def view_assigned_products(request):
     """Rf-17 — Muestra los productos asignados a un empleado específico"""
     employees = User.objects.filter(role='empleada').order_by('first_name', 'last_name')

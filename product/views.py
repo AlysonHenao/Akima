@@ -4,9 +4,9 @@ from decimal import Decimal
 
 from .models import Product, ColorProduct, ProductImage, GeneralColor, SetProduct
 from order.models import OrderDetail
+from account.views import require_role
 
 
-# ── Rf-01: Display product catalog  /  Rf-02: Search product catalog ─────────
 
 def display_product_catalog(request):
     """Rf-01 — Muestra el catálogo de productos activos.
@@ -23,7 +23,6 @@ def display_product_catalog(request):
     })
 
 
-# ── Rf-04: Show product details ───────────────────────────────────────────────
 
 def show_product_details(request, product_id):
     """Rf-04 — Muestra el detalle de un producto con colores y tallas disponibles"""
@@ -41,32 +40,46 @@ def show_product_details(request, product_id):
     })
 
 
-# ── Panel administración (soporte Rf-28, Rf-29) ───────────────────────────────
 
+@require_role('administrador')
 def administrator(request):
     """Soporte — Panel de administración general de productos"""
     products = Product.objects.all()
     return render(request, 'product/administrator.html', {'products': products})
 
 
-# ── Rf-05: Customize product ──────────────────────────────────────────────────
 
 def customize_product(product, post_data, files):
-    """Rf-05 — Agrega colores, imágenes y composición de set a un producto.
-    Función interna llamada desde create_product (Rf-28) en el mismo formulario."""
+    """Rf-05 — Agrega colores, imágenes y composición de set a un producto."""
+
+    
     for color_id in post_data.getlist('colors'):
         ColorProduct.objects.create(
             product=product,
             general_color_id=color_id,
             available=True
         )
-    for image in files.getlist('images')[:5]:
+
+    images = files.getlist('images')
+
+    if len(images) > 5:
+        raise Exception("Solo puedes subir máximo 5 imágenes")
+
+    if product.images.count() + len(images) > 5:
+        raise Exception("El producto no puede tener más de 5 imágenes en total")
+
+    for image in images:
         ProductImage.objects.create(product=product, url_image=image)
+
+
     if product.category == 'Set':
         for product_id in post_data.getlist('set_products'):
             quantity = post_data.get(f'set_quantity_{product_id}')
             price = post_data.get(f'set_price_{product_id}')
+
             if quantity and price:
+                price = price.replace(',', '.')
+
                 SetProduct.objects.create(
                     set_product=product,
                     individual_product_id=product_id,
@@ -75,28 +88,30 @@ def customize_product(product, post_data, files):
                 )
 
 
-# ── Rf-28: Create product ─────────────────────────────────────────────────────
 
+@require_role('administrador')
 def create_product(request):
-    """Rf-28 — Crea el producto base y llama a customize_product (Rf-05)
-    para agregar colores, imágenes y composición de set en el mismo flujo."""
     if request.method == 'POST':
         try:
+            price = request.POST.get('price', '0').replace(',', '.')
+
             product = Product.objects.create(
                 name=request.POST.get('name'),
                 category=request.POST.get('category'),
                 description=request.POST.get('description'),
-                price=Decimal(request.POST.get('price')),
+                price=Decimal(price),
                 stock=int(request.POST.get('stock', 0)),
                 manufacturing_time=int(request.POST.get('manufacturing_time')),
                 active=request.POST.get('active') == 'on',
                 manufacturing_guide=request.FILES.get('manufacturing_guide'),
                 size_guide=request.FILES.get('size_guide'),
             )
-            # Rf-05: personalizar colores, imágenes y sets
+
             customize_product(product, request.POST, request.FILES)
+
             messages.success(request, f'¡Producto "{product.name}" creado exitosamente!')
             return redirect('new_product')
+
         except Exception as e:
             messages.error(request, f'Error al crear producto: {str(e)}')
 
@@ -110,59 +125,75 @@ def create_product(request):
     return render(request, 'product/new_product.html', context)
 
 
-# ── Rf-29: Edit product ───────────────────────────────────────────────────────
 
+@require_role('administrador')
 def edit_product(request, product_id):
-    """Rf-29 — Edita todos los campos de un producto: datos base, colores e imágenes."""
     product = get_object_or_404(
         Product.objects.prefetch_related('colors__general_color', 'images'),
         id=product_id
     )
+
     if request.method == 'POST':
         try:
+            price = request.POST.get('price', '0').replace(',', '.')
+
             # Datos base
             product.name = request.POST.get('name')
             product.category = request.POST.get('category')
             product.description = request.POST.get('description')
-            product.price = Decimal(request.POST.get('price'))
+            product.price = Decimal(price)
             product.stock = int(request.POST.get('stock', 0))
             product.manufacturing_time = int(request.POST.get('manufacturing_time'))
             product.active = request.POST.get('active') == 'on'
 
             if request.FILES.get('manufacturing_guide'):
                 product.manufacturing_guide = request.FILES.get('manufacturing_guide')
+
             if request.FILES.get('size_guide'):
                 product.size_guide = request.FILES.get('size_guide')
 
             product.save()
 
-            # Colores: reemplazar por la selección actual
+          
             color_ids_nuevos = set(int(x) for x in request.POST.getlist('colors'))
             color_ids_actuales = set(
                 product.colors.values_list('general_color_id', flat=True)
             )
+
             for color_id in color_ids_nuevos - color_ids_actuales:
                 ColorProduct.objects.create(
-                    product=product, general_color_id=color_id, available=True
+                    product=product,
+                    general_color_id=color_id,
+                    available=True
                 )
+
             product.colors.filter(
                 general_color_id__in=color_ids_actuales - color_ids_nuevos
             ).delete()
 
-            # Imágenes: eliminar marcadas y agregar nuevas
+            
             ids_a_eliminar = request.POST.getlist('delete_images')
             if ids_a_eliminar:
-                ProductImage.objects.filter(id__in=ids_a_eliminar, product=product).delete()
-            for image in request.FILES.getlist('new_images')[:5]:
+                ProductImage.objects.filter(
+                    id__in=ids_a_eliminar,
+                    product=product
+                ).delete()
+
+            new_images = request.FILES.getlist('new_images')
+
+            if product.images.count() + len(new_images) > 5:
+                raise Exception("Máximo 5 imágenes por producto")
+
+            for image in new_images:
                 ProductImage.objects.create(product=product, url_image=image)
 
             messages.success(request, f'Producto "{product.name}" actualizado correctamente.')
+
         except Exception as e:
             messages.error(request, f'Error al editar producto: {str(e)}')
+
     return redirect('new_product')
 
-
-# ── Rf-29 (soporte): Toggle activo/inactivo ───────────────────────────────────
 
 def toggle_product(request, product_id):
     """Rf-29 (soporte) — Activa o desactiva un producto rápidamente desde el listado"""
@@ -174,7 +205,6 @@ def toggle_product(request, product_id):
     return redirect('new_product')
 
 
-# ── Rf-28 (soporte): Create general color ────────────────────────────────────
 
 def create_general_color(request):
     """Rf-28 (soporte) — Crea un nuevo color en el catálogo general"""
