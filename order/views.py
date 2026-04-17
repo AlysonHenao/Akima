@@ -288,10 +288,30 @@ def modify_order_status(request, order_id):
     return redirect('orders')
 
 
-@require_role('administrador')
+# DESPUÉS
+@require_role('administrador', 'empleada', 'cliente')
 def check_order_status(request):
-    """Rf-11 — Muestra el panel de pedidos por cliente para que el administrador
-    pueda consultar el estado de los pedidos de cada cliente."""
+    user_role = request.session.get('user_role')
+    user_id = request.session.get('user_id')
+
+    # Empleada: redirigir a su propio panel de tareas
+    if user_role == 'empleada':
+        return redirect('employee_panel')
+
+    # Cliente: mostrar solo sus propias órdenes
+    if user_role == 'cliente':
+        orders = Order.objects.filter(
+            user_id=user_id
+        ).prefetch_related(
+            'details__product',
+            'details__color_product__general_color'
+        ).order_by('-order_date')
+        return render(request, 'order/customer_orders_panel.html', {
+            'orders': orders,
+            'is_cliente': True,
+        })
+
+    # Administrador: selector de clientes (comportamiento actual)
     customers = User.objects.filter(role='cliente').order_by('first_name', 'last_name')
     selected_customer_id = request.GET.get('user_id')
     selected_customer = None
@@ -310,4 +330,5 @@ def check_order_status(request):
         'customers': customers,
         'selected_customer': selected_customer,
         'orders': orders,
+        'is_cliente': False,
     })

@@ -5,12 +5,19 @@
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
-            <h3 class="fw-bold mb-1" style="color: var(--akima-brown);">Mis pedidos</h3>
-            <p class="text-muted mb-0">Consulta el estado actualizado de tus órdenes.</p>
+            <h3 class="fw-bold mb-1" style="color: var(--akima-brown);">
+                {% if is_cliente %}Mis pedidos{% else %}Pedidos por cliente{% endif %}
+            </h3>
+            <p class="text-muted mb-0">
+                {% if is_cliente %}Consulta el estado actualizado de tus órdenes.
+                {% else %}Consulta el estado de los pedidos de cada cliente.{% endif %}
+            </p>
         </div>
         <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm rounded-pill">Volver al inicio</a>
     </div>
 
+    {% if not is_cliente %}
+    <!-- Selector solo para admin -->
     <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
         <form method="GET" class="row g-3 align-items-end">
             <div class="col-md-8">
@@ -33,62 +40,69 @@
             </div>
         </form>
     </div>
+    {% endif %}
 
-    {% if selected_customer %}
+    {% if not is_cliente and selected_customer %}
         <div class="mb-3">
             <h5 class="fw-bold mb-1" style="color: var(--akima-brown);">
                 {{ selected_customer.first_name }} {{ selected_customer.last_name }}
             </h5>
             <p class="text-muted small mb-0">{{ selected_customer.email }}</p>
         </div>
+    {% endif %}
 
-        {% if orders %}
-            <div class="d-flex flex-column gap-4">
-                {% for order in orders %}
-                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3 px-4">
-                            <div>
-                                <h6 class="fw-bold mb-1" style="color: var(--akima-brown);">Pedido</h6>
-                                <p class="text-muted small mb-0">
-                                    {{ order.order_date|date:"d/m/Y H:i" }}
-                                </p>
+    {% if orders %}
+        <div class="d-flex flex-column gap-4">
+            {% for order in orders %}
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2 py-3 px-4">
+                        <div>
+                            <h6 class="fw-bold mb-1" style="color: var(--akima-brown);">
+                                Pedido #{{ order.id }}
+                            </h6>
+                            <p class="text-muted small mb-0">{{ order.order_date|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        <span class="badge rounded-pill px-3 py-2"
+                              style="background-color: var(--akima-pink); color: var(--akima-brown);">
+                            {{ order.status }}
+                        </span>
+                    </div>
+
+                    <div class="card-body px-4 py-4">
+                        <div class="row g-4 mb-3">
+                            <div class="col-md-6">
+                                <div class="bg-light rounded-4 p-3 h-100">
+                                    <p class="fw-semibold mb-2">Resumen del pedido</p>
+                                    <p class="small mb-1"><strong>Total:</strong> ${{ order.total }}</p>
+                                    <p class="small mb-0"><strong>Estado:</strong> {{ order.status }}</p>
+                                </div>
                             </div>
-
-                            <span class="badge rounded-pill px-3 py-2" style="background-color: var(--akima-pink); color: var(--akima-brown);">
-                                {{ order.status }}
-                            </span>
+                            <div class="col-md-6">
+                                <div class="bg-light rounded-4 p-3 h-100">
+                                    <p class="fw-semibold mb-2">Seguimiento</p>
+                                    {% if order.status == "Pendiente confirmacion" %}
+                                        <p class="small mb-0">Tu pago está siendo revisado por el administrador.</p>
+                                    {% elif order.status == "Confirmado" %}
+                                        <p class="small mb-0">Tu pedido fue confirmado y está en proceso.</p>
+                                    {% elif order.status == "Enviado" %}
+                                        <p class="small mb-0">Tu pedido ya fue enviado.</p>
+                                    {% elif order.status == "Entregado" %}
+                                        <p class="small mb-0">Tu pedido ya fue entregado.</p>
+                                    {% else %}
+                                        <p class="small mb-0">Consulta el estado actualizado de tu pedido.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="card-body px-4 py-4">
-                            <div class="row g-4 mb-3">
-                                <div class="col-md-6">
-                                    <div class="bg-light rounded-4 p-3 h-100">
-                                        <p class="fw-semibold mb-2">Resumen del pedido</p>
-                                        <p class="small mb-1"><strong>Total:</strong> ${{ order.total }}</p>
-                                        <p class="small mb-0"><strong>Estado:</strong> {{ order.status }}</p>
-                                    </div>
-                                </div>
+                        <!-- Detalle colapsable -->
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill mb-3"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#detalle-orden-{{ order.id }}">
+                            <i class="bi bi-eye me-1"></i>Ver productos
+                        </button>
 
-                                <div class="col-md-6">
-                                    <div class="bg-light rounded-4 p-3 h-100">
-                                        <p class="fw-semibold mb-2">Seguimiento</p>
-                                        {% if order.status == "Pendiente confirmacion" %}
-                                            <p class="small mb-0">Tu pago está siendo revisado por el administrador.</p>
-                                        {% elif order.status == "Confirmado" %}
-                                            <p class="small mb-0">Tu pedido fue confirmado y está en proceso.</p>
-                                        {% elif order.status == "Enviado" %}
-                                            <p class="small mb-0">Tu pedido ya fue enviado.</p>
-                                        {% elif order.status == "Entregado" %}
-                                            <p class="small mb-0">Tu pedido ya fue entregado.</p>
-                                        {% else %}
-                                            <p class="small mb-0">Consulta el estado actualizado de tu pedido.</p>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <h6 class="fw-bold mb-3" style="color: var(--akima-brown);">Productos del pedido</h6>
-
+                        <div class="collapse" id="detalle-orden-{{ order.id }}">
                             <div class="table-responsive">
                                 <table class="table align-middle">
                                     <thead class="table-light">
@@ -111,7 +125,9 @@
                                             </tr>
                                         {% empty %}
                                             <tr>
-                                                <td colspan="5" class="text-center text-muted">No hay productos en este pedido.</td>
+                                                <td colspan="5" class="text-center text-muted">
+                                                    No hay productos en este pedido.
+                                                </td>
                                             </tr>
                                         {% endfor %}
                                     </tbody>
@@ -119,13 +135,20 @@
                             </div>
                         </div>
                     </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="card border-0 shadow-sm rounded-4 p-4">
-                <p class="text-muted mb-0">Este cliente no tiene pedidos registrados.</p>
-            </div>
-        {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+    {% elif is_cliente %}
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <p class="text-muted mb-0">Aún no tienes pedidos registrados.</p>
+        </div>
+
+    {% elif selected_customer %}
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <p class="text-muted mb-0">Este cliente no tiene pedidos registrados.</p>
+        </div>
+
     {% else %}
         <div class="card border-0 shadow-sm rounded-4 p-4">
             <p class="text-muted mb-0">Selecciona un cliente para ver sus pedidos.</p>

@@ -128,38 +128,33 @@ def assign_products_to_employees(request):
     return redirect('production_panel')
 
 
+# DESPUÉS
 @require_role('empleada')
 def view_assigned_products(request):
-    """Rf-17 — Muestra los productos asignados a un empleado específico"""
-    employees = User.objects.filter(role='empleada').order_by('first_name', 'last_name')
-    selected_employee_id = request.GET.get('employee_id')
-    selected_employee = None
-    tasks = ProductionTask.objects.none()
+    user_id = request.session.get('user_id')
+    employee = get_object_or_404(User, id=user_id, role='empleada')
 
-    if selected_employee_id:
-        selected_employee = get_object_or_404(User, id=selected_employee_id, role='empleada')
-        tasks = ProductionTask.objects.select_related(
-            'employee',
-            'product__product',
-            'product__general_color',
-            'order_detail__order',
-            'order_detail__product',
-            'order_detail__color_product__general_color',
-        ).filter(
-            employee=selected_employee
-        ).annotate(
-            status_order=Case(
-                When(status='En progreso', then=0),
-                When(status='Pendiente', then=1),
-                When(status='Completada', then=2),
-                When(status='Cancelada', then=3),
-                default=4,
-                output_field=IntegerField()
-            )
-        ).order_by('status_order', '-assignment_date')
+    tasks = ProductionTask.objects.select_related(
+        'employee',
+        'product__product',
+        'product__general_color',
+        'order_detail__order',
+        'order_detail__product',
+        'order_detail__color_product__general_color',
+    ).filter(
+        employee=employee
+    ).annotate(
+        status_order=Case(
+            When(status='En progreso', then=0),
+            When(status='Pendiente', then=1),
+            When(status='Completada', then=2),
+            When(status='Cancelada', then=3),
+            default=4,
+            output_field=IntegerField()
+        )
+    ).order_by('status_order', '-assignment_date')
 
     return render(request, 'production/employee_panel.html', {
-        'employees': employees,
-        'selected_employee': selected_employee,
+        'employee': employee,
         'tasks': tasks,
     })
