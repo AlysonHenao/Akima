@@ -80,7 +80,7 @@
                 <div class="card-body">
                     <h6 class="fw-bold mb-1">{{ product.name }}</h6>
                     <p class="text-muted small mb-2">{{ product.description|truncatewords:12 }}</p>
-                    <p class="fw-bold mb-3" style="color: var(--akima-brown);">${{ product.price }}</p>
+                    <p class="fw-bold mb-3" style="color: var(--akima-brown);">{{ product.formatted_price }}</p>
                     <a href="{% url 'product_detail' product.id %}" class="btn btn-akima btn-sm w-100">
                         Personalizar
                     </a>

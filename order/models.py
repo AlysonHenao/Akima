@@ -40,6 +40,11 @@ class Order(models.Model):
         customer = f"{self.user.first_name} {self.user.last_name}" if self.user else 'Invitado'
         return f"Order #{self.id} - {customer} ({self.status})"
 
+    @property
+    def formatted_price(self):
+        """Format total in Colombian format (185.000)"""
+        return f"${self.total:,.0f}".replace(',', '.')
+
 
 class OrderDetail(models.Model):
     SIZE = [
@@ -108,6 +113,12 @@ class ShoppingCart(models.Model):
     def get_total(self):
         return sum(item.get_subtotal() for item in self.items.all())
 
+    @property
+    def formatted_total(self):
+        """Format total in Colombian format"""
+        total = self.get_total()
+        return f"${total:,.0f}".replace(',', '.')
+
 
 class ItemCart(models.Model):
     SIZE = [
@@ -149,6 +160,17 @@ class ItemCart(models.Model):
 
     def get_subtotal(self):
         return self.unit_price * self.quantity
+
+    @property
+    def formatted_unit_price(self):
+        """Format unit price in Colombian format"""
+        return f"${self.unit_price:,.0f}".replace(',', '.')
+
+    @property
+    def formatted_subtotal(self):
+        """Format subtotal in Colombian format"""
+        subtotal = self.get_subtotal()
+        return f"${subtotal:,.0f}".replace(',', '.')
 
 
 class PaymentMethod(models.Model):

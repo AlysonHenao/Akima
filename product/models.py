@@ -44,6 +44,11 @@ class Product(models.Model):
     def __str__(self):
         return f"{self.name} ({self.category})"
 
+    @property
+    def formatted_price(self):
+        """Format price in Colombian format (185.000,00)"""
+        return f"${self.price:,.0f}".replace(',', '.')
+
 
 class ColorProduct(models.Model):
     product = models.ForeignKey(

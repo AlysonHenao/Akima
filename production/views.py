@@ -107,11 +107,28 @@ def assign_products_to_employees(request):
         order_detail_id = request.POST.get('order_detail_id') or None
         specification = request.POST.get('specification', '').strip()
 
+        if not employee_id or not color_product_id:
+            messages.error(request, 'Debes seleccionar una empleada y un producto.')
+            return redirect('production_panel')
+
         employee = get_object_or_404(User, id=employee_id, role='empleada')
         color_product = get_object_or_404(ColorProduct, id=color_product_id)
         order_detail = None
         if order_detail_id:
             order_detail = get_object_or_404(OrderDetail, id=order_detail_id)
+
+        existing_task = ProductionTask.objects.filter(
+            employee=employee,
+            product=color_product,
+            status__in=['Pendiente', 'En progreso']
+        ).exists()
+
+        if existing_task:
+            messages.error(
+                request,
+                f'{employee.first_name} ya tiene asignada esta tarea en estado Pendiente o En progreso.'
+            )
+            return redirect('production_panel')
 
         ProductionTask.objects.create(
             employee=employee,
@@ -121,14 +138,12 @@ def assign_products_to_employees(request):
             status='Pendiente'
         )
 
-        # Rf-18: notificar al empleado
         notify_employee_of_assignment(employee, color_product, order_detail, specification)
 
         messages.success(request, f'Tarea asignada a {employee.first_name} exitosamente.')
     return redirect('production_panel')
 
 
-# DESPUÉS
 @require_role('empleada')
 def view_assigned_products(request):
     user_id = request.session.get('user_id')

@@ -51,8 +51,6 @@ def administrator(request):
 
 def customize_product(product, post_data, files):
     """Rf-05 — Agrega colores, imágenes y composición de set a un producto."""
-
-    
     for color_id in post_data.getlist('colors'):
         ColorProduct.objects.create(
             product=product,
@@ -70,7 +68,6 @@ def customize_product(product, post_data, files):
 
     for image in images:
         ProductImage.objects.create(product=product, url_image=image)
-
 
     if product.category == 'Set':
         for product_id in post_data.getlist('set_products'):
@@ -137,7 +134,6 @@ def edit_product(request, product_id):
         try:
             price = request.POST.get('price', '0').replace(',', '.')
 
-            # Datos base
             product.name = request.POST.get('name')
             product.category = request.POST.get('category')
             product.description = request.POST.get('description')
@@ -154,7 +150,6 @@ def edit_product(request, product_id):
 
             product.save()
 
-          
             color_ids_nuevos = set(int(x) for x in request.POST.getlist('colors'))
             color_ids_actuales = set(
                 product.colors.values_list('general_color_id', flat=True)

@@ -68,7 +68,7 @@
 
                     <div class="card-body">
                         <h6 class="fw-bold mb-1">{{ product.name }}</h6>
-                        <p class="fw-bold mb-2" style="color: var(--akima-brown);">${{ product.price|floatformat:0|intcomma }}</p>
+                        <p class=\"fw-bold mb-2\" style=\"color: var(--akima-brown);\">{{ product.formatted_price }}</p>
                         <p class="text-muted small mb-3">Stock: {{ product.stock }}</p>
                         <div class="d-flex gap-2">
                             <!-- Rf-29: Editar producto -->

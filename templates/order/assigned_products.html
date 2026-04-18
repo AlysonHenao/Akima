@@ -35,7 +35,7 @@
                             <td>{{ detail.color_product.general_color.name }}</td>
                             <td>{{ detail.size }}</td>
                             <td>{{ detail.quantity }}</td>
-                            <td>${{ detail.unit_price }}</td>
+                            <td>{{ detail.formatted_unit_price }}</td>
                         </tr>
                         {% empty %}
                         <tr>

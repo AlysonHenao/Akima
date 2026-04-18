@@ -27,7 +27,7 @@
                 <td>#{{ order.id }}</td>
                 <td>{{ order.user }}</td>
                 <td>{{ order.order_date }}</td>
-                <td>${{ order.total }}</td>
+                <td>{{ order.formatted_price }}</td>
                 <td>
                     {% if order.status == "Confirmado" %}
                         <span class="badge bg-success">{{ order.status }}</span>

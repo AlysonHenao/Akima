@@ -16,10 +16,27 @@ from account.views import require_role
 
 
 def get_or_create_cart(request):
-    """Helper — Obtiene o crea un carrito para la sesión actual"""
+    """Helper — Obtiene o crea un carrito para la sesión actual
+    Si el usuario está logueado, lo asocia al carrito."""
     if not request.session.session_key:
         request.session.create()
+    
     session_key = request.session.session_key
+    user_id = request.session.get('user_id')
+    
+    if user_id:
+        try:
+            user = User.objects.get(id=user_id)
+            cart, created = ShoppingCart.objects.get_or_create(
+                user=user,
+                defaults={'session_key': session_key}
+            )
+            cart.session_key = session_key
+            cart.save()
+            return cart
+        except User.DoesNotExist:
+            pass
+    
     cart, created = ShoppingCart.objects.get_or_create(session_key=session_key)
     return cart
 
@@ -33,15 +50,36 @@ def add_product_to_cart(request, product_id):
         size = request.POST.get('size')
         quantity = int(request.POST.get('quantity', 1))
 
+        if quantity <= 0:
+            messages.error(request, 'La cantidad debe ser mayor a 0.')
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+
         color_product = get_object_or_404(
             ColorProduct, id=color_id, product=product, available=True
         )
+        
+        if product.stock < quantity:
+            messages.error(
+                request,
+                f'Stock insuficiente. Disponible: {product.stock}, Solicitado: {quantity}'
+            )
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+
         cart = get_or_create_cart(request)
         existing_item = ItemCart.objects.filter(
             cart=cart, product=product, color_product=color_product, size=size
         ).first()
 
         if existing_item:
+            new_total = existing_item.quantity + quantity
+            if product.stock < new_total:
+                messages.error(
+                    request,
+                    f'Stock insuficiente para esa cantidad. '
+                    f'Total solicitado: {new_total}, Disponible: {product.stock}'
+                )
+                return redirect(request.META.get('HTTP_REFERER', '/'))
+            
             existing_item.quantity += quantity
             existing_item.save()
             messages.success(request, f'Cantidad de "{product.name}" actualizada en el carrito.')
@@ -70,11 +108,18 @@ def update_cart_item(request, item_id):
     nueva_cantidad = int(request.GET.get('cantidad', 1))
     next_url = request.GET.get('next', '/')
 
-    if nueva_cantidad > 0:
-        item.quantity = nueva_cantidad
-        item.save()
-    else:
-        item.delete()
+    if nueva_cantidad <= 0:
+        messages.error(request, 'La cantidad debe ser mayor a 0.')
+        return redirect(next_url + '?carrito=abierto')
+    if item.product.stock < nueva_cantidad:
+        messages.error(
+            request,
+            f'Stock insuficiente. Disponible: {item.product.stock}'
+        )
+        return redirect(next_url + '?carrito=abierto')
+
+    item.quantity = nueva_cantidad
+    item.save()
 
     return redirect(next_url + '?carrito=abierto')
 
@@ -102,19 +147,28 @@ def display_payment_methods(cart, items):
     Función interna usada en payment_page (GET)."""
     return {
         'items': items,
-        'total': cart.get_total(),
+        'total': cart.formatted_total,
         'payment_methods': PaymentMethod.objects.filter(active=True),
     }
 
 
 
-def place_order(cart, items):
+def place_order(cart, items, user=None):
     """Rf-07 — Crea el Order con sus OrderDetail y vacía el carrito.
     Función interna usada en payment_page (POST).
     Retorna el pedido creado."""
+    for item in items:
+        if item.product.stock < item.quantity:
+            raise ValueError(
+                f"Stock insuficiente para {item.product.name}. "
+                f"Disponible: {item.product.stock}, Solicitado: {item.quantity}"
+            )
+
     total = cart.get_total()
+    order_user = cart.user or user
+    
     order = Order.objects.create(
-        user=cart.user,
+        user=order_user,
         subtotal=total,
         total=total,
         status='Pendiente confirmacion',
@@ -174,11 +228,9 @@ def payment_page(request):
     GET  → llama a display_payment_methods (Rf-08).
     POST → llama a place_order (Rf-07), upload_payment_proof (Rf-09)
            y notify_administrator_of_payment (Rf-26) en secuencia."""
-    # Verificar que el usuario sea cliente
     if request.session.get('user_role') != 'cliente':
         messages.error(request, 'No tienes permiso para acceder a esta página.')
         return redirect('login')
-    
     cart = get_or_create_cart(request)
     items = cart.items.select_related('product', 'color_product__general_color')
 
@@ -199,19 +251,25 @@ def payment_page(request):
 
         payment_method = get_object_or_404(PaymentMethod, id=payment_method_id)
 
-        # Rf-07: crear pedido y detalles
-        order = place_order(cart, items)
+        user_id = request.session.get('user_id')
+        user = None
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                pass
 
-        # Rf-09: guardar comprobante
-        upload_payment_proof(order, payment_method, receipt_file)
+        try:
+            order = place_order(cart, items, user=user)
+            upload_payment_proof(order, payment_method, receipt_file)
+            notify_administrator_of_payment(order, payment_method)
 
-        # Rf-26: notificar al administrador
-        notify_administrator_of_payment(order, payment_method)
+            messages.success(request, '¡Comprobante enviado! Tu pedido será verificado.')
+            return redirect('home')
+        except ValueError as e:
+            messages.error(request, f'Error al procesar pedido: {str(e)}')
+            return redirect('payment')
 
-        messages.success(request, '¡Comprobante enviado! Tu pedido será verificado.')
-        return redirect('home')
-
-    # Rf-08: mostrar métodos de pago
     context = display_payment_methods(cart, items)
     return render(request, 'order/payment.html', context)
 
@@ -250,11 +308,9 @@ def notify_customer_of_order(order):
 def confirm_payment(request, receipt_id):
     """Rf-27 — Confirma el comprobante de pago y actualiza el estado del pedido.
     Tras confirmar llama a notify_customer_of_order (Rf-10)."""
-    # Solo admins pueden confirmar pagos
     if request.session.get('user_role') != 'administrador':
         messages.error(request, 'No tienes permiso para acceder a esta acción.')
         return redirect('login')
-    
     if request.method == 'POST':
         receipt = get_object_or_404(PaymentReceipt, id=receipt_id)
         receipt.confirm = True
@@ -265,7 +321,18 @@ def confirm_payment(request, receipt_id):
         order.status = 'Confirmado'
         order.save()
 
-        # Rf-10: notificar al cliente
+        for detail in order.details.all():
+            product = detail.product
+            if product.stock >= detail.quantity:
+                product.stock -= detail.quantity
+                product.save()
+            else:
+                messages.warning(
+                    request, 
+                    f'Advertencia: Stock insuficiente para {product.name} '
+                    f'en pedido #{order.id}'
+                )
+
         notify_customer_of_order(order)
 
         messages.success(request, f'Pago del pedido #{order.id} confirmado exitosamente.')
@@ -288,17 +355,14 @@ def modify_order_status(request, order_id):
     return redirect('orders')
 
 
-# DESPUÉS
 @require_role('administrador', 'empleada', 'cliente')
 def check_order_status(request):
     user_role = request.session.get('user_role')
     user_id = request.session.get('user_id')
 
-    # Empleada: redirigir a su propio panel de tareas
     if user_role == 'empleada':
         return redirect('employee_panel')
 
-    # Cliente: mostrar solo sus propias órdenes
     if user_role == 'cliente':
         orders = Order.objects.filter(
             user_id=user_id
@@ -310,8 +374,6 @@ def check_order_status(request):
             'orders': orders,
             'is_cliente': True,
         })
-
-    # Administrador: selector de clientes (comportamiento actual)
     customers = User.objects.filter(role='cliente').order_by('first_name', 'last_name')
     selected_customer_id = request.GET.get('user_id')
     selected_customer = None

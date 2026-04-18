@@ -71,9 +71,9 @@
                     <div class="card-body px-4 py-4">
                         <div class="row g-4 mb-3">
                             <div class="col-md-6">
-                                <div class="bg-light rounded-4 p-3 h-100">
-                                    <p class="fw-semibold mb-2">Resumen del pedido</p>
-                                    <p class="small mb-1"><strong>Total:</strong> ${{ order.total }}</p>
+                                <div class="bg-light rounded-4 p-3 h-100\">
+                                    <p class=\"fw-semibold mb-2\">Resumen del pedido</p>
+                                    <p class=\"small mb-1\"><strong>Total:</strong> {{ order.formatted_price }}</p>
                                     <p class="small mb-0"><strong>Estado:</strong> {{ order.status }}</p>
                                 </div>
                             </div>
@@ -121,7 +121,7 @@
                                                 <td>{{ detail.color_product.general_color.name }}</td>
                                                 <td>{{ detail.size }}</td>
                                                 <td>{{ detail.quantity }}</td>
-                                                <td>${{ detail.unit_price }}</td>
+                                                <td>{{ detail.formatted_unit_price }}</td>
                                             </tr>
                                         {% empty %}
                                             <tr>

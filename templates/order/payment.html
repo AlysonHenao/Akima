@@ -10,7 +10,7 @@
         {% for item in items %}
         <div class="d-flex justify-content-between text-muted small mb-1">
             <span>{{ item.product.name }} ({{ item.color_product.general_color.name }} - {{ item.size }}) x{{ item.quantity }}</span>
-            <span>${{ item.get_subtotal }}</span>
+            <span>{{ item.formatted_subtotal }}</span>
         </div>
         {% empty %}
         <p class="text-muted small">No hay productos.</p>
@@ -18,7 +18,7 @@
         <hr>
         <div class="d-flex justify-content-between fw-bold">
             <span>Total a pagar:</span>
-            <span style="color: var(--akima-brown);">${{ total }}</span>
+            <span style="color: var(--akima-brown);">{{ total }}</span>
         </div>
     </div>
 
