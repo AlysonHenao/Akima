@@ -13,21 +13,26 @@
 
     {% if tasks %}
         <div class="card border-0 shadow-sm rounded-4 p-4">
-            <div class="d-flex flex-column gap-3">
+            <div class="d-flex flex-column gap-4">
                 {% for task in tasks %}
-                <div class="border-bottom pb-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
+                <div class="border-bottom pb-4">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                        <div class="flex-grow-1">
                             <h6 class="fw-bold mb-2" style="color: var(--akima-brown);">
                                 {{ task.product.product.name }} — {{ task.product.general_color.name }}
                             </h6>
+
                             <p class="text-muted small mb-2">
                                 <i class="bi bi-calendar-event me-1"></i>
                                 Asignado: {{ task.assignment_date|date:"d/m/Y H:i" }}
+                                {% if task.initial_date %}
+                                    | Inicio: {{ task.initial_date|date:"d/m/Y H:i" }}
+                                {% endif %}
                                 {% if task.final_date %}
-                                    | Entrega: {{ task.final_date|date:"d/m/Y" }}
+                                    | Fin: {{ task.final_date|date:"d/m/Y H:i" }}
                                 {% endif %}
                             </p>
+
                             {% if task.order_detail %}
                             <p class="text-muted small mb-2">
                                 <i class="bi bi-box-seam me-1"></i>
@@ -35,19 +40,234 @@
                                 {{ task.order_detail.product.name }} ({{ task.order_detail.size }})
                             </p>
                             {% endif %}
+
                             {% if task.specification %}
-                            <div class="bg-light rounded-3 p-3 mb-2">
+                            <div class="bg-light rounded-3 p-3 mb-3">
                                 <p class="small mb-0 fst-italic">
                                     <strong>Especificación:</strong> {{ task.specification }}
                                 </p>
                             </div>
                             {% endif %}
+
+                            {% if task.product.product.manufacturing_guide %}
+                            <div class="mb-3">
+                                <a href="{{ task.product.product.manufacturing_guide.url }}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill">
+                                    <i class="bi bi-file-earmark-text me-1"></i>Ver guía de fabricación
+                                </a>
+                            </div>
+                            {% endif %}
                         </div>
+
                         <span class="badge rounded-pill px-3 py-2"
                               style="background-color: var(--akima-pink); color: var(--akima-brown);">
                             {{ task.status }}
                         </span>
                     </div>
+
+                    {% if task.status == 'Pendiente' %}
+                    <div class="mt-3">
+                        <button class="btn btn-sm rounded-pill px-4"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#startTask{{ task.id }}"
+                                aria-expanded="false"
+                                aria-controls="startTask{{ task.id }}"
+                                style="background-color: var(--akima-brown); color: white;">
+                            <i class="bi bi-play-fill me-1"></i>Iniciar producción
+                        </button>
+
+                        <div class="collapse mt-3" id="startTask{{ task.id }}">
+                            <div class="border rounded-4 p-3 bg-light">
+                                <h6 class="fw-bold mb-3" style="color: var(--akima-brown);">
+                                    Registrar insumos iniciales
+                                </h6>
+
+                                <form method="POST" action="{% url 'start_task_supplies' task.id %}">
+                                    {% csrf_token %}
+
+                                    {% for item in task.required_supplies_with_inventory %}
+                                    <div class="row g-2 align-items-center mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold mb-1">
+                                                {{ item.required.supply.type_supply }} - {{ item.required.supply.brand }} {{ item.required.supply.reference }}
+                                            </label>
+                                            <div class="small text-muted">
+                                                Requerido sugerido: {{ item.required.required_quantity|floatformat:0 }} g
+                                            </div>
+                                            <div class="small text-muted">
+                                                Disponible: {{ item.available_quantity|floatformat:0 }} g
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                name="initial_quantity_{{ item.required.supply.id }}"
+                                                class="form-control rounded-3"
+                                                value="{{ item.required.required_quantity|floatformat:0 }}"
+                                                required
+                                            >
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+
+                                    <button type="submit" class="btn btn-akima px-4 rounded-pill">
+                                        Guardar e iniciar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if task.status == 'En progreso' %}
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        <button class="btn btn-sm rounded-pill px-4"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#finishTask{{ task.id }}"
+                                aria-expanded="false"
+                                aria-controls="finishTask{{ task.id }}"
+                                style="background-color: var(--akima-pink); color: var(--akima-brown);">
+                            <i class="bi bi-check2-circle me-1"></i>Registrar sobrantes y finalizar
+                        </button>
+
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-4"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#addSupply{{ task.id }}"
+                                aria-expanded="false"
+                                aria-controls="addSupply{{ task.id }}">
+                            <i class="bi bi-plus-circle me-1"></i>Agregar insumo adicional
+                        </button>
+                    </div>
+
+                    <div class="collapse mt-3" id="finishTask{{ task.id }}">
+                        <div class="border rounded-4 p-3 bg-light">
+                            <h6 class="fw-bold mb-3" style="color: var(--akima-brown);">
+                                Registrar sobrantes
+                            </h6>
+
+                            <form method="POST" action="{% url 'finish_task_supplies' task.id %}">
+                                {% csrf_token %}
+
+                                {% for supply_task in task.supplies.all %}
+                                <div class="row g-2 align-items-center mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold mb-1">
+                                            {{ supply_task.supply.type_supply }} - {{ supply_task.supply.brand }} {{ supply_task.supply.reference }}
+                                        </label>
+                                        <div class="small text-muted">
+                                            Cantidad inicial: {{ supply_task.initial_quantity|floatformat:0 }} g
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            max="{{ supply_task.initial_quantity }}"
+                                            name="final_quantity_{{ supply_task.id }}"
+                                            class="form-control rounded-3"
+                                            value="0"
+                                            required
+                                        >
+                                    </div>
+                                </div>
+                                {% endfor %}
+
+                                <button type="submit" class="btn btn-akima px-4 rounded-pill">
+                                    Guardar sobrantes y finalizar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="collapse mt-3" id="addSupply{{ task.id }}">
+                        <div class="border rounded-4 p-3 bg-white">
+                            <h6 class="fw-bold mb-3" style="color: var(--akima-brown);">
+                                Agregar insumo adicional
+                            </h6>
+
+                            <form method="POST" action="{% url 'add_supply_to_task' task.id %}">
+                                {% csrf_token %}
+
+                                <div class="row g-3">
+                                    <div class="col-md-7">
+                                        <label class="form-label small fw-bold">Insumo</label>
+                                        <select name="supply_id" class="form-select rounded-3" required>
+                                            <option value="">Selecciona un insumo...</option>
+                                            {% for inv in task.available_inventory_supplies %}
+                                            <option value="{{ inv.supply.id }}">
+                                                {{ inv.supply.type_supply }} - {{ inv.supply.brand }} {{ inv.supply.reference }}
+                                                (Disponible: {{ inv.available_quantity|floatformat:0 }} g)
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-5">
+                                        <label class="form-label small fw-bold">Cantidad inicial</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0.01"
+                                            name="initial_quantity"
+                                            class="form-control rounded-3"
+                                            required
+                                        >
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-akima rounded-pill px-4">
+                                        Guardar insumo
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if task.status == 'Completada' and task.supplies.all %}
+                    <div class="mt-3">
+                        <div class="border rounded-4 p-3 bg-light">
+                            <h6 class="fw-bold mb-3" style="color: var(--akima-brown);">
+                                Resumen de insumos registrados
+                            </h6>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Insumo</th>
+                                            <th>Inicial</th>
+                                            <th>Sobrante</th>
+                                            <th>Usado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for supply_task in task.supplies.all %}
+                                        <tr>
+                                            <td>
+                                                {{ supply_task.supply.type_supply }} - {{ supply_task.supply.brand }} {{ supply_task.supply.reference }}
+                                            </td>
+                                            <td>{{ supply_task.initial_quantity|floatformat:0 }} g</td>
+                                            <td>{{ supply_task.final_quantity|floatformat:0 }} g</td>
+                                            <td>{{ supply_task.used_quantity|floatformat:0 }} g</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <p class="small text-muted mt-2 mb-0">
+                                El descuento real del inventario corresponde a: cantidad inicial - sobrante.
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>

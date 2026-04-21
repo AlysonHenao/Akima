@@ -15,7 +15,7 @@ class OrderAdmin(admin.ModelAdmin):
     )
     
     def order_number(self, obj):
-        return f"#{obj.id}"
+        return f"#{obj.id}" if obj and obj.id else "-"
     order_number.short_description = "Número"
     
     def customer_name(self, obj):
@@ -23,10 +23,14 @@ class OrderAdmin(admin.ModelAdmin):
     customer_name.short_description = "Cliente"
     
     def order_date_formatted(self, obj):
+        if not obj or not obj.order_date:
+            return "-"
         return obj.order_date.strftime("%d/%m/%Y %H:%M")
     order_date_formatted.short_description = "Fecha"
     
     def formatted_total(self, obj):
+        if not obj or obj.total is None:
+            return "-"
         return f"${obj.total:,.0f}".replace(',', '.')
     formatted_total.short_description = "Total"
 
@@ -51,6 +55,8 @@ class OrderDetailAdmin(admin.ModelAdmin):
     color_name.short_description = "Color"
     
     def formatted_unit_price(self, obj):
+        if obj.unit_price is None:
+            return "-"
         return f"${obj.unit_price:,.0f}".replace(',', '.')
     formatted_unit_price.short_description = "Precio unitario"
 
