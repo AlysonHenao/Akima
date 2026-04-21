@@ -57,13 +57,6 @@ def add_product_to_cart(request, product_id):
         color_product = get_object_or_404(
             ColorProduct, id=color_id, product=product, available=True
         )
-        
-        if product.stock < quantity:
-            messages.error(
-                request,
-                f'Stock insuficiente. Disponible: {product.stock}, Solicitado: {quantity}'
-            )
-            return redirect(request.META.get('HTTP_REFERER', '/'))
 
         cart = get_or_create_cart(request)
         existing_item = ItemCart.objects.filter(
@@ -71,15 +64,6 @@ def add_product_to_cart(request, product_id):
         ).first()
 
         if existing_item:
-            new_total = existing_item.quantity + quantity
-            if product.stock < new_total:
-                messages.error(
-                    request,
-                    f'Stock insuficiente para esa cantidad. '
-                    f'Total solicitado: {new_total}, Disponible: {product.stock}'
-                )
-                return redirect(request.META.get('HTTP_REFERER', '/'))
-            
             existing_item.quantity += quantity
             existing_item.save()
             messages.success(request, f'Cantidad de "{product.name}" actualizada en el carrito.')
@@ -111,13 +95,7 @@ def update_cart_item(request, item_id):
     if nueva_cantidad <= 0:
         messages.error(request, 'La cantidad debe ser mayor a 0.')
         return redirect(next_url + '?carrito=abierto')
-    if item.product.stock < nueva_cantidad:
-        messages.error(
-            request,
-            f'Stock insuficiente. Disponible: {item.product.stock}'
-        )
-        return redirect(next_url + '?carrito=abierto')
-
+    
     item.quantity = nueva_cantidad
     item.save()
 
@@ -157,13 +135,6 @@ def place_order(cart, items, user=None):
     """Rf-07 — Crea el Order con sus OrderDetail y vacía el carrito.
     Función interna usada en payment_page (POST).
     Retorna el pedido creado."""
-    for item in items:
-        if item.product.stock < item.quantity:
-            raise ValueError(
-                f"Stock insuficiente para {item.product.name}. "
-                f"Disponible: {item.product.stock}, Solicitado: {item.quantity}"
-            )
-
     total = cart.get_total()
     order_user = cart.user or user
     
@@ -295,7 +266,7 @@ def notify_customer_of_order(order):
             subject=f'Pedido #{order.id} confirmado - Akima',
             message=(
                 f'Hola {order.user.first_name},\n\n'
-                f'Tu pago ha sido confirmado y tu pedido #{order.id} está en proceso.\n'
+                f'Tu pago ha sido confirmado.\n'
                 f'Total: ${order.total}\n\n'
                 f'Gracias por comprar en Akima.'
             ),
@@ -320,18 +291,6 @@ def confirm_payment(request, receipt_id):
         order = receipt.order
         order.status = 'Confirmado'
         order.save()
-
-        for detail in order.details.all():
-            product = detail.product
-            if product.stock >= detail.quantity:
-                product.stock -= detail.quantity
-                product.save()
-            else:
-                messages.warning(
-                    request, 
-                    f'Advertencia: Stock insuficiente para {product.name} '
-                    f'en pedido #{order.id}'
-                )
 
         notify_customer_of_order(order)
 
