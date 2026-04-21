@@ -26,9 +26,9 @@ class Order(models.Model):
         blank=True,
     )
     order_date = models.DateTimeField('Order Date', auto_now_add=True)
-    subtotal = models.DecimalField('Subtotal', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    discount = models.DecimalField('Discount', max_digits=10, decimal_places=2, blank=True, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
-    total = models.DecimalField('Total', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    subtotal = models.IntegerField('Subtotal', validators=[MinValueValidator(0)])
+    discount = models.IntegerField('Discount', default=0, validators=[MinValueValidator(0)])
+    total = models.IntegerField('Total', validators=[MinValueValidator(0)])
     status = models.CharField('Status', max_length=30, choices=STATUS, default='Pendiente confirmacion')
     customer_note = models.TextField('Customer Note', blank=True, null=True)
 
@@ -75,8 +75,8 @@ class OrderDetail(models.Model):
     )
     size = models.CharField('Size', max_length=3, choices=SIZE)
     quantity = models.IntegerField('Quantity', validators=[MinValueValidator(1)])
-    unit_price = models.DecimalField('Unit Price', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    subtotal = models.DecimalField('Subtotal', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    unit_price = models.IntegerField('Unit Price', validators=[MinValueValidator(0)])
+    subtotal = models.IntegerField('Subtotal', validators=[MinValueValidator(0)])
 
     class Meta:
         db_table = 'order_detail'
@@ -149,7 +149,7 @@ class ItemCart(models.Model):
     )
     size = models.CharField('Size', max_length=3, choices=SIZE)
     quantity = models.IntegerField('Quantity', default=1, validators=[MinValueValidator(1)])
-    unit_price = models.DecimalField('Unit Price', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    unit_price = models.IntegerField('Unit Price', validators=[MinValueValidator(0)])
     addition_date = models.DateTimeField('Added At', auto_now_add=True)
 
     class Meta:
@@ -200,7 +200,7 @@ class PaymentReceipt(models.Model):
         related_name='receipts'
     )
     receipt = models.ImageField('Payment Receipt', upload_to='receipts/', null=True, blank=True)
-    amount = models.DecimalField('Amount', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    amount = models.IntegerField('Amount', validators=[MinValueValidator(0)])
     upload_date = models.DateTimeField('Upload Date', auto_now_add=True)
     confirm = models.BooleanField('Confirmed', default=False)
     confirm_date = models.DateTimeField('Confirmation Date', blank=True, null=True)
@@ -244,7 +244,7 @@ class FinancialMovement(models.Model):
     category = models.CharField('Category', max_length=20, choices=CATEGORIES)
     type = models.CharField('Type', max_length=10, choices=TYPES)
     concept = models.CharField('Concept', max_length=255, default='')
-    amount = models.DecimalField('Amount', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    amount = models.IntegerField('Amount', validators=[MinValueValidator(0)])
     movement_date = models.DateTimeField('Date of Movement', auto_now_add=True)
     receipt = models.ImageField('Receipt', upload_to='financial_receipts/', null=True, blank=True)
     note = models.TextField('Note', blank=True, null=True)

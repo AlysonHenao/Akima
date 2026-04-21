@@ -31,7 +31,7 @@ class Product(models.Model):
     category = models.CharField('Category', max_length=20, choices=CATEGORIES)
     name = models.CharField('Name', max_length=150)
     description = models.TextField('Description')
-    price = models.DecimalField('Price', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    price = models.IntegerField('Price', validators=[MinValueValidator(0)])    
     stock = models.IntegerField('Stock', default=0, validators=[MinValueValidator(0)])
     manufacturing_time = models.IntegerField('Manufacturing Time (hours)', validators=[MinValueValidator(0)])
     active = models.BooleanField('Active', default=True)
@@ -103,7 +103,7 @@ class SetProduct(models.Model):
         related_name='belongs_to_sets'
     )
     quantity = models.IntegerField('Quantity', validators=[MinValueValidator(1)])
-    set_price = models.DecimalField('Set Price', max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))], help_text='Discounted price')
+    set_price = models.IntegerField('Set Price', validators=[MinValueValidator(0)], help_text='Discounted price')
 
     class Meta:
         db_table = 'set_product'
