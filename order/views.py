@@ -14,10 +14,7 @@ from product.models import Product, ColorProduct
 from account.views import require_role
 
 
-
 def get_or_create_cart(request):
-    """Helper — Obtiene o crea un carrito para la sesión actual
-    Si el usuario está logueado, lo asocia al carrito."""
     if not request.session.session_key:
         request.session.create()
     
@@ -41,9 +38,7 @@ def get_or_create_cart(request):
     return cart
 
 
-
 def add_product_to_cart(request, product_id):
-    """Rf-06 — Agrega un producto con color, talla y cantidad al carrito"""
     if request.method == 'POST':
         product = get_object_or_404(Product, id=product_id, active=True)
         color_id = request.POST.get('color')
@@ -86,7 +81,6 @@ def add_product_to_cart(request, product_id):
 
 
 def update_cart_item(request, item_id):
-    """Rf-06 (soporte) — Actualiza la cantidad de un ítem en el carrito"""
     cart = get_or_create_cart(request)
     item = get_object_or_404(ItemCart, id=item_id, cart=cart)
     nueva_cantidad = int(request.GET.get('cantidad', 1))
@@ -103,7 +97,6 @@ def update_cart_item(request, item_id):
 
 
 def remove_cart_item(request, item_id):
-    """Rf-06 (soporte) — Elimina un ítem del carrito"""
     cart = get_or_create_cart(request)
     item = get_object_or_404(ItemCart, id=item_id, cart=cart)
     item.delete()
@@ -112,17 +105,13 @@ def remove_cart_item(request, item_id):
 
 
 def empty_cart(request):
-    """Rf-06 (soporte) — Vacía todo el carrito"""
     cart = get_or_create_cart(request)
     cart.items.all().delete()
     messages.success(request, 'Carrito vaciado.')
     return redirect('/?carrito=abierto')
 
 
-
 def display_payment_methods(cart, items):
-    """Rf-08 — Construye el contexto con métodos de pago activos y resumen del carrito.
-    Función interna usada en payment_page (GET)."""
     return {
         'items': items,
         'total': cart.formatted_total,
@@ -130,11 +119,7 @@ def display_payment_methods(cart, items):
     }
 
 
-
 def place_order(cart, items, user=None):
-    """Rf-07 — Crea el Order con sus OrderDetail y vacía el carrito.
-    Función interna usada en payment_page (POST).
-    Retorna el pedido creado."""
     total = cart.get_total()
     order_user = cart.user or user
     
@@ -157,10 +142,7 @@ def place_order(cart, items, user=None):
     return order
 
 
-
 def upload_payment_proof(order, payment_method, receipt_file):
-    """Rf-09 — Guarda el comprobante de pago vinculado al pedido.
-    Función interna usada en payment_page (POST)."""
     PaymentReceipt.objects.create(
         order=order,
         payment_method=payment_method,
@@ -169,10 +151,7 @@ def upload_payment_proof(order, payment_method, receipt_file):
     )
 
 
-
 def notify_administrator_of_payment(order, payment_method):
-    """Rf-26 — Notifica al administrador cuando un cliente sube un comprobante.
-    Función interna usada en payment_page (POST)."""
     cliente_nombre = (
         f"{order.user.first_name} {order.user.last_name}"
         if order.user else "Cliente invitado"
@@ -193,15 +172,11 @@ def notify_administrator_of_payment(order, payment_method):
     )
 
 
-
 def payment_page(request):
-    """Coordinador HTTP para la página de pago.
-    GET  → llama a display_payment_methods (Rf-08).
-    POST → llama a place_order (Rf-07), upload_payment_proof (Rf-09)
-           y notify_administrator_of_payment (Rf-26) en secuencia."""
     if request.session.get('user_role') != 'cliente':
         messages.error(request, 'No tienes permiso para acceder a esta página.')
         return redirect('login')
+
     cart = get_or_create_cart(request)
     items = cart.items.select_related('product', 'color_product__general_color')
 
@@ -245,10 +220,8 @@ def payment_page(request):
     return render(request, 'order/payment.html', context)
 
 
-
 @require_role('administrador')
 def view_order_information(request):
-    """Rf-30 — Lista todos los pedidos con sus detalles para el administrador"""
     all_orders = Order.objects.select_related('user').prefetch_related(
         'receipts__payment_method',
         'details__product',
@@ -257,10 +230,7 @@ def view_order_information(request):
     return render(request, 'order/orders.html', {'orders': all_orders})
 
 
-
 def notify_customer_of_order(order):
-    """Rf-10 — Envía un correo al cliente notificando que su pago fue confirmado.
-    Función interna llamada desde confirm_payment (Rf-27)."""
     if order.user and order.user.email:
         send_mail(
             subject=f'Pedido #{order.id} confirmado - Akima',
@@ -277,11 +247,10 @@ def notify_customer_of_order(order):
 
 
 def confirm_payment(request, receipt_id):
-    """Rf-27 — Confirma el comprobante de pago y actualiza el estado del pedido.
-    Tras confirmar llama a notify_customer_of_order (Rf-10)."""
     if request.session.get('user_role') != 'administrador':
         messages.error(request, 'No tienes permiso para acceder a esta acción.')
         return redirect('login')
+
     if request.method == 'POST':
         receipt = get_object_or_404(PaymentReceipt, id=receipt_id)
         receipt.confirm = True
@@ -295,22 +264,24 @@ def confirm_payment(request, receipt_id):
         notify_customer_of_order(order)
 
         messages.success(request, f'Pago del pedido #{order.id} confirmado exitosamente.')
+
     return redirect('orders')
 
 
 @require_role('administrador')
 def modify_order_status(request, order_id):
-    """Rf-36 — Modifica el estado de un pedido existente"""
     if request.method == 'POST':
         order = get_object_or_404(Order, id=order_id)
         new_status = request.POST.get('status')
         valid_statuses = [choice[0] for choice in Order.STATUS]
+
         if new_status in valid_statuses:
             order.status = new_status
             order.save()
             messages.success(request, f'Estado del Pedido #{order.id} actualizado a "{new_status}".')
         else:
             messages.error(request, 'Estado no válido.')
+
     return redirect('orders')
 
 
@@ -333,6 +304,7 @@ def check_order_status(request):
             'orders': orders,
             'is_cliente': True,
         })
+
     customers = User.objects.filter(role='cliente').order_by('first_name', 'last_name')
     selected_customer_id = request.GET.get('user_id')
     selected_customer = None

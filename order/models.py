@@ -25,6 +25,16 @@ class Order(models.Model):
         null=True,
         blank=True,
     )
+
+    assigned_to = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_orders',
+        verbose_name='Assigned Employee'
+    )
+
     order_date = models.DateTimeField('Order Date', auto_now_add=True)
     subtotal = models.IntegerField('Subtotal', validators=[MinValueValidator(0)])
     discount = models.IntegerField('Discount', default=0, validators=[MinValueValidator(0)])
@@ -42,7 +52,6 @@ class Order(models.Model):
 
     @property
     def formatted_price(self):
-        """Format total in Colombian format (185.000)"""
         return f"${self.total:,.0f}".replace(',', '.')
 
 
@@ -115,7 +124,6 @@ class ShoppingCart(models.Model):
 
     @property
     def formatted_total(self):
-        """Format total in Colombian format"""
         total = self.get_total()
         return f"${total:,.0f}".replace(',', '.')
 
@@ -163,12 +171,10 @@ class ItemCart(models.Model):
 
     @property
     def formatted_unit_price(self):
-        """Format unit price in Colombian format"""
         return f"${self.unit_price:,.0f}".replace(',', '.')
 
     @property
     def formatted_subtotal(self):
-        """Format subtotal in Colombian format"""
         subtotal = self.get_subtotal()
         return f"${subtotal:,.0f}".replace(',', '.')
 
