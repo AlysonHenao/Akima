@@ -14,4 +14,8 @@ urlpatterns = [
     path('employee/task/<int:task_id>/start/', views.start_task_supplies, name='start_task_supplies'),
     path('employee/task/<int:task_id>/finish/', views.finish_task_supplies, name='finish_task_supplies'),
     path('employee/task/<int:task_id>/add-supply/', views.add_supply_to_task, name='add_supply_to_task'),
+
+    path('employee/inventory/', views.view_inventory, name='view_inventory'),
+    path('employee/inventory/add/', views.add_supply_to_inventory, name='add_supply_to_inventory'),
+    path('employee/inventory/create-supply/', views.create_supply, name='create_supply'),
 ]

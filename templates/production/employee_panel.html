@@ -3,19 +3,29 @@
 
 {% block content %}
 <div class="container py-5">
+
+    {# ══════════════════════════════════════════════════════════════════════ #}
+    {# CABECERA                                                               #}
+    {# ══════════════════════════════════════════════════════════════════════ #}
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
             <h3 class="fw-bold mb-1" style="color: var(--akima-brown);">Mis asignaciones</h3>
             <p class="text-muted mb-0">Consulta los productos y pedidos que tienes asignados.</p>
         </div>
         <a href="{% url 'employee' %}" class="btn btn-outline-secondary btn-sm rounded-pill">Volver</a>
+        <a href="{% url 'view_inventory' %}" class="btn btn-sm rounded-pill px-3" style="background-color: var(--akima-brown); color: white;">
+            <i class="bi bi-archive me-1"></i>Ver inventario
+        </a>
     </div>
 
+    {# ══════════════════════════════════════════════════════════════════════ #}
+    {# TAREAS ASIGNADAS                                                       #}
+    {# ══════════════════════════════════════════════════════════════════════ #}
     {% if tasks %}
         <div class="card border-0 shadow-sm rounded-4 p-4">
             <div class="d-flex flex-column gap-4">
                 {% for task in tasks %}
-                <div class="border-bottom pb-4">
+                <div class="border-bottom pb-4" id="task-card-{{ task.id }}">
                     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                         <div class="flex-grow-1">
                             <h6 class="fw-bold mb-2" style="color: var(--akima-brown);">
@@ -51,7 +61,8 @@
 
                             {% if task.product.product.manufacturing_guide %}
                             <div class="mb-3">
-                                <a href="{{ task.product.product.manufacturing_guide.url }}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill">
+                                <a href="{{ task.product.product.manufacturing_guide.url }}" target="_blank"
+                                   class="btn btn-sm btn-outline-secondary rounded-pill">
                                     <i class="bi bi-file-earmark-text me-1"></i>Ver guía de fabricación
                                 </a>
                             </div>
@@ -64,6 +75,7 @@
                         </span>
                     </div>
 
+                    {# ── Pendiente: iniciar producción ─────────────────────────── #}
                     {% if task.status == 'Pendiente' %}
                     <div class="mt-3">
                         <button class="btn btn-sm rounded-pill px-4"
@@ -121,6 +133,7 @@
                     </div>
                     {% endif %}
 
+                    {# ── En progreso: registrar sobrantes (AJAX < 3 s) ─────────── #}
                     {% if task.status == 'En progreso' %}
                     <div class="mt-3 d-flex flex-wrap gap-2">
                         <button class="btn btn-sm rounded-pill px-4"
@@ -143,13 +156,19 @@
                         </button>
                     </div>
 
+                    {# Formulario sobrantes — enviado vía fetch() para cumplir < 3 s #}
                     <div class="collapse mt-3" id="finishTask{{ task.id }}">
                         <div class="border rounded-4 p-3 bg-light">
                             <h6 class="fw-bold mb-3" style="color: var(--akima-brown);">
                                 Registrar sobrantes
                             </h6>
 
-                            <form method="POST" action="{% url 'finish_task_supplies' task.id %}">
+                            {# Alerta de resultado del AJAX #}
+                            <div id="finishAlert{{ task.id }}" class="alert d-none mb-3" role="alert"></div>
+
+                            <form id="finishForm{{ task.id }}"
+                                  data-task-id="{{ task.id }}"
+                                  data-url="{% url 'finish_task_supplies' task.id %}">
                                 {% csrf_token %}
 
                                 {% for supply_task in task.supplies.all %}
@@ -170,6 +189,7 @@
                                             max="{{ supply_task.initial_quantity }}"
                                             name="final_quantity_{{ supply_task.id }}"
                                             class="form-control rounded-3"
+                                            placeholder="Sobrante en g"
                                             value="0"
                                             required
                                         >
@@ -177,13 +197,17 @@
                                 </div>
                                 {% endfor %}
 
-                                <button type="submit" class="btn btn-akima px-4 rounded-pill">
-                                    Guardar sobrantes y finalizar
+                                <button type="button"
+                                        class="btn btn-akima px-4 rounded-pill"
+                                        onclick="submitFinishTask({{ task.id }})">
+                                    <span id="finishBtnText{{ task.id }}">Guardar sobrantes y finalizar</span>
+                                    <span id="finishBtnSpinner{{ task.id }}" class="spinner-border spinner-border-sm d-none" role="status"></span>
                                 </button>
                             </form>
                         </div>
                     </div>
 
+                    {# Agregar insumo adicional a tarea en curso #}
                     <div class="collapse mt-3" id="addSupply{{ task.id }}">
                         <div class="border rounded-4 p-3 bg-white">
                             <h6 class="fw-bold mb-3" style="color: var(--akima-brown);">
@@ -230,6 +254,7 @@
                     </div>
                     {% endif %}
 
+                    {# ── Completada: resumen de insumos ───────────────────────── #}
                     {% if task.status == 'Completada' and task.supplies.all %}
                     <div class="mt-3">
                         <div class="border rounded-4 p-3 bg-light">
@@ -281,4 +306,128 @@
         </div>
     {% endif %}
 </div>
+
+{# ══════════════════════════════════════════════════════════════════════════ #}
+{# JAVASCRIPT: AJAX para inventario y finalización de tareas                  #}
+{# ══════════════════════════════════════════════════════════════════════════ #}
+<script>
+    const CSRF_TOKEN = '{{ csrf_token }}';
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    function showAlert(alertId, type, html) {
+        const el = document.getElementById(alertId);
+        if (!el) return;
+        el.className = `alert alert-${type} mb-3`;
+        el.innerHTML = html;
+        el.classList.remove('d-none');
+    }
+
+    function hideAlert(alertId) {
+        const el = document.getElementById(alertId);
+        if (el) el.classList.add('d-none');
+    }
+
+    function setLoading(btnTextId, btnSpinnerId, loading) {
+        const txt = document.getElementById(btnTextId);
+        const spinner = document.getElementById(btnSpinnerId);
+        if (txt) txt.classList.toggle('d-none', loading);
+        if (spinner) spinner.classList.toggle('d-none', !loading);
+    }
+
+    // ── RF-20: Registrar sobrantes y actualizar inventario (< 3 segundos) ────    }
+
+    // ── RF-20: Registrar sobrantes y actualizar inventario (< 3 segundos) ────
+
+    async function submitFinishTask(taskId) {
+        const alertId = `finishAlert${taskId}`;
+        hideAlert(alertId);
+
+        setLoading(`finishBtnText${taskId}`, `finishBtnSpinner${taskId}`, true);
+
+        const form = document.getElementById(`finishForm${taskId}`);
+        const url  = form.dataset.url;
+
+        // Validación en frontend
+        const inputs = form.querySelectorAll('input[type="number"]');
+        let valid = true;
+
+        inputs.forEach(input => {
+            input.classList.remove('is-invalid');
+            const val = parseFloat(input.value.replace(',', '.'));
+            const max = parseFloat(input.max);
+
+            if (input.value.trim() === '' || isNaN(val)) {
+                input.classList.add('is-invalid');
+                valid = false;
+            } else if (val < 0) {
+                input.classList.add('is-invalid');
+                valid = false;
+            } else if (!isNaN(max) && val > max) {
+                input.classList.add('is-invalid');
+                valid = false;
+            }
+        });
+
+        if (!valid) {
+            showAlert(
+                alertId,
+                'warning',
+                '<i class="bi bi-exclamation-triangle me-1"></i> Revisa los valores ingresados: ' +
+                'no pueden ser negativos ni superar la cantidad inicial.'
+            );
+            setLoading(`finishBtnText${taskId}`, `finishBtnSpinner${taskId}`, false);
+            return;
+        }
+
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showAlert(
+                    alertId,
+                    'success',
+                    `<i class="bi bi-check-circle me-1"></i> ${data.message}`
+                );
+
+                // Actualizar filas del inventario personal afectadas
+                if (data.updated_inventory) {
+                    data.updated_inventory.forEach(upd => {
+                        const qtyCell = document.querySelector(`.inv-qty-${upd.supply_id}`);
+                        if (qtyCell) qtyCell.textContent = upd.remaining.toFixed(2);
+                    });
+                }
+
+                // Recargar la página tras 1.5 s para reflejar el nuevo estado de la tarea
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                const errList = data.errors
+                    ? data.errors.map(e => `<li>${e}</li>`).join('')
+                    : (data.error || 'Error desconocido.');
+                showAlert(
+                    alertId,
+                    'danger',
+                    `<i class="bi bi-exclamation-triangle me-1"></i>` +
+                    `<ul class="mb-0 mt-1">${errList}</ul>`
+                );
+            }
+        } catch (err) {
+            showAlert(
+                alertId,
+                'danger',
+                '<i class="bi bi-wifi-off me-1"></i> Error de conexión. Intenta de nuevo.'
+            );
+        } finally {
+            setLoading(`finishBtnText${taskId}`, `finishBtnSpinner${taskId}`, false);
+        }
+    }
+</script>
 {% endblock %}
