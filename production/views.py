@@ -270,3 +270,82 @@ def finish_task_supplies(request, task_id):
 def add_supply_to_task(request, task_id):
     messages.success(request, 'Insumo agregado.')
     return redirect('employee_panel')
+
+@require_role('empleada')
+def view_inventory(request):
+    """
+    Vista de inventario del empleado (restaurada).
+    """
+    user_id = request.session.get('user_id')
+    employee = get_object_or_404(User, id=user_id, role='empleada')
+
+    inventory = EmployeeInventory.objects.filter(
+        employee=employee
+    ).select_related('supply').order_by('supply__type_supply', 'supply__brand')
+
+    supplies = Supply.objects.all().order_by('type_supply', 'brand')
+
+    return render(request, 'production/inventory.html', {
+        'employee': employee,
+        'inventory': inventory,
+        'supplies': supplies,
+    })    
+
+@require_role('empleada')
+def view_inventory(request):
+    """
+    RF-INV2 — Muestra el inventario personal de la empleada.
+    """
+    user_id = request.session.get('user_id')
+    employee = get_object_or_404(User, id=user_id, role='empleada')
+
+    inventory = EmployeeInventory.objects.filter(
+        employee=employee
+    ).select_related('supply').order_by('supply__type_supply', 'supply__brand')
+
+    all_supplies = Supply.objects.all().order_by('type_supply', 'brand')
+
+    return render(request, 'production/inventory.html', {
+        'employee': employee,
+        'inventory': inventory,
+        'all_supplies': all_supplies,
+    })
+
+
+@require_role('empleada')
+@transaction.atomic
+def create_supply(request):
+    """
+    RF-INV3 — Permite crear un nuevo insumo.
+    """
+    if request.method != 'POST':
+        return redirect('view_inventory')
+
+    type_supply = request.POST.get('type_supply', '').strip()
+    brand = request.POST.get('brand', '').strip()
+    reference = request.POST.get('reference', '').strip()
+
+    if not brand or not reference:
+        messages.error(request, 'Marca y referencia son obligatorias.')
+        return redirect('view_inventory')
+
+    duplicate = Supply.objects.filter(
+        type_supply=type_supply,
+        brand__iexact=brand,
+        reference__iexact=reference,
+    ).first()
+
+    if duplicate:
+        messages.error(request, f'El insumo ya existe: {duplicate}')
+        return redirect('view_inventory')
+
+    Supply.objects.create(
+        type_supply=type_supply,
+        brand=brand,
+        reference=reference,
+        quantity=Decimal('0.00'),
+        price=Decimal('0.00'),
+    )
+
+    messages.success(request, 'Insumo creado correctamente.')
+    return redirect('view_inventory')    
