@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.db.models import Case, When, IntegerField, Prefetch
 from django.db import transaction
+from django.http import JsonResponse
 from django.utils import timezone
 
 from .models import (
@@ -138,6 +139,7 @@ def assign_products_to_employees(request):
         messages.success(request, f'Tarea asignada a {employee.first_name} exitosamente.')
     return redirect('production_panel')
 
+
 @require_role('empleada')
 def view_assigned_products(request):
     user_id = request.session.get('user_id')
@@ -200,9 +202,14 @@ def view_assigned_products(request):
                 supply_task.initial_quantity - supply_task.final_quantity
             )
 
+    # All supplies available for adding to inventory
+    all_supplies = Supply.objects.select_related('general_color').order_by('type_supply', 'brand')
+
     return render(request, 'production/employee_panel.html', {
         'employee': employee,
         'tasks': tasks,
+        'inventory': inventory,
+        'all_supplies': all_supplies,
     })
 
 
@@ -213,6 +220,107 @@ def _parse_decimal(value):
     except (InvalidOperation, AttributeError, TypeError):
         return None
 
+
+# ──────────────────────────────────────────────────────────────────────────────
+# RF-INV1: Agregar insumos al inventario personal (< 5 segundos)
+# ──────────────────────────────────────────────────────────────────────────────
+
+@require_role('empleada')
+@transaction.atomic
+def add_supply_to_inventory(request):
+    """
+    RF-INV1 — El empleado agrega insumos y cantidades a su inventario personal.
+    Responde con JSON en menos de 5 segundos.
+
+    Reglas de validación:
+    - supply_id obligatorio y debe existir.
+    - quantity obligatoria, numérica, mayor a 0, no negativa.
+    - quantity no puede exceder 99 999.99 g.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido.'}, status=405)
+
+    user_id = request.session.get('user_id')
+    employee = get_object_or_404(User, id=user_id, role='empleada')
+
+    supply_id = request.POST.get('supply_id', '').strip()
+    raw_quantity = request.POST.get('quantity', '').strip()
+
+    # ── Validaciones ──────────────────────────────────────────────────────────
+    if not supply_id:
+        return JsonResponse(
+            {'success': False, 'error': 'Debes seleccionar un insumo.'},
+            status=400
+        )
+
+    if not raw_quantity:
+        return JsonResponse(
+            {'success': False, 'error': 'Debes ingresar una cantidad.'},
+            status=400
+        )
+
+    try:
+        supply_id_int = int(supply_id)
+    except (ValueError, TypeError):
+        return JsonResponse(
+            {'success': False, 'error': 'El insumo seleccionado no es válido.'},
+            status=400
+        )
+
+    quantity = _parse_decimal(raw_quantity)
+
+    if quantity is None:
+        return JsonResponse(
+            {'success': False, 'error': 'La cantidad debe ser un número válido (ej: 150 o 150.5).'},
+            status=400
+        )
+
+    if quantity < Decimal('0.00'):
+        return JsonResponse(
+            {'success': False, 'error': 'La cantidad no puede ser negativa.'},
+            status=400
+        )
+
+    if quantity == Decimal('0.00'):
+        return JsonResponse(
+            {'success': False, 'error': 'La cantidad debe ser mayor a 0.'},
+            status=400
+        )
+
+    if quantity > Decimal('99999.99'):
+        return JsonResponse(
+            {'success': False, 'error': 'La cantidad ingresada supera el límite permitido (99 999.99 g).'},
+            status=400
+        )
+
+    # ── Lógica ────────────────────────────────────────────────────────────────
+    supply = get_object_or_404(Supply, id=supply_id_int)
+
+    inventory, _ = EmployeeInventory.objects.select_for_update().get_or_create(
+        employee=employee,
+        supply=supply,
+        defaults={'available_quantity': Decimal('0.00')}
+    )
+
+    inventory.available_quantity += quantity
+    inventory.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Se agregaron {quantity:f} g de "{supply}" al inventario.',
+        'item': {
+            'supply_id': supply.id,
+            'supply_name': str(supply),
+            'type_supply': supply.type_supply,
+            'available_quantity': float(inventory.available_quantity),
+            'last_update': inventory.last_update.strftime('%d/%m/%Y %H:%M'),
+        }
+    })
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# RF-19: Iniciar tarea registrando insumos iniciales
+# ──────────────────────────────────────────────────────────────────────────────
 
 @require_role('empleada')
 @transaction.atomic
@@ -256,11 +364,11 @@ def start_task_supplies(request, task_id):
         quantity = _parse_decimal(raw_value)
 
         if quantity is None:
-            errors.append(f'Cantidad inválida para {required.supply}.')
+            errors.append(f'La cantidad de "{required.supply}" debe ser un número válido.')
             continue
 
         if quantity < Decimal('0.00'):
-            errors.append(f'La cantidad inicial de {required.supply} no puede ser negativa.')
+            errors.append(f'La cantidad inicial de "{required.supply}" no puede ser negativa.')
             continue
 
         inventory = EmployeeInventory.objects.filter(
@@ -272,8 +380,8 @@ def start_task_supplies(request, task_id):
 
         if quantity > available_quantity:
             errors.append(
-                f'No tienes suficiente inventario de {required.supply}. '
-                f'Disponible: {available_quantity}'
+                f'No tienes suficiente inventario de "{required.supply}". '
+                f'Disponible: {available_quantity} g'
             )
             continue
 
@@ -310,14 +418,27 @@ def start_task_supplies(request, task_id):
     return redirect('employee_panel')
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# RF-20: Registrar sobrantes y actualizar inventario (< 3 segundos)
+# ──────────────────────────────────────────────────────────────────────────────
+
 @require_role('empleada')
 @transaction.atomic
 def finish_task_supplies(request, task_id):
     """
     RF-20 — Registra sobrantes y descuenta del inventario lo realmente consumido.
+    Responde con JSON en menos de 3 segundos cuando la petición es AJAX.
+
+    Reglas de validación:
+    - Cantidad sobrante obligatoria y numérica.
+    - Sobrante no puede ser negativo.
+    - Sobrante no puede superar la cantidad inicial registrada.
+    - El consumo resultante no puede exceder el inventario disponible.
     """
     if request.method != 'POST':
         return redirect('employee_panel')
+
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     user_id = request.session.get('user_id')
     employee = get_object_or_404(User, id=user_id, role='empleada')
@@ -329,7 +450,10 @@ def finish_task_supplies(request, task_id):
     )
 
     if task.status != 'En progreso':
-        messages.error(request, 'Solo puedes finalizar tareas en estado En progreso.')
+        error_msg = 'Solo puedes finalizar tareas en estado En progreso.'
+        if is_ajax:
+            return JsonResponse({'success': False, 'errors': [error_msg]}, status=400)
+        messages.error(request, error_msg)
         return redirect('employee_panel')
 
     task_supplies = list(
@@ -337,7 +461,10 @@ def finish_task_supplies(request, task_id):
     )
 
     if not task_supplies:
-        messages.error(request, 'Primero debes registrar los insumos iniciales de esta tarea.')
+        error_msg = 'Primero debes registrar los insumos iniciales de esta tarea.'
+        if is_ajax:
+            return JsonResponse({'success': False, 'errors': [error_msg]}, status=400)
+        messages.error(request, error_msg)
         return redirect('employee_panel')
 
     parsed_leftovers = []
@@ -349,26 +476,34 @@ def finish_task_supplies(request, task_id):
         leftover = _parse_decimal(raw_value)
 
         if leftover is None:
-            errors.append(f'Cantidad sobrante inválida para {supply_task.supply}.')
+            errors.append(
+                f'La cantidad sobrante de "{supply_task.supply}" debe ser un número válido.'
+            )
             continue
 
         if leftover < Decimal('0.00'):
-            errors.append(f'La cantidad sobrante de {supply_task.supply} no puede ser negativa.')
+            errors.append(
+                f'La cantidad sobrante de "{supply_task.supply}" no puede ser negativa.'
+            )
             continue
 
         if leftover > supply_task.initial_quantity:
             errors.append(
-                f'La cantidad sobrante de {supply_task.supply} no puede ser mayor '
-                f'a la cantidad inicial registrada ({supply_task.initial_quantity}).'
+                f'La cantidad sobrante de "{supply_task.supply}" no puede ser mayor '
+                f'a la cantidad inicial registrada ({supply_task.initial_quantity} g).'
             )
             continue
 
         parsed_leftovers.append((supply_task, leftover))
 
     if errors:
+        if is_ajax:
+            return JsonResponse({'success': False, 'errors': errors}, status=400)
         for error in errors:
             messages.error(request, error)
         return redirect('employee_panel')
+
+    updated_inventory = []
 
     for supply_task, leftover in parsed_leftovers:
         supply_task.final_quantity = leftover
@@ -382,21 +517,32 @@ def finish_task_supplies(request, task_id):
         ).first()
 
         if not inventory:
-            messages.error(
-                request,
-                f'No existe inventario para el insumo {supply_task.supply}.'
-            )
+            error_msg = f'No existe inventario para el insumo "{supply_task.supply}".'
+            if is_ajax:
+                return JsonResponse({'success': False, 'errors': [error_msg]}, status=400)
+            messages.error(request, error_msg)
             raise ValueError('Inventario no encontrado.')
 
         if consumed_quantity > inventory.available_quantity:
-            messages.error(
-                request,
-                f'El consumo calculado de {supply_task.supply} excede el inventario disponible.'
+            error_msg = (
+                f'El consumo calculado de "{supply_task.supply}" '
+                f'excede el inventario disponible ({inventory.available_quantity} g).'
             )
+            if is_ajax:
+                return JsonResponse({'success': False, 'errors': [error_msg]}, status=400)
+            messages.error(request, error_msg)
             raise ValueError('Consumo excede inventario disponible.')
 
         inventory.available_quantity -= consumed_quantity
         inventory.save()
+
+        updated_inventory.append({
+            'supply_id': supply_task.supply.id,
+            'supply_name': str(supply_task.supply),
+            'consumed': float(consumed_quantity),
+            'remaining': float(inventory.available_quantity),
+            'last_update': inventory.last_update.strftime('%d/%m/%Y %H:%M'),
+        })
 
     task.status = 'Completada'
     task.final_date = timezone.now()
@@ -404,19 +550,25 @@ def finish_task_supplies(request, task_id):
 
     if task.order_detail:
         order = task.order_detail.order
-
-        all_tasks = ProductionTask.objects.filter(
-            order_detail__order=order
-        )
-
+        all_tasks = ProductionTask.objects.filter(order_detail__order=order)
         all_completed = all(t.status == 'Completada' for t in all_tasks)
-
         if all_completed:
             order.status = 'Completado'
             order.save()
 
-    messages.success(request, f'Tarea #{task.id} finalizada y sobrantes registrados exitosamente.')
+    success_msg = f'Tarea #{task.id} finalizada y sobrantes registrados exitosamente.'
+
+    if is_ajax:
+        return JsonResponse({
+            'success': True,
+            'message': success_msg,
+            'task_id': task.id,
+            'updated_inventory': updated_inventory,
+        })
+
+    messages.success(request, success_msg)
     return redirect('employee_panel')
+
 
 @require_role('empleada')
 @transaction.atomic

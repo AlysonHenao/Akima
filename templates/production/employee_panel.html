@@ -3,6 +3,10 @@
 
 {% block content %}
 <div class="container py-5">
+
+    {# ══════════════════════════════════════════════════════════════════════ #}
+    {# CABECERA                                                               #}
+    {# ══════════════════════════════════════════════════════════════════════ #}
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
             <h3 class="fw-bold mb-1" style="color: var(--akima-brown);">Mis asignaciones</h3>
@@ -11,11 +15,129 @@
         <a href="{% url 'employee' %}" class="btn btn-outline-secondary btn-sm rounded-pill">Volver</a>
     </div>
 
+    {# ══════════════════════════════════════════════════════════════════════ #}
+    {# RF-INV1: INVENTARIO PERSONAL — AGREGAR INSUMOS (< 5 segundos)         #}
+    {# ══════════════════════════════════════════════════════════════════════ #}
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h5 class="fw-bold mb-0" style="color: var(--akima-brown);">
+                <i class="bi bi-box-seam me-2"></i>Mi inventario de insumos
+            </h5>
+            <button class="btn btn-sm rounded-pill px-3"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#addInventoryForm"
+                    aria-expanded="false"
+                    style="background-color: var(--akima-brown); color: white;">
+                <i class="bi bi-plus-lg me-1"></i>Agregar insumo
+            </button>
+        </div>
+
+        {# Formulario para agregar insumos al inventario personal #}
+        <div class="collapse mb-3" id="addInventoryForm">
+            <div class="border rounded-4 p-3 bg-light">
+                <h6 class="fw-bold mb-3" style="color: var(--akima-brown);">
+                    Agregar insumo al inventario
+                </h6>
+
+                {# Alerta de resultado (se muestra tras la respuesta AJAX) #}
+                <div id="inventoryAlert" class="alert d-none mb-3" role="alert"></div>
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold" for="invSupplySelect">
+                            Insumo <span class="text-danger">*</span>
+                        </label>
+                        <select id="invSupplySelect" class="form-select rounded-3" required>
+                            <option value="">Selecciona un insumo...</option>
+                            {% for supply in all_supplies %}
+                            <option value="{{ supply.id }}">
+                                {{ supply.type_supply }} — {{ supply.brand }} {{ supply.reference }}
+                                {% if supply.general_color %}({{ supply.general_color.name }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback" id="invSupplyError"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold" for="invQuantityInput">
+                            Cantidad (g) <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="invQuantityInput"
+                            class="form-control rounded-3"
+                            placeholder="Ej: 500"
+                            step="0.01"
+                            min="0.01"
+                            max="99999.99"
+                        >
+                        <div class="invalid-feedback" id="invQuantityError"></div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <button type="button"
+                                id="btnAddInventory"
+                                class="btn btn-akima w-100 rounded-pill"
+                                onclick="submitAddInventory()">
+                            <span id="btnAddInventoryText">Agregar</span>
+                            <span id="btnAddInventorySpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <p class="small text-muted mt-2 mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    La cantidad ingresada se sumará al stock actual del insumo seleccionado.
+                </p>
+            </div>
+        </div>
+
+        {# Tabla de inventario actual del empleado #}
+        {% if inventory %}
+        <div class="table-responsive" id="inventoryTable">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Insumo</th>
+                        <th>Disponible (g)</th>
+                        <th>Última actualización</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody">
+                    {% for inv in inventory %}
+                    <tr id="inv-row-{{ inv.supply.id }}">
+                        <td>
+                            <span class="badge bg-secondary rounded-pill">{{ inv.supply.type_supply }}</span>
+                        </td>
+                        <td>{{ inv.supply.brand }} {{ inv.supply.reference }}</td>
+                        <td class="fw-bold inv-qty-{{ inv.supply.id }}">
+                            {{ inv.available_quantity|floatformat:2 }}
+                        </td>
+                        <td class="text-muted small">{{ inv.last_update|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div id="inventoryEmptyMsg" class="text-muted small">
+            <i class="bi bi-inbox me-1"></i>
+            Aún no tienes insumos en tu inventario. Agrega el primero usando el botón de arriba.
+        </div>
+        {% endif %}
+    </div>
+
+    {# ══════════════════════════════════════════════════════════════════════ #}
+    {# TAREAS ASIGNADAS                                                       #}
+    {# ══════════════════════════════════════════════════════════════════════ #}
     {% if tasks %}
         <div class="card border-0 shadow-sm rounded-4 p-4">
             <div class="d-flex flex-column gap-4">
                 {% for task in tasks %}
-                <div class="border-bottom pb-4">
+                <div class="border-bottom pb-4" id="task-card-{{ task.id }}">
                     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                         <div class="flex-grow-1">
                             <h6 class="fw-bold mb-2" style="color: var(--akima-brown);">
@@ -51,7 +173,8 @@
 
                             {% if task.product.product.manufacturing_guide %}
                             <div class="mb-3">
-                                <a href="{{ task.product.product.manufacturing_guide.url }}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill">
+                                <a href="{{ task.product.product.manufacturing_guide.url }}" target="_blank"
+                                   class="btn btn-sm btn-outline-secondary rounded-pill">
                                     <i class="bi bi-file-earmark-text me-1"></i>Ver guía de fabricación
                                 </a>
                             </div>
@@ -64,6 +187,7 @@
                         </span>
                     </div>
 
+                    {# ── Pendiente: iniciar producción ─────────────────────────── #}
                     {% if task.status == 'Pendiente' %}
                     <div class="mt-3">
                         <button class="btn btn-sm rounded-pill px-4"
@@ -121,6 +245,7 @@
                     </div>
                     {% endif %}
 
+                    {# ── En progreso: registrar sobrantes (AJAX < 3 s) ─────────── #}
                     {% if task.status == 'En progreso' %}
                     <div class="mt-3 d-flex flex-wrap gap-2">
                         <button class="btn btn-sm rounded-pill px-4"
@@ -143,13 +268,19 @@
                         </button>
                     </div>
 
+                    {# Formulario sobrantes — enviado vía fetch() para cumplir < 3 s #}
                     <div class="collapse mt-3" id="finishTask{{ task.id }}">
                         <div class="border rounded-4 p-3 bg-light">
                             <h6 class="fw-bold mb-3" style="color: var(--akima-brown);">
                                 Registrar sobrantes
                             </h6>
 
-                            <form method="POST" action="{% url 'finish_task_supplies' task.id %}">
+                            {# Alerta de resultado del AJAX #}
+                            <div id="finishAlert{{ task.id }}" class="alert d-none mb-3" role="alert"></div>
+
+                            <form id="finishForm{{ task.id }}"
+                                  data-task-id="{{ task.id }}"
+                                  data-url="{% url 'finish_task_supplies' task.id %}">
                                 {% csrf_token %}
 
                                 {% for supply_task in task.supplies.all %}
@@ -170,6 +301,7 @@
                                             max="{{ supply_task.initial_quantity }}"
                                             name="final_quantity_{{ supply_task.id }}"
                                             class="form-control rounded-3"
+                                            placeholder="Sobrante en g"
                                             value="0"
                                             required
                                         >
@@ -177,13 +309,17 @@
                                 </div>
                                 {% endfor %}
 
-                                <button type="submit" class="btn btn-akima px-4 rounded-pill">
-                                    Guardar sobrantes y finalizar
+                                <button type="button"
+                                        class="btn btn-akima px-4 rounded-pill"
+                                        onclick="submitFinishTask({{ task.id }})">
+                                    <span id="finishBtnText{{ task.id }}">Guardar sobrantes y finalizar</span>
+                                    <span id="finishBtnSpinner{{ task.id }}" class="spinner-border spinner-border-sm d-none" role="status"></span>
                                 </button>
                             </form>
                         </div>
                     </div>
 
+                    {# Agregar insumo adicional a tarea en curso #}
                     <div class="collapse mt-3" id="addSupply{{ task.id }}">
                         <div class="border rounded-4 p-3 bg-white">
                             <h6 class="fw-bold mb-3" style="color: var(--akima-brown);">
@@ -230,6 +366,7 @@
                     </div>
                     {% endif %}
 
+                    {# ── Completada: resumen de insumos ───────────────────────── #}
                     {% if task.status == 'Completada' and task.supplies.all %}
                     <div class="mt-3">
                         <div class="border rounded-4 p-3 bg-light">
@@ -281,4 +418,251 @@
         </div>
     {% endif %}
 </div>
+
+{# ══════════════════════════════════════════════════════════════════════════ #}
+{# JAVASCRIPT: AJAX para inventario y finalización de tareas                  #}
+{# ══════════════════════════════════════════════════════════════════════════ #}
+<script>
+    const CSRF_TOKEN = '{{ csrf_token }}';
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    function showAlert(alertId, type, html) {
+        const el = document.getElementById(alertId);
+        if (!el) return;
+        el.className = `alert alert-${type} mb-3`;
+        el.innerHTML = html;
+        el.classList.remove('d-none');
+    }
+
+    function hideAlert(alertId) {
+        const el = document.getElementById(alertId);
+        if (el) el.classList.add('d-none');
+    }
+
+    function setLoading(btnTextId, btnSpinnerId, loading) {
+        const txt = document.getElementById(btnTextId);
+        const spinner = document.getElementById(btnSpinnerId);
+        if (txt) txt.classList.toggle('d-none', loading);
+        if (spinner) spinner.classList.toggle('d-none', !loading);
+    }
+
+    // ── RF-INV1: Agregar insumo al inventario personal (< 5 segundos) ────────
+
+    async function submitAddInventory() {
+        hideAlert('inventoryAlert');
+
+        const supplySelect = document.getElementById('invSupplySelect');
+        const quantityInput = document.getElementById('invQuantityInput');
+
+        // Validación en frontend (refuerza las reglas del backend)
+        let valid = true;
+
+        supplySelect.classList.remove('is-invalid');
+        quantityInput.classList.remove('is-invalid');
+
+        if (!supplySelect.value) {
+            supplySelect.classList.add('is-invalid');
+            document.getElementById('invSupplyError').textContent = 'Debes seleccionar un insumo.';
+            valid = false;
+        }
+
+        const rawQty = quantityInput.value.trim();
+        if (!rawQty) {
+            quantityInput.classList.add('is-invalid');
+            document.getElementById('invQuantityError').textContent = 'Debes ingresar una cantidad.';
+            valid = false;
+        } else {
+            const qty = parseFloat(rawQty.replace(',', '.'));
+            if (isNaN(qty)) {
+                quantityInput.classList.add('is-invalid');
+                document.getElementById('invQuantityError').textContent = 'La cantidad debe ser un número válido.';
+                valid = false;
+            } else if (qty <= 0) {
+                quantityInput.classList.add('is-invalid');
+                document.getElementById('invQuantityError').textContent = 'La cantidad debe ser mayor a 0.';
+                valid = false;
+            } else if (qty > 99999.99) {
+                quantityInput.classList.add('is-invalid');
+                document.getElementById('invQuantityError').textContent = 'La cantidad no puede superar 99 999.99 g.';
+                valid = false;
+            }
+        }
+
+        if (!valid) return;
+
+        setLoading('btnAddInventoryText', 'btnAddInventorySpinner', true);
+
+        const formData = new FormData();
+        formData.append('supply_id', supplySelect.value);
+        formData.append('quantity', quantityInput.value);
+        formData.append('csrfmiddlewaretoken', CSRF_TOKEN);
+
+        try {
+            const response = await fetch("{% url 'add_supply_to_inventory' %}", {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showAlert(
+                    'inventoryAlert',
+                    'success',
+                    `<i class="bi bi-check-circle me-1"></i> ${data.message}`
+                );
+                // Actualizar la tabla de inventario en el DOM
+                updateInventoryRow(data.item);
+                // Limpiar formulario
+                supplySelect.value = '';
+                quantityInput.value = '';
+            } else {
+                showAlert(
+                    'inventoryAlert',
+                    'danger',
+                    `<i class="bi bi-exclamation-triangle me-1"></i> ${data.error}`
+                );
+            }
+        } catch (err) {
+            showAlert(
+                'inventoryAlert',
+                'danger',
+                '<i class="bi bi-wifi-off me-1"></i> Error de conexión. Intenta de nuevo.'
+            );
+        } finally {
+            setLoading('btnAddInventoryText', 'btnAddInventorySpinner', false);
+        }
+    }
+
+    function updateInventoryRow(item) {
+        const tbody = document.getElementById('inventoryTableBody');
+        const emptyMsg = document.getElementById('inventoryEmptyMsg');
+
+        // Si no existía tabla, crearla
+        if (!tbody) {
+            const tableDiv = document.querySelector('#inventoryTable') || createInventoryTable();
+            return;
+        }
+
+        // Buscar fila existente del insumo
+        let row = document.getElementById(`inv-row-${item.supply_id}`);
+
+        if (row) {
+            // Actualizar cantidad
+            const qtyCell = row.querySelector(`.inv-qty-${item.supply_id}`);
+            if (qtyCell) qtyCell.textContent = parseFloat(item.available_quantity).toFixed(2);
+            // Actualizar fecha
+            const cells = row.querySelectorAll('td');
+            if (cells[3]) cells[3].textContent = item.last_update;
+        } else {
+            // Agregar nueva fila
+            row = document.createElement('tr');
+            row.id = `inv-row-${item.supply_id}`;
+            row.innerHTML = `
+                <td><span class="badge bg-secondary rounded-pill">${item.type_supply}</span></td>
+                <td>${item.supply_name}</td>
+                <td class="fw-bold inv-qty-${item.supply_id}">${parseFloat(item.available_quantity).toFixed(2)}</td>
+                <td class="text-muted small">${item.last_update}</td>
+            `;
+            tbody.appendChild(row);
+
+            // Ocultar mensaje vacío si existía
+            if (emptyMsg) emptyMsg.classList.add('d-none');
+        }
+    }
+
+    // ── RF-20: Registrar sobrantes y actualizar inventario (< 3 segundos) ────
+
+    async function submitFinishTask(taskId) {
+        const alertId = `finishAlert${taskId}`;
+        hideAlert(alertId);
+
+        setLoading(`finishBtnText${taskId}`, `finishBtnSpinner${taskId}`, true);
+
+        const form = document.getElementById(`finishForm${taskId}`);
+        const url  = form.dataset.url;
+
+        // Validación en frontend
+        const inputs = form.querySelectorAll('input[type="number"]');
+        let valid = true;
+
+        inputs.forEach(input => {
+            input.classList.remove('is-invalid');
+            const val = parseFloat(input.value.replace(',', '.'));
+            const max = parseFloat(input.max);
+
+            if (input.value.trim() === '' || isNaN(val)) {
+                input.classList.add('is-invalid');
+                valid = false;
+            } else if (val < 0) {
+                input.classList.add('is-invalid');
+                valid = false;
+            } else if (!isNaN(max) && val > max) {
+                input.classList.add('is-invalid');
+                valid = false;
+            }
+        });
+
+        if (!valid) {
+            showAlert(
+                alertId,
+                'warning',
+                '<i class="bi bi-exclamation-triangle me-1"></i> Revisa los valores ingresados: ' +
+                'no pueden ser negativos ni superar la cantidad inicial.'
+            );
+            setLoading(`finishBtnText${taskId}`, `finishBtnSpinner${taskId}`, false);
+            return;
+        }
+
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showAlert(
+                    alertId,
+                    'success',
+                    `<i class="bi bi-check-circle me-1"></i> ${data.message}`
+                );
+
+                // Actualizar filas del inventario personal afectadas
+                if (data.updated_inventory) {
+                    data.updated_inventory.forEach(upd => {
+                        const qtyCell = document.querySelector(`.inv-qty-${upd.supply_id}`);
+                        if (qtyCell) qtyCell.textContent = upd.remaining.toFixed(2);
+                    });
+                }
+
+                // Recargar la página tras 1.5 s para reflejar el nuevo estado de la tarea
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                const errList = data.errors
+                    ? data.errors.map(e => `<li>${e}</li>`).join('')
+                    : (data.error || 'Error desconocido.');
+                showAlert(
+                    alertId,
+                    'danger',
+                    `<i class="bi bi-exclamation-triangle me-1"></i>` +
+                    `<ul class="mb-0 mt-1">${errList}</ul>`
+                );
+            }
+        } catch (err) {
+            showAlert(
+                alertId,
+                'danger',
+                '<i class="bi bi-wifi-off me-1"></i> Error de conexión. Intenta de nuevo.'
+            );
+        } finally {
+            setLoading(`finishBtnText${taskId}`, `finishBtnSpinner${taskId}`, false);
+        }
+    }
+</script>
 {% endblock %}
