@@ -202,14 +202,12 @@ def view_assigned_products(request):
                 supply_task.initial_quantity - supply_task.final_quantity
             )
 
-    # All supplies available for adding to inventory
-    all_supplies = Supply.objects.select_related('general_color').order_by('type_supply', 'brand')
+    # All supplies available in inventory view (moved to view_inventory)
 
     return render(request, 'production/employee_panel.html', {
         'employee': employee,
         'tasks': tasks,
         'inventory': inventory,
-        'all_supplies': all_supplies,
     })
 
 
@@ -568,6 +566,88 @@ def finish_task_supplies(request, task_id):
 
     messages.success(request, success_msg)
     return redirect('employee_panel')
+
+
+@require_role('empleada')
+def view_inventory(request):
+    """
+    RF-INV2 — Muestra el inventario personal de la empleada en su propia vista.
+    """
+    user_id = request.session.get('user_id')
+    employee = get_object_or_404(User, id=user_id, role='empleada')
+
+    inventory = EmployeeInventory.objects.filter(
+        employee=employee
+    ).select_related('supply').order_by('supply__type_supply', 'supply__brand')
+
+    all_supplies = Supply.objects.select_related('general_color').order_by('type_supply', 'brand')
+
+    return render(request, 'production/inventory.html', {
+        'employee': employee,
+        'inventory': inventory,
+        'all_supplies': all_supplies,
+    })
+
+
+@require_role('empleada')
+@transaction.atomic
+def create_supply(request):
+    """
+    RF-INV3 — Permite a la empleada crear un nuevo insumo (especialmente hilos).
+    Valida que no exista un duplicado exacto (tipo + marca + referencia).
+    """
+    if request.method != 'POST':
+        return redirect('view_inventory')
+
+    type_supply = request.POST.get('type_supply', '').strip()
+    brand = request.POST.get('brand', '').strip()
+    reference = request.POST.get('reference', '').strip()
+    color_name = request.POST.get('color_name', '').strip()
+
+    errors = []
+
+    valid_types = [t[0] for t in Supply.TYPES]
+    type_supply = 'Hilo'
+    if not brand:
+        errors.append('La marca es obligatoria.')
+    if not reference:
+        errors.append('La referencia es obligatoria.')
+
+    if not errors:
+        # Verificar duplicado: mismo tipo + marca + referencia
+        duplicate = Supply.objects.filter(
+            type_supply=type_supply,
+            brand__iexact=brand,
+            reference__iexact=reference,
+        ).first()
+
+        if duplicate:
+            errors.append(
+                f'Ya existe un insumo con ese tipo, marca y referencia: "{duplicate}".'
+            )
+
+    if errors:
+        for error in errors:
+            messages.error(request, error)
+        return redirect('view_inventory')
+
+    # Buscar o crear el color general si se proporcionó
+    from product.models import GeneralColor
+    general_color = None
+    if color_name:
+        general_color, _ = GeneralColor.objects.get_or_create(name__iexact=color_name, defaults={'name': color_name})
+
+    Supply.objects.create(
+        type_supply=type_supply,
+        brand=brand,
+        reference=reference,
+        general_color=general_color,
+        quantity=Decimal('0.00'),
+        price=Decimal('0.00'),
+    )
+
+    messages.success(request, f'Insumo "{type_supply} — {brand} {reference}" creado exitosamente.')
+    return redirect('view_inventory')
 
 
 @require_role('empleada')
