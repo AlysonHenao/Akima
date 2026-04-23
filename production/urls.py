@@ -4,6 +4,10 @@ from . import views
 urlpatterns = [
     path('administrator/production/', views.display_manufacturing_process, name='production_panel'),
     path('administrator/production/assign/', views.assign_products_to_employees, name='assign_task'),
+
+    #  NUEVA RUTA (CONSULT MANUFACTURING INFO)
+    path('administrator/production/consult/', views.consult_manufacturing_information, name='consult_manufacturing'),
+
     path('employee_panel/', views.view_assigned_products, name='employee_panel'),
     path('employee/', views.view_employee_information, name='employee'),
 

@@ -71,7 +71,13 @@ class EmployeeInventory(models.Model):
         verbose_name='Supply',
         related_name='employee_inventory'
     )
-    available_quantity = models.DecimalField('Available Quantity', max_digits=10, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
+    available_quantity = models.DecimalField(
+        'Available Quantity',
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
     last_update = models.DateTimeField('Last Update', auto_now=True)
 
     class Meta:
@@ -97,23 +103,33 @@ class ProductionTask(models.Model):
         verbose_name='Order Detail',
         related_name='tasks'
     )
+
     employee = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
         verbose_name='Employee',
         related_name='tasks'
     )
+
     product = models.ForeignKey(
         ColorProduct,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         verbose_name='Product',
-        related_name='tasks',
+        related_name='tasks'
+    )
+
+    assignment_date = models.DateTimeField(
+        'Fecha de asignación',
+        auto_now_add=True,
         null=True,
         blank=True
     )
-    assignment_date = models.DateTimeField('Fecha de asignación', auto_now_add=True)
+
     initial_date = models.DateTimeField('Fecha inicio', null=True, blank=True)
     final_date = models.DateTimeField('Fecha fin', null=True, blank=True)
+
     status = models.CharField('Estado', max_length=20, choices=STATUS, default='Pendiente')
     specification = models.TextField('Especificación', blank=True, null=True)
 

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Consult Manufacturing Information</title>
+</head>
+<body>
+
+<h1>Manufacturing Information</h1>
+
+<h2>Production Tasks</h2>
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Empleado</th>
+        <th>Producto</th>
+        <th>Estado</th>
+        <th>Fecha</th>
+    </tr>
+    {% for task in tasks %}
+    <tr>
+        <td>{{ task.id }}</td>
+        <td>{{ task.employee.first_name }}</td>
+        <td>
+            {{ task.product.product.name }} - {{ task.product.general_color.name }}
+        </td>
+        <td>{{ task.status }}</td>
+        <td>{{ task.assignment_date }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<hr>
+
+<h2>Supplies</h2>
+<table border="1">
+    <tr>
+        <th>Tipo</th>
+        <th>Marca</th>
+        <th>Referencia</th>
+        <th>Cantidad</th>
+    </tr>
+    {% for supply in supplies %}
+    <tr>
+        <td>{{ supply.type_supply }}</td>
+        <td>{{ supply.brand }}</td>
+        <td>{{ supply.reference }}</td>
+        <td>{{ supply.quantity }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<hr>
+
+<h2>Employee Inventory</h2>
+<table border="1">
+    <tr>
+        <th>Empleado</th>
+        <th>Insumo</th>
+        <th>Cantidad disponible</th>
+    </tr>
+    {% for item in inventory %}
+    <tr>
+        <td>{{ item.employee.first_name }}</td>
+        <td>{{ item.supply }}</td>
+        <td>{{ item.available_quantity }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>
