@@ -131,11 +131,11 @@
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold small">Nombre</label>
+                            <label class="form-label fw-bold small">Nombre <span class="text-danger">*</span></label>
                             <input type="text" name="name" class="form-control rounded-3" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold small">Categoría</label>
+                            <label class="form-label fw-bold small">Categoría <span class="text-danger">*</span></label>
                             <select name="category" class="form-select rounded-3" id="selectCategoria" required>
                                 <option value="">Selecciona...</option>
                                 <option value="Bikini">Bikini</option>
@@ -152,11 +152,11 @@
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-bold small">Descripción</label>
+                            <label class="form-label fw-bold small">Descripción <span class="text-danger">*</span></label>
                             <textarea name="description" class="form-control rounded-3" rows="3" required></textarea>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-bold small">Precio</label>
+                            <label class="form-label fw-bold small">Precio <span class="text-danger">*</span></label>
                             <input type="number" name="price" class="form-control rounded-3" step="100" min="0" required>
                         </div>
                         <div class="col-md-4">
@@ -164,7 +164,7 @@
                             <input type="number" name="stock" class="form-control rounded-3" min="0" value="0">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-bold small">Tiempo fabricación (horas)</label>
+                            <label class="form-label fw-bold small">Tiempo fabricación (horas) <span class="text-danger">*</span></label>
                             <input type="number" name="manufacturing_time" class="form-control rounded-3" min="0" required>
                         </div>
 
@@ -268,13 +268,16 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-end gap-2 mt-4">
+                    <div class="d-flex justify-content-between align-items-center gap-2 mt-4">
+                        <p class="text-muted small mb-0"><span class="text-danger">*</span> Campos obligatorios</p>
+                        <div class="d-flex gap-2">
                         <button type="button" class="btn btn-outline-secondary rounded-pill"
                                 data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn rounded-pill px-4"
                                 style="background-color: var(--akima-brown); color: white;">
                             Crear Producto
                         </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -295,11 +298,11 @@
                     {% csrf_token %}
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-bold small">Nombre</label>
+                            <label class="form-label fw-bold small">Nombre <span class="text-danger">*</span></label>
                             <input type="text" name="name" id="edit_name" class="form-control rounded-3" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-bold small">Categoría</label>
+                            <label class="form-label fw-bold small">Categoría <span class="text-danger">*</span></label>
                             <select name="category" id="edit_category" class="form-select rounded-3" required>
                                 <option value="Bikini">Bikini</option>
                                 <option value="Top">Top</option>
@@ -315,12 +318,12 @@
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-bold small">Descripción</label>
+                            <label class="form-label fw-bold small">Descripción <span class="text-danger">*</span></label>
                             <textarea name="description" id="edit_description"
                                       class="form-control rounded-3" rows="3" required></textarea>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-bold small">Precio</label>
+                            <label class="form-label fw-bold small">Precio <span class="text-danger">*</span></label>
                             <input type="number" name="price" id="edit_price"
                                    class="form-control rounded-3" step="0.01" min="0" required>
                         </div>
@@ -330,7 +333,7 @@
                                    class="form-control rounded-3" min="0">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-bold small">Tiempo fabricación (horas)</label>
+                            <label class="form-label fw-bold small">Tiempo fabricación (horas) <span class="text-danger">*</span></label>
                             <input type="number" name="manufacturing_time" id="edit_manufacturing_time"
                                    class="form-control rounded-3" min="0" required>
                         </div>
@@ -392,13 +395,16 @@
                             </div>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-end gap-2 mt-4">
+                    <div class="d-flex justify-content-between align-items-center gap-2 mt-4">
+                        <p class="text-muted small mb-0"><span class="text-danger">*</span> Campos obligatorios</p>
+                        <div class="d-flex gap-2">
                         <button type="button" class="btn btn-outline-secondary rounded-pill"
                                 data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn rounded-pill px-4"
                                 style="background-color: var(--akima-brown); color: white;">
                             Guardar Cambios
                         </button>
+                        </div>
                     </div>
                 </form>
             </div>
