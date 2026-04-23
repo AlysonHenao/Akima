@@ -63,6 +63,19 @@ def view_employee_information(request):
 
 
 # ─────────────────────────────────────────────────────────────
+# EMPLOYEE PROFILE (NUEVO)
+# ─────────────────────────────────────────────────────────────
+@require_role('empleada')
+def view_employee_profile(request):
+    user_id = request.session.get('user_id')
+    employee = get_object_or_404(User, id=user_id, role='empleada')
+
+    return render(request, 'production/employee_profile.html', {
+        'employee': employee,
+    })
+
+
+# ─────────────────────────────────────────────────────────────
 # PANEL ADMIN
 # ─────────────────────────────────────────────────────────────
 @require_role('administrador')
@@ -176,22 +189,27 @@ def assign_products_to_employees(request):
 
 
 # ─────────────────────────────────────────────────────────────
-# PANEL EMPLEADA
+# PANEL EMPLEADA (MEJORADO CON GUÍA DE FABRICACIÓN)
 # ─────────────────────────────────────────────────────────────
 @require_role('empleada')
 def view_assigned_products(request):
     employee = get_object_or_404(User, id=request.session.get('user_id'), role='empleada')
 
-    tasks = ProductionTask.objects.filter(employee=employee).order_by('-assignment_date')
+    tasks = ProductionTask.objects.filter(employee=employee).select_related(
+        'product__product',
+        'product__general_color'
+    ).prefetch_related(
+        'supplies__supply',
+        'product__required_supplies__supply'
+    ).order_by('-assignment_date')
 
-    inventory = EmployeeInventory.objects.filter(employee=employee)
+    inventory = EmployeeInventory.objects.filter(employee=employee).select_related('supply')
 
     return render(request, 'production/employee_panel.html', {
         'employee': employee,
         'tasks': tasks,
         'inventory': inventory,
     })
-
 
 # ─────────────────────────────────────────────────────────────
 # PARSE DECIMAL
@@ -281,31 +299,9 @@ def add_supply_to_task(request, task_id):
     messages.success(request, 'Insumo agregado.')
     return redirect('employee_panel')
 
-@require_role('empleada')
-def view_inventory(request):
-    """
-    Vista de inventario del empleado (restaurada).
-    """
-    user_id = request.session.get('user_id')
-    employee = get_object_or_404(User, id=user_id, role='empleada')
-
-    inventory = EmployeeInventory.objects.filter(
-        employee=employee
-    ).select_related('supply').order_by('supply__type_supply', 'supply__brand')
-
-    supplies = Supply.objects.all().order_by('type_supply', 'brand')
-
-    return render(request, 'production/inventory.html', {
-        'employee': employee,
-        'inventory': inventory,
-        'supplies': supplies,
-    })    
 
 @require_role('empleada')
 def view_inventory(request):
-    """
-    RF-INV2 — Muestra el inventario personal de la empleada.
-    """
     user_id = request.session.get('user_id')
     employee = get_object_or_404(User, id=user_id, role='empleada')
 
@@ -325,9 +321,6 @@ def view_inventory(request):
 @require_role('empleada')
 @transaction.atomic
 def create_supply(request):
-    """
-    RF-INV3 — Permite crear un nuevo insumo.
-    """
     if request.method != 'POST':
         return redirect('view_inventory')
 
@@ -358,4 +351,35 @@ def create_supply(request):
     )
 
     messages.success(request, 'Insumo creado correctamente.')
-    return redirect('view_inventory')    
+    return redirect('view_inventory')
+
+@require_role('administrador')
+def employees_info(request):
+    employees = User.objects.filter(role='empleada').order_by('first_name')
+
+    selected_id = request.GET.get('employee_id')
+
+    employee = None
+    inventory = []
+    tasks = []
+
+    if selected_id:
+        employee = get_object_or_404(User, id=selected_id, role='empleada')
+
+        inventory = EmployeeInventory.objects.filter(
+            employee=employee
+        ).select_related('supply')
+
+        tasks = ProductionTask.objects.filter(
+            employee=employee
+        ).select_related(
+            'product__product',
+            'product__general_color'
+        ).order_by('-assignment_date')
+
+    return render(request, 'production/employees_info.html', {
+        'employees': employees,
+        'employee': employee,
+        'inventory': inventory,
+        'tasks': tasks,
+    })    

@@ -1,0 +1,170 @@
+{% extends 'shared/header_admin.html' %}
+{% block title %}Empleadas Info - Akima{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <div class="text-center mb-5">
+        <h3 class="fw-bold mb-1" style="color: var(--akima-brown);">
+            Información de Empleadas
+        </h3>
+        <p class="text-muted small mb-0">
+            Consulta datos personales, inventario y tareas asignadas
+        </p>
+    </div>
+
+    <!-- SELECT EMPLEADA -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <form method="GET">
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-10">
+                    <label class="form-label fw-bold small">
+                        Seleccionar empleada
+                    </label>
+
+                    <select name="employee_id" class="form-select rounded-3" required>
+                        <option value="">Selecciona...</option>
+
+                        {% for emp in employees %}
+                        <option value="{{ emp.id }}"
+                            {% if employee and employee.id == emp.id %}selected{% endif %}>
+                            {{ emp.first_name }} {{ emp.last_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit"
+                            class="btn w-100 rounded-pill"
+                            style="background-color: var(--akima-brown); color:white;">
+                        Ver info
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+    {% if employee %}
+
+    <!-- DATOS EMPLEADA -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+
+        <h5 class="fw-bold mb-3" style="color: var(--akima-brown);">
+            {{ employee.first_name }} {{ employee.last_name }}
+        </h5>
+
+        <div class="row g-3">
+
+            <div class="col-md-6">
+                <p class="mb-2">
+                    <strong>Correo:</strong><br>
+                    {{ employee.email }}
+                </p>
+            </div>
+
+            <div class="col-md-6">
+                <p class="mb-2">
+                    <strong>Teléfono:</strong><br>
+                    {{ employee.phone }}
+                </p>
+            </div>
+
+            <div class="col-md-12">
+                <p class="mb-0">
+                    <strong>Dirección:</strong><br>
+                    {{ employee.address }}
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- INVENTARIO -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+
+        <h5 class="fw-bold mb-3" style="color: var(--akima-brown);">
+            Inventario
+        </h5>
+
+        {% if inventory %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Marca</th>
+                        <th>Referencia</th>
+                        <th>Cantidad</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in inventory %}
+                    <tr>
+                        <td>{{ item.supply.type_supply }}</td>
+                        <td>{{ item.supply.brand }}</td>
+                        <td>{{ item.supply.reference }}</td>
+                        <td>{{ item.available_quantity }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted small mb-0">
+            No tiene inventario registrado.
+        </p>
+        {% endif %}
+
+    </div>
+
+    <!-- TAREAS -->
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+
+        <h5 class="fw-bold mb-3" style="color: var(--akima-brown);">
+            Tareas Asignadas
+        </h5>
+
+        {% if tasks %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Color</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td>{{ task.product.product.name }}</td>
+                        <td>{{ task.product.general_color.name }}</td>
+                        <td>{{ task.status }}</td>
+                        <td>{{ task.assignment_date|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted small mb-0">
+            No tiene tareas asignadas.
+        </p>
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}
