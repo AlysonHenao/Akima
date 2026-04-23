@@ -226,7 +226,17 @@ def add_supply_to_inventory(request):
     inventory.available_quantity += quantity
     inventory.save()
 
-    return JsonResponse({'success': True})
+    return JsonResponse({
+    'success': True,
+    'message': f'Se agregaron {quantity:f} g de "{supply}" al inventario.',
+    'item': {
+        'supply_id': supply.id,
+        'supply_name': str(supply),
+        'type_supply': supply.type_supply,
+        'available_quantity': float(inventory.available_quantity),
+        'last_update': inventory.last_update.strftime('%d/%m/%Y %H:%M'),
+    }
+})
 
 
 # ─────────────────────────────────────────────────────────────
