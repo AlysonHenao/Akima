@@ -1,0 +1,50 @@
+{% extends 'shared/header_client.html' %}
+
+{% block title %}Gestión de usuarios{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <h3 class="fw-bold mb-4">Gestión de usuarios</h3>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rol actual</th>
+                    <th>Cambiar rol</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.role }}</td>
+
+                    <td>
+                        <form method="POST" action="{% url 'update_user_role' user.id %}">
+                            {% csrf_token %}
+                            <select name="role" class="form-select form-select-sm d-inline w-auto">
+                                <option value="cliente">Cliente</option>
+                                <option value="empleada">Empleada</option>
+                                <option value="administrador">Administrador</option>
+                            </select>
+                            <button type="submit" class="btn btn-akima btn-sm ms-2">
+                                Guardar
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+
+    </div>
+</div>
+{% endblock %}

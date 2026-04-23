@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import HttpResponseForbidden
 from django.core.mail import send_mail
 from functools import wraps
 import hashlib
 from .models import User
+
+
 
 
 def require_login(view_func):
@@ -24,16 +25,20 @@ def require_role(*allowed_roles):
             if not request.session.get('user_id'):
                 messages.error(request, 'Debes iniciar sesión para acceder a esta página.')
                 return redirect('login')
-            
+
             user_role = request.session.get('user_role')
             if user_role not in allowed_roles:
                 messages.error(request, 'No tienes permiso para acceder a esta página.')
                 return redirect('login')
-            
+
             return view_func(request, *args, **kwargs)
         return wrapper
     return decorator
 
+
+# ======================
+# UTILIDADES
+# ======================
 
 def hash_password(raw_password):
     return hashlib.sha256(raw_password.encode()).hexdigest()
@@ -44,20 +49,71 @@ def check_password(raw_password, hashed):
 
 
 
+
+@require_login
+def profile_view(request):
+    user = User.objects.get(id=request.session.get('user_id'))
+    return render(request, 'account/profile.html', {'user': user})
+
+
+@require_login
+def edit_profile(request):
+    user = User.objects.get(id=request.session.get('user_id'))
+
+    if request.method == 'POST':
+        user.first_name = request.POST.get('first_name', '').strip()
+        user.last_name  = request.POST.get('last_name', '').strip()
+        user.email      = request.POST.get('email', '').strip().lower()
+        user.phone      = request.POST.get('phone', '').strip()
+        user.address    = request.POST.get('address', '').strip()
+        user.city       = request.POST.get('city', '').strip()
+
+        user.save()
+        request.session['user_name'] = user.first_name
+
+        messages.success(request, 'Perfil actualizado correctamente.')
+        return redirect('profile')
+
+    return render(request, 'account/edit_profile.html', {'user': user})
+
+
+
+@require_role('administrador')
+def manage_users(request):
+    users = User.objects.all()
+    return render(request, 'account/manage_users.html', {'users': users})
+
+
+@require_role('administrador')
+def update_user_role(request, user_id):
+    user = User.objects.get(id=user_id)
+    new_role = request.POST.get('role')
+
+    if user.id == request.session.get('user_id') and new_role != 'administrador':
+        messages.error(request, 'No puedes cambiar tu propio rol.')
+        return redirect('manage_users')
+
+    user.role = new_role
+    user.save()
+
+    messages.success(request, f'Rol actualizado para {user.first_name}')
+    return redirect('manage_users')
+
+
+
 def register(request):
-    """Registro público — siempre crea un usuario con rol 'cliente'."""
     if request.session.get('user_id'):
         return redirect('home')
 
     if request.method == 'POST':
-        first_name  = request.POST.get('first_name', '').strip()
-        last_name   = request.POST.get('last_name', '').strip()
-        email       = request.POST.get('email', '').strip().lower()
-        password    = request.POST.get('password', '')
-        password2   = request.POST.get('password2', '')
-        phone       = request.POST.get('phone', '').strip()
-        address     = request.POST.get('address', '').strip()
-        city        = request.POST.get('city', '').strip()
+        first_name = request.POST.get('first_name', '').strip()
+        last_name  = request.POST.get('last_name', '').strip()
+        email      = request.POST.get('email', '').strip().lower()
+        password   = request.POST.get('password', '')
+        password2  = request.POST.get('password2', '')
+        phone      = request.POST.get('phone', '').strip()
+        address    = request.POST.get('address', '').strip()
+        city       = request.POST.get('city', '').strip()
 
         if not all([first_name, last_name, email, password, phone, address, city]):
             messages.error(request, 'Por favor completa todos los campos.')
@@ -88,12 +144,7 @@ def register(request):
 
         send_mail(
             subject='Bienvenida a Akima',
-            message=(
-                f'Hola {user.first_name},\n\n'
-                f'Tu cuenta ha sido creada exitosamente en Akima.\n'
-                f'Correo: {user.email}\n\n'
-                f'Gracias por unirte a nuestra comunidad.\n\nAkima'
-            ),
+            message=f'Hola {user.first_name}, tu cuenta fue creada.',
             from_email=None,
             recipient_list=[user.email],
             fail_silently=True,
@@ -103,20 +154,18 @@ def register(request):
         request.session['user_role'] = user.role
         request.session['user_name'] = user.first_name
 
-        messages.success(request, f'¡Bienvenida, {user.first_name}! Tu cuenta fue creada.')
+        messages.success(request, f'¡Bienvenida, {user.first_name}!')
         return redirect('home')
 
     return render(request, 'account/register.html', {'post': {}})
 
 
-
 def login_view(request):
-    """Login para todos los roles. Redirige según el rol detectado."""
     if request.session.get('user_id'):
         return _redirect_by_role(request.session.get('user_role'))
 
     if request.method == 'POST':
-        email    = request.POST.get('email', '').strip().lower()
+        email = request.POST.get('email', '').strip().lower()
         password = request.POST.get('password', '')
 
         try:
@@ -129,7 +178,7 @@ def login_view(request):
             messages.error(request, 'Correo o contraseña incorrectos.')
             return render(request, 'account/login.html', {'email': email})
 
-        request.session['user_id']   = user.id
+        request.session['user_id'] = user.id
         request.session['user_role'] = user.role
         request.session['user_name'] = user.first_name
 
@@ -144,8 +193,7 @@ def _redirect_by_role(role):
         return redirect('administrator')
     elif role == 'empleada':
         return redirect('employee')
-    else:
-        return redirect('home')
+    return redirect('home')
 
 
 def logout_view(request):

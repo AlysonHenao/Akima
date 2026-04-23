@@ -1,0 +1,60 @@
+{% extends 'shared/header_client.html' %}
+
+{% block title %}Editar perfil - Akima{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 mx-auto" style="max-width: 600px;">
+
+        <div class="text-center mb-4">
+            <h4 class="fw-bold" style="color: #3a270de0;">Editar perfil</h4>
+            <p class="text-muted small">Actualiza tus datos personales</p>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label class="form-label small">Nombre</label>
+                    <input type="text" name="first_name" value="{{ user.first_name }}" class="form-control rounded-3">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label small">Apellido</label>
+                    <input type="text" name="last_name" value="{{ user.last_name }}" class="form-control rounded-3">
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label small">Correo</label>
+                    <input type="email" name="email" value="{{ user.email }}" class="form-control rounded-3">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label small">Teléfono</label>
+                    <input type="text" name="phone" value="{{ user.phone }}" class="form-control rounded-3">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label small">Ciudad</label>
+                    <input type="text" name="city" value="{{ user.city }}" class="form-control rounded-3">
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label small">Dirección</label>
+                    <input type="text" name="address" value="{{ user.address }}" class="form-control rounded-3">
+                </div>
+
+            </div>
+
+            <button type="submit" class="btn btn-akima w-100 mt-4">
+                Guardar cambios
+            </button>
+        </form>
+
+    </div>
+
+</div>
+{% endblock %}
