@@ -4,9 +4,6 @@
 {% block content %}
 <div class="container py-5">
 
-    {# ══════════════════════════════════════════════════════════════════════ #}
-    {# CABECERA                                                               #}
-    {# ══════════════════════════════════════════════════════════════════════ #}
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
         <div>
             <h3 class="fw-bold mb-1" style="color: var(--akima-brown);">Mi inventario</h3>
@@ -22,7 +19,6 @@
         </div>
     </div>
 
-    {# Mensajes de Django #}
     {% if messages %}
     <div class="mb-3">
         {% for message in messages %}
@@ -34,19 +30,14 @@
     </div>
     {% endif %}
 
-    {# ══════════════════════════════════════════════════════════════════════ #}
-    {# RF-INV1: AGREGAR INSUMOS AL INVENTARIO (AJAX)                         #}
-    {# ══════════════════════════════════════════════════════════════════════ #}
+    {# ══ RF-INV1: AGREGAR INSUMOS AL INVENTARIO (AJAX) ══ #}
     <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <h5 class="fw-bold mb-0" style="color: var(--akima-brown);">
                 <i class="bi bi-plus-circle me-2"></i>Agregar insumo al inventario
             </h5>
-            <button class="btn btn-sm rounded-pill px-3"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#addInventoryForm"
-                    aria-expanded="false"
+            <button class="btn btn-sm rounded-pill px-3" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#addInventoryForm"
                     style="background-color: var(--akima-brown); color: white;">
                 <i class="bi bi-chevron-down me-1"></i>Expandir
             </button>
@@ -54,9 +45,7 @@
 
         <div class="collapse mb-3" id="addInventoryForm">
             <div class="border rounded-4 p-3 bg-light">
-
                 <div id="inventoryAlert" class="alert d-none mb-3" role="alert"></div>
-
                 <div class="row g-3 align-items-end">
                     <div class="col-md-6">
                         <label class="form-label small fw-bold" for="invSupplySelect">
@@ -73,26 +62,16 @@
                         </select>
                         <div class="invalid-feedback" id="invSupplyError"></div>
                     </div>
-
                     <div class="col-md-4">
                         <label class="form-label small fw-bold" for="invQuantityInput">
                             Cantidad (g) <span class="text-danger">*</span>
                         </label>
-                        <input
-                            type="number"
-                            id="invQuantityInput"
-                            class="form-control rounded-3"
-                            placeholder="Ej: 500"
-                            step="0.01"
-                            min="0.01"
-                            max="99999.99"
-                        >
+                        <input type="number" id="invQuantityInput" class="form-control rounded-3"
+                               placeholder="Ej: 500" step="0.01" min="0.01" max="99999.99">
                         <div class="invalid-feedback" id="invQuantityError"></div>
                     </div>
-
                     <div class="col-md-2">
-                        <button type="button"
-                                id="btnAddInventory"
+                        <button type="button" id="btnAddInventory"
                                 class="btn btn-akima w-100 rounded-pill"
                                 onclick="submitAddInventory()">
                             <span id="btnAddInventoryText">Agregar</span>
@@ -100,7 +79,6 @@
                         </button>
                     </div>
                 </div>
-
                 <p class="small text-muted mt-2 mb-0">
                     <i class="bi bi-info-circle me-1"></i>
                     La cantidad se sumará al stock actual del insumo seleccionado.
@@ -108,9 +86,8 @@
             </div>
         </div>
 
-        {# Tabla de inventario #}
         {% if inventory %}
-        <div class="table-responsive" id="inventoryTableWrapper">
+        <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
                 <thead>
                     <tr>
@@ -123,13 +100,9 @@
                 <tbody id="inventoryTableBody">
                     {% for inv in inventory %}
                     <tr id="inv-row-{{ inv.supply.id }}">
-                        <td>
-                            <span class="badge bg-secondary rounded-pill">{{ inv.supply.type_supply }}</span>
-                        </td>
+                        <td><span class="badge bg-secondary rounded-pill">{{ inv.supply.type_supply }}</span></td>
                         <td>{{ inv.supply.brand }} {{ inv.supply.reference }}</td>
-                        <td class="fw-bold inv-qty-{{ inv.supply.id }}">
-                            {{ inv.available_quantity|floatformat:2 }}
-                        </td>
+                        <td class="fw-bold inv-qty-{{ inv.supply.id }}">{{ inv.available_quantity|floatformat:2 }}</td>
                         <td class="text-muted small">{{ inv.last_update|date:"d/m/Y H:i" }}</td>
                     </tr>
                     {% endfor %}
@@ -139,24 +112,19 @@
         {% else %}
         <div id="inventoryEmptyMsg" class="text-muted small">
             <i class="bi bi-inbox me-1"></i>
-            Aún no tienes insumos en tu inventario. Agrega el primero usando el formulario de arriba.
+            Aún no tienes insumos. Agrega el primero usando el formulario de arriba.
         </div>
         {% endif %}
     </div>
 
-    {# ══════════════════════════════════════════════════════════════════════ #}
-    {# RF-INV3: CREAR NUEVO INSUMO                                            #}
-    {# ══════════════════════════════════════════════════════════════════════ #}
+    {# ══ RF-INV3: CREAR NUEVO INSUMO ══ #}
     <div class="card border-0 shadow-sm rounded-4 p-4">
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <h5 class="fw-bold mb-0" style="color: var(--akima-brown);">
                 <i class="bi bi-tag me-2"></i>Crear nuevo insumo
             </h5>
-            <button class="btn btn-sm rounded-pill px-3"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#createSupplyForm"
-                    aria-expanded="false"
+            <button class="btn btn-sm rounded-pill px-3" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#createSupplyForm"
                     style="background-color: var(--akima-brown); color: white;">
                 <i class="bi bi-chevron-down me-1"></i>Expandir
             </button>
@@ -166,56 +134,36 @@
             <div class="border rounded-4 p-3 bg-light">
                 <p class="small text-muted mb-3">
                     <i class="bi bi-info-circle me-1"></i>
-                    Úsalo para registrar hilos u otros insumos que aún no están en el sistema.
+                    Para hilos u otros insumos que aún no están en el sistema.
                     No se crearán duplicados si ya existe uno con el mismo tipo, marca y referencia.
                 </p>
-
                 <form method="post" action="{% url 'create_supply' %}">
                     {% csrf_token %}
                     <div class="row g-3">
                         <div class="col-md-3">
-                            <label class="form-label small fw-bold">
-                                Tipo <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label small fw-bold">Tipo <span class="text-danger">*</span></label>
                             <select name="type_supply" class="form-select rounded-3" required>
-                            <option value="Hilo" selected>Hilo</option>
+                                <option value="">Selecciona...</option>
+                                <option value="Hilo">Hilo</option>
+                                <option value="Botón">Botón</option>
+                                <option value="Argolla">Argolla</option>
+                                <option value="Otro">Otro</option>
                             </select>
                         </div>
-
                         <div class="col-md-3">
-                            <label class="form-label small fw-bold">
-                                Marca <span class="text-danger">*</span>
-                            </label>
-                            <input type="text"
-                                   name="brand"
-                                   class="form-control rounded-3"
-                                   placeholder="Ej: Anchor"
-                                   maxlength="100"
-                                   required>
+                            <label class="form-label small fw-bold">Marca <span class="text-danger">*</span></label>
+                            <input type="text" name="brand" class="form-control rounded-3"
+                                   placeholder="Ej: Anchor" maxlength="100" required>
                         </div>
-
                         <div class="col-md-3">
-                            <label class="form-label small fw-bold">
-                                Referencia <span class="text-danger">*</span>
-                            </label>
-                            <input type="text"
-                                   name="reference"
-                                   class="form-control rounded-3"
-                                   placeholder="Ej: 100% algodón N°8"
-                                   maxlength="100"
-                                   required>
+                            <label class="form-label small fw-bold">Referencia <span class="text-danger">*</span></label>
+                            <input type="text" name="reference" class="form-control rounded-3"
+                                   placeholder="Ej: N°8 algodón" maxlength="100" required>
                         </div>
-
                         <div class="col-md-3">
-                            <label class="form-label small fw-bold">
-                                Color <span class="text-muted fw-normal">(opcional)</span>
-                            </label>
-                            <input type="text"
-                                   name="color_name"
-                                   class="form-control rounded-3"
-                                   placeholder="Ej: Rojo">
+                            <label class="form-label small fw-bold">Color <span class="text-muted fw-normal">(opcional)</span></label>
+                            <input type="text" name="color_name" class="form-control rounded-3" placeholder="Ej: Rojo">
                         </div>
-
                         <div class="col-12 text-end">
                             <button type="submit" class="btn btn-akima rounded-pill px-4">
                                 <i class="bi bi-plus-lg me-1"></i>Crear insumo
@@ -251,14 +199,11 @@
         if (spinner) spinner.classList.toggle('d-none', !loading);
     }
 
-    // ── RF-INV1: Agregar insumo al inventario (AJAX, < 5 segundos) ───────────
-
     async function submitAddInventory() {
         hideAlert('inventoryAlert');
 
         const supplySelect = document.getElementById('invSupplySelect');
         const quantityInput = document.getElementById('invQuantityInput');
-
         let valid = true;
 
         supplySelect.classList.remove('is-invalid');
@@ -306,31 +251,21 @@
                 method: 'POST',
                 body: formData,
             });
-
             const data = await response.json();
 
             if (data.success) {
-                showAlert(
-                    'inventoryAlert',
-                    'success',
-                    `<i class="bi bi-check-circle me-1"></i> ${data.message}`
-                );
+                showAlert('inventoryAlert', 'success',
+                    `<i class="bi bi-check-circle me-1"></i> ${data.message}`);
                 updateInventoryRow(data.item);
                 supplySelect.value = '';
                 quantityInput.value = '';
             } else {
-                showAlert(
-                    'inventoryAlert',
-                    'danger',
-                    `<i class="bi bi-exclamation-triangle me-1"></i> ${data.error}`
-                );
+                showAlert('inventoryAlert', 'danger',
+                    `<i class="bi bi-exclamation-triangle me-1"></i> ${data.error}`);
             }
         } catch (err) {
-            showAlert(
-                'inventoryAlert',
-                'danger',
-                '<i class="bi bi-wifi-off me-1"></i> Error de conexión. Intenta de nuevo.'
-            );
+            showAlert('inventoryAlert', 'danger',
+                '<i class="bi bi-wifi-off me-1"></i> Error de conexión. Intenta de nuevo.');
         } finally {
             setLoading('btnAddInventoryText', 'btnAddInventorySpinner', false);
         }
@@ -339,11 +274,9 @@
     function updateInventoryRow(item) {
         const tbody = document.getElementById('inventoryTableBody');
         const emptyMsg = document.getElementById('inventoryEmptyMsg');
-
         if (!tbody) return;
 
         let row = document.getElementById(`inv-row-${item.supply_id}`);
-
         if (row) {
             const qtyCell = row.querySelector(`.inv-qty-${item.supply_id}`);
             if (qtyCell) qtyCell.textContent = parseFloat(item.available_quantity).toFixed(2);

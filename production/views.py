@@ -607,7 +607,9 @@ def create_supply(request):
     errors = []
 
     valid_types = [t[0] for t in Supply.TYPES]
-    type_supply = 'Hilo'
+    valid_types = [t[0] for t in Supply.TYPES]
+    if not type_supply or type_supply not in valid_types:
+      errors.append('Debes seleccionar un tipo de insumo válido.')
     if not brand:
         errors.append('La marca es obligatoria.')
     if not reference:
