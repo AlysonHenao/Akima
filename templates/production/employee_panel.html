@@ -22,10 +22,9 @@
     {# TAREAS ASIGNADAS                                                       #}
     {# ══════════════════════════════════════════════════════════════════════ #}
     {% if tasks %}
-        <div class="card border-0 shadow-sm rounded-4 p-4">
-            <div class="d-flex flex-column gap-4">
-                {% for task in tasks %}
-                <div class="border-bottom pb-4" id="task-card-{{ task.id }}">
+    <div class="d-flex flex-column gap-4">
+            {% for task in tasks %}
+            <div class="card border-0 shadow-sm rounded-4 p-4" id="task-card-{{ task.id }}">
                     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                         <div class="flex-grow-1">
                             <h6 class="fw-bold mb-2" style="color: var(--akima-brown);">
@@ -67,44 +66,43 @@
                                 </a>
                             </div>
                             {% endif %}
-                            {# ===== NUEVO BLOQUE: INSUMOS + COLOR ===== #}
-{% if task.product.required_supplies.all %}
-<div class="mt-3">
-    <div class="border rounded-4 p-3" style="background-color: #fff5f8;">
+                            {% if task.product.required_supplies.all %}
+                            <div class="mt-3">
+                                <div class="border rounded-4 p-3" style="background-color: #fff5f8;">
 
-        <h6 class="fw-bold mb-3" style="color: var(--akima-brown);">
-            <i class="bi bi-list-check me-1"></i>Insumos requeridos
-        </h6>
+                                    <h6 class="fw-bold mb-3" style="color: var(--akima-brown);">
+                                        <i class="bi bi-list-check me-1"></i>Insumos requeridos
+                                    </h6>
 
-        <!-- COLOR -->
-        <div class="mb-2 d-flex align-items-center gap-2">
-            <div style="
-                width: 15px;
-                height: 15px;
-                border-radius: 50%;
-                background-color: {{ task.product.general_color.hex_code|default:'#ccc' }};
-                border: 1px solid #ddd;">
-            </div>
-            <span class="small text-muted">
-                {{ task.product.general_color.name }}
-            </span>
-        </div>
+                                    <!-- COLOR -->
+                                    <div class="mb-2 d-flex align-items-center gap-2">
+                                        <div style="
+                                            width: 15px;
+                                            height: 15px;
+                                            border-radius: 50%;
+                                            background-color: {{ task.product.general_color.hex_code|default:'#ccc' }};
+                                            border: 1px solid #ddd;">
+                                        </div>
+                                        <span class="small text-muted">
+                                            {{ task.product.general_color.name }}
+                                        </span>
+                                    </div>
 
-        <!-- LISTA INSUMOS -->
-        <ul class="small mb-0">
-            {% for req in task.product.required_supplies.all %}
-            <li>
-                {{ req.supply.type_supply }} - 
-                {{ req.supply.brand }} 
-                {{ req.supply.reference }} 
-                ({{ req.required_quantity|floatformat:0 }} g)
-            </li>
-            {% endfor %}
-        </ul>
+                                    <!-- LISTA INSUMOS -->
+                                    <ul class="small mb-0">
+                                        {% for req in task.product.required_supplies.all %}
+                                        <li>
+                                            {{ req.supply.type_supply }} - 
+                                            {{ req.supply.brand }} 
+                                            {{ req.supply.reference }} 
+                                            ({{ req.required_quantity|floatformat:0 }} g)
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
 
-    </div>
-</div>
-{% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
 
                         <span class="badge rounded-pill px-3 py-2"
@@ -252,6 +250,31 @@
                                 Agregar insumo adicional
                             </h6>
 
+                            {% if task.registered_supplies %}
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">
+                                    Insumos ya registrados en esta tarea
+                                </label>
+
+                                <div class="d-flex flex-column gap-2">
+                                    {% for supply_task in task.registered_supplies %}
+                                    <div class="border rounded-3 px-3 py-2 bg-light small d-flex justify-content-between align-items-center">
+                                        <span>
+                                            {{ supply_task.supply.type_supply }} -
+                                            {{ supply_task.supply.brand }}
+                                            {{ supply_task.supply.reference }}
+                                        </span>
+
+                                        <span class="badge rounded-pill"
+                                            style="background-color: var(--akima-pink); color: var(--akima-brown);">
+                                            {{ supply_task.initial_quantity|floatformat:0 }} g registrados
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+
                             <form method="POST" action="{% url 'add_supply_to_task' task.id %}">
                                 {% csrf_token %}
 
@@ -260,9 +283,12 @@
                                         <label class="form-label small fw-bold">Insumo</label>
                                         <select name="supply_id" class="form-select rounded-3" required>
                                             <option value="">Selecciona un insumo...</option>
+
                                             {% for inv in task.available_inventory_supplies %}
                                             <option value="{{ inv.supply.id }}">
-                                                {{ inv.supply.type_supply }} - {{ inv.supply.brand }} {{ inv.supply.reference }}
+                                                {{ inv.supply.type_supply }} -
+                                                {{ inv.supply.brand }}
+                                                {{ inv.supply.reference }}
                                                 (Disponible: {{ inv.available_quantity|floatformat:0 }} g)
                                             </option>
                                             {% endfor %}
@@ -332,8 +358,7 @@
                     </div>
                     {% endif %}
                 </div>
-                {% endfor %}
-            </div>
+            {% endfor %}
         </div>
     {% else %}
         <div class="card border-0 shadow-sm rounded-4 p-4">
@@ -372,8 +397,6 @@
         if (txt) txt.classList.toggle('d-none', loading);
         if (spinner) spinner.classList.toggle('d-none', !loading);
     }
-
-    // ── RF-20: Registrar sobrantes y actualizar inventario (< 3 segundos) ────    }
 
     // ── RF-20: Registrar sobrantes y actualizar inventario (< 3 segundos) ────
 
