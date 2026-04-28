@@ -34,7 +34,7 @@
                     </p>
                 </div>
                 <div class="text-end">
-                    <p class="fw-bold mb-1" style="color: var(--akima-brown);">${{ orden.total }}</p>
+                    <p class="fw-bold mb-1" style="color: var(--akima-brown);">{{ orden.formatted_price }}</p>
                     <p class="text-muted small mb-2">{{ orden.details.count }} producto(s)</p>
                     <button class="btn btn-outline-secondary btn-sm rounded-pill"
                             data-bs-toggle="collapse"
@@ -66,7 +66,7 @@
                                     <td>{{ detalle.color_product.general_color.name }}</td>
                                     <td>{{ detalle.size }}</td>
                                     <td>{{ detalle.quantity }}</td>
-                                    <td>${{ detalle.subtotal }}</td>
+                                    <td>{{ detalle.formatted_subtotal }}</td>
                                     <td>
                                         <a href="{% url 'production_panel' %}?order_detail={{ detalle.id }}"
                                         class="btn btn-sm rounded-pill"
@@ -125,7 +125,7 @@
                         <p class="text-muted small fw-bold mb-2">Comprobante de pago</p>
                         {% for comprobante in orden.receipts.all %}
                         <p class="small mb-1"><strong>Método:</strong> {{ comprobante.payment_method.name }}</p>
-                        <p class="small mb-1"><strong>Monto:</strong> ${{ comprobante.amount }}</p>
+                        <p class="small mb-1"><strong>Monto:</strong> {{ comprobante.formatted_amount }}</p>
                         <p class="small mb-2"><strong>Subido:</strong> {{ comprobante.upload_date|date:"d/m/Y H:i" }}</p>
 
                         {% if comprobante.receipt %}

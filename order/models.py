@@ -90,6 +90,14 @@ class OrderDetail(models.Model):
     class Meta:
         db_table = 'order_detail'
 
+    @property
+    def formatted_unit_price(self):
+        return f"${self.unit_price:,.0f}".replace(',', '.')
+
+    @property
+    def formatted_subtotal(self):
+        return f"${self.subtotal:,.0f}".replace(',', '.')
+
     def __str__(self):
         return f"Order #{self.order.id} - {self.product.name} x{self.quantity}"
 
@@ -214,6 +222,10 @@ class PaymentReceipt(models.Model):
     class Meta:
         db_table = 'payment_receipt'
 
+    @property
+    def formatted_amount(self):
+        return f"${self.amount:,.0f}".replace(',', '.')
+
     def __str__(self):
         return f"Receipt Order #{self.order.id} - ${self.amount}"
 
@@ -257,6 +269,10 @@ class FinancialMovement(models.Model):
 
     class Meta:
         db_table = 'financial_movement'
+
+    @property
+    def formatted_amount(self):
+        return f"${self.amount:,.0f}".replace(',', '.')
 
     def __str__(self):
         return f"{self.type} - {self.category} - ${self.amount}"

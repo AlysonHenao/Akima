@@ -173,8 +173,8 @@ def notify_administrator_of_payment(order, payment_method):
 
 
 def payment_page(request):
-    if request.session.get('user_role') != 'cliente':
-        messages.error(request, 'No tienes permiso para acceder a esta página.')
+    if not request.session.get('user_id'):
+        messages.error(request, 'Debes iniciar sesión para realizar un pedido.')
         return redirect('login')
 
     cart = get_or_create_cart(request)
@@ -290,38 +290,15 @@ def check_order_status(request):
     user_role = request.session.get('user_role')
     user_id = request.session.get('user_id')
 
-    if user_role == 'empleada':
-        return redirect('employee_panel')
-
-    if user_role == 'cliente':
+    if user_role in ['cliente', 'empleada', 'administrador']:
         orders = Order.objects.filter(
             user_id=user_id
         ).prefetch_related(
             'details__product',
             'details__color_product__general_color'
         ).order_by('-order_date')
+
         return render(request, 'order/customer_orders_panel.html', {
             'orders': orders,
             'is_cliente': True,
         })
-
-    customers = User.objects.filter(role='cliente').order_by('first_name', 'last_name')
-    selected_customer_id = request.GET.get('user_id')
-    selected_customer = None
-    orders = Order.objects.none()
-
-    if selected_customer_id:
-        selected_customer = get_object_or_404(User, id=selected_customer_id, role='cliente')
-        orders = Order.objects.filter(
-            user=selected_customer
-        ).prefetch_related(
-            'details__product',
-            'details__color_product__general_color'
-        ).order_by('-order_date')
-
-    return render(request, 'order/customer_orders_panel.html', {
-        'customers': customers,
-        'selected_customer': selected_customer,
-        'orders': orders,
-        'is_cliente': False,
-    })

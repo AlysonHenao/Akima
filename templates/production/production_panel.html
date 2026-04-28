@@ -40,8 +40,6 @@
             {% if preselected_detail %}
             <input type="hidden" name="order_detail_id" value="{{ preselected_detail.id }}">
             <input type="hidden" name="color_product_id" value="{{ preselected_detail.color_product.id }}">
-            {% else %}
-            <input type="hidden" name="order_detail_id" value="">
             {% endif %}
 
             <div class="row g-3 mb-3">
@@ -65,7 +63,7 @@
                 {% else %}
                 <div class="col-md-4">
                     <label class="form-label fw-bold small" style="color: var(--akima-brown);">Producto</label>
-                    <select name="product_id" class="form-select rounded-3" id="selectProduct">
+                    <select name="product_id" class="form-select rounded-3" id="selectProduct" required>
                         <option value="">Selecciona...</option>
                         {% for product in products %}
                         <optgroup label="{{ product.name }}">
@@ -75,7 +73,7 @@
                         </optgroup>
                         {% endfor %}
                     </select>
-                    <input type="hidden" name="color_product_id" id="hiddenColorProduct">
+                    <input type="hidden" name="color_product_id" id="hiddenColorProduct" required>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold small" style="color: var(--akima-brown);">Talla</label>

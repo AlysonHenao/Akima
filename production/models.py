@@ -159,5 +159,9 @@ class SupplyTask(models.Model):
     class Meta:
         db_table = 'supply_task'
 
+    @property
+    def used_quantity(self):
+        return self.initial_quantity - self.final_quantity
+
     def __str__(self):
         return f"Tarea #{self.task.id} - {self.supply}"
