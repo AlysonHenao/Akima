@@ -6,7 +6,6 @@ urlpatterns = [
     path('administrator/production/assign/', views.assign_products_to_employees, name='assign_task'),
     path('administrator/employees-info/', views.employees_info, name='employees_info'),
 
-    #  NUEVA RUTA (CONSULT MANUFACTURING INFO)
     path('administrator/production/consult/', views.consult_manufacturing_information, name='consult_manufacturing'),
 
     path('employee_panel/', views.view_assigned_products, name='employee_panel'),
@@ -19,5 +18,7 @@ urlpatterns = [
 
     path('employee/inventory/', views.view_inventory, name='view_inventory'),
     path('employee/inventory/add/', views.add_supply_to_inventory, name='add_supply_to_inventory'),
+    path('employee/inventory/update/', views.update_inventory_quantity, name='update_inventory_quantity'),
+    path('employee/inventory/delete/', views.delete_inventory_supply, name='delete_inventory_supply'),
     path('employee/inventory/create-supply/', views.create_supply, name='create_supply'),
 ]

@@ -248,6 +248,95 @@ def add_supply_to_inventory(request):
     }
 })
 
+@require_role('empleada')
+@transaction.atomic
+def update_inventory_quantity(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido.'}, status=405)
+
+    employee = get_object_or_404(User, id=request.session.get('user_id'), role='empleada')
+    supply_id = request.POST.get('supply_id')
+    action = request.POST.get('action')
+    quantity = _parse_decimal(request.POST.get('quantity'))
+
+    if not supply_id:
+        return JsonResponse({'success': False, 'error': 'Debes seleccionar un insumo.'}, status=400)
+
+    if action not in ['add', 'subtract', 'set']:
+        return JsonResponse({'success': False, 'error': 'Acción no válida.'}, status=400)
+
+    if quantity is None or quantity < Decimal('0.00'):
+        return JsonResponse({'success': False, 'error': 'La cantidad debe ser un número válido mayor o igual a 0.'}, status=400)
+
+    inventory = get_object_or_404(
+        EmployeeInventory,
+        employee=employee,
+        supply_id=supply_id
+    )
+
+    if action == 'add':
+        inventory.available_quantity += quantity
+        message = f'Se agregaron {quantity:f} g a "{inventory.supply}".'
+
+    elif action == 'subtract':
+        if quantity <= Decimal('0.00'):
+            return JsonResponse({'success': False, 'error': 'La cantidad a quitar debe ser mayor a 0.'}, status=400)
+
+        if quantity > inventory.available_quantity:
+            return JsonResponse({
+                'success': False,
+                'error': f'No puedes quitar {quantity:f} g. Disponible: {inventory.available_quantity:f} g.'
+            }, status=400)
+
+        inventory.available_quantity -= quantity
+        message = f'Se quitaron {quantity:f} g de "{inventory.supply}".'
+
+    else:
+        inventory.available_quantity = quantity
+        message = f'La cantidad de "{inventory.supply}" fue actualizada a {quantity:f} g.'
+
+    inventory.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': message,
+        'item': {
+            'supply_id': inventory.supply.id,
+            'supply_name': str(inventory.supply),
+            'type_supply': inventory.supply.type_supply,
+            'available_quantity': float(inventory.available_quantity),
+            'last_update': inventory.last_update.strftime('%d/%m/%Y %H:%M'),
+        }
+    })
+
+
+@require_role('empleada')
+@transaction.atomic
+def delete_inventory_supply(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido.'}, status=405)
+
+    employee = get_object_or_404(User, id=request.session.get('user_id'), role='empleada')
+    supply_id = request.POST.get('supply_id')
+
+    if not supply_id:
+        return JsonResponse({'success': False, 'error': 'Debes seleccionar un insumo.'}, status=400)
+
+    inventory = get_object_or_404(
+        EmployeeInventory,
+        employee=employee,
+        supply_id=supply_id
+    )
+
+    supply_name = str(inventory.supply)
+    inventory.delete()
+
+    return JsonResponse({
+        'success': True,
+        'message': f'"{supply_name}" fue eliminado de tu inventario.',
+        'supply_id': int(supply_id),
+    })
+
 
 @require_role('empleada')
 def view_inventory(request):
