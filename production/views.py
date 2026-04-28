@@ -167,26 +167,44 @@ def notify_employee_of_assignment(employee, color_product, order_detail, specifi
 @require_role('administrador')
 def assign_products_to_employees(request):
     if request.method == 'POST':
-        employee = get_object_or_404(User, id=request.POST.get('employee_id'), role='empleada')
-        color_product = get_object_or_404(ColorProduct, id=request.POST.get('color_product_id'))
-
+        employee_id = request.POST.get('employee_id')
+        color_product_id = request.POST.get('color_product_id')
         order_detail_id = request.POST.get('order_detail_id')
-        order_detail = OrderDetail.objects.filter(id=order_detail_id).first()
+        specification = request.POST.get('specification', '').strip()
+
+        if not employee_id:
+            messages.error(request, 'Debes seleccionar una empleada.')
+            return redirect('production_panel')
+
+        if not color_product_id:
+            messages.error(request, 'Debes seleccionar un producto.')
+            return redirect('production_panel')
+
+        employee = get_object_or_404(User, id=employee_id, role='empleada')
+        color_product = get_object_or_404(ColorProduct, id=color_product_id)
+
+        order_detail = None
+        if order_detail_id:
+            order_detail = get_object_or_404(OrderDetail, id=order_detail_id)
 
         ProductionTask.objects.create(
             employee=employee,
             product=color_product,
             order_detail=order_detail,
-            specification=request.POST.get('specification', ''),
+            specification=specification,
             status='Pendiente'
         )
 
-        notify_employee_of_assignment(employee, color_product, order_detail, '')
+        notify_employee_of_assignment(
+            employee,
+            color_product,
+            order_detail,
+            specification
+        )
 
         messages.success(request, 'Tarea asignada correctamente.')
 
     return redirect('production_panel')
-
 
 # ─────────────────────────────────────────────────────────────
 # PANEL EMPLEADA (MEJORADO CON GUÍA DE FABRICACIÓN)
