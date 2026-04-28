@@ -1,50 +1,275 @@
-{% extends 'shared/header_client.html' %}
+{% extends 'shared/header_admin.html' %}
 
-{% block title %}Gestión de usuarios{% endblock %}
+{% block title %}Gestión de usuarios - Akima{% endblock %}
 
 {% block content %}
 <div class="container py-5">
 
-    <h3 class="fw-bold mb-4">Gestión de usuarios</h3>
-
-    <div class="card border-0 shadow-sm rounded-4 p-4">
-
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Email</th>
-                    <th>Rol actual</th>
-                    <th>Cambiar rol</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for user in users %}
-                <tr>
-                    <td>{{ user.first_name }} {{ user.last_name }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ user.role }}</td>
-
-                    <td>
-                        <form method="POST" action="{% url 'update_user_role' user.id %}">
-                            {% csrf_token %}
-                            <select name="role" class="form-select form-select-sm d-inline w-auto">
-                                <option value="cliente">Cliente</option>
-                                <option value="empleada">Empleada</option>
-                                <option value="administrador">Administrador</option>
-                            </select>
-                            <button type="submit" class="btn btn-akima btn-sm ms-2">
-                                Guardar
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-
-        </table>
-
+    <div class="text-center mb-5">
+        <h3 class="fw-bold mb-1" style="color: var(--akima-brown);">
+            Gestión de usuarios
+        </h3>
+        <p class="text-muted small mb-0">
+            Consulta usuarios, cambia roles y revisa información asociada
+        </p>
     </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <form method="GET">
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small">Buscar usuario</label>
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ search }}"
+                        class="form-control rounded-3"
+                        placeholder="Nombre, correo o teléfono"
+                    >
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small">Filtrar por rol</label>
+                    <select name="role" class="form-select rounded-3">
+                        <option value="">Todos los roles</option>
+                        {% for value, label in roles %}
+                        <option value="{{ value }}" {% if role == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-akima w-100">
+                        Filtrar
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Rol actual</th>
+                        <th>Cambiar rol</th>
+                        <th>Información</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.first_name }} {{ user.last_name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.phone }}</td>
+                        <td>
+                            <span class="badge rounded-pill text-bg-light">
+                                {{ user.get_role_display }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <form method="POST" action="{% url 'update_user_role' user.id %}" class="d-flex gap-2">
+                                {% csrf_token %}
+                                <select name="role" class="form-select form-select-sm">
+                                    {% for value, label in roles %}
+                                    <option value="{{ value }}" {% if user.role == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+
+                                <button type="submit" class="btn btn-akima btn-sm">
+                                    Guardar
+                                </button>
+                            </form>
+                        </td>
+
+                        <td>
+                            <a href="{% url 'manage_users' %}?user_id={{ user.id }}{% if search %}&search={{ search }}{% endif %}{% if role %}&role={{ role }}{% endif %}"
+                               class="btn btn-outline-secondary btn-sm rounded-pill">
+                                Ver detalle
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            No se encontraron usuarios.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+    {% if selected_user %}
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h5 class="fw-bold mb-3" style="color: var(--akima-brown);">
+            Información personal
+        </h5>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <strong>Nombre:</strong><br>
+                {{ selected_user.first_name }} {{ selected_user.last_name }}
+            </div>
+
+            <div class="col-md-4">
+                <strong>Correo:</strong><br>
+                {{ selected_user.email }}
+            </div>
+
+            <div class="col-md-4">
+                <strong>Rol:</strong><br>
+                {{ selected_user.get_role_display }}
+            </div>
+
+            <div class="col-md-4">
+                <strong>Teléfono:</strong><br>
+                {{ selected_user.phone }}
+            </div>
+
+            <div class="col-md-4">
+                <strong>Ciudad:</strong><br>
+                {{ selected_user.city }}
+            </div>
+
+            <div class="col-md-4">
+                <strong>Dirección:</strong><br>
+                {{ selected_user.address }}
+            </div>
+        </div>
+    </div>
+
+    {% if inventory %}
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h5 class="fw-bold mb-3" style="color: var(--akima-brown);">
+            Inventario
+        </h5>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Marca</th>
+                        <th>Referencia</th>
+                        <th>Cantidad disponible</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in inventory %}
+                    <tr>
+                        <td>{{ item.supply.type_supply }}</td>
+                        <td>{{ item.supply.brand }}</td>
+                        <td>{{ item.supply.reference }}</td>
+                        <td>{{ item.available_quantity }} g</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if assigned_tasks %}
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h5 class="fw-bold mb-3" style="color: var(--akima-brown);">
+            Asignaciones de producción
+        </h5>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Color</th>
+                        <th>Cliente</th>
+                        <th>Orden</th>
+                        <th>Estado</th>
+                        <th>Fecha asignación</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for task in assigned_tasks %}
+                    <tr>
+                        <td>{{ task.product.product.name }}</td>
+                        <td>{{ task.product.general_color.name }}</td>
+
+                        <td>
+                            {% if task.order_detail and task.order_detail.order.user %}
+                                {{ task.order_detail.order.user.first_name }}
+                                {{ task.order_detail.order.user.last_name }}
+                            {% else %}
+                                Sin cliente asociado
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if task.order_detail %}
+                                #{{ task.order_detail.order.id }}
+                            {% else %}
+                                Sin orden
+                            {% endif %}
+                        </td>
+
+                        <td>{{ task.status }}</td>
+                        <td>{{ task.assignment_date|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if customer_orders %}
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h5 class="fw-bold mb-3" style="color: var(--akima-brown);">
+            Órdenes realizadas como cliente
+        </h5>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Orden</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for order in customer_orders %}
+                    <tr>
+                        <td>#{{ order.id }}</td>
+                        <td>{{ order.order_date|date:"d/m/Y" }}</td>
+                        <td>{{ order.status }}</td>
+                        <td>{{ order.formatted_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% endif %}
+    
 </div>
 {% endblock %}

@@ -1,11 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Q
 from django.contrib import messages
 from django.core.mail import send_mail
 from functools import wraps
 import hashlib
 from .models import User
-
-
 
 
 def require_login(view_func):
@@ -80,14 +79,75 @@ def edit_profile(request):
 
 @require_role('administrador')
 def manage_users(request):
-    users = User.objects.all()
-    return render(request, 'account/manage_users.html', {'users': users})
+    from production.models import EmployeeInventory, ProductionTask
+    from order.models import Order
+
+    search = request.GET.get('search', '').strip()
+    role = request.GET.get('role', '').strip()
+    selected_user_id = request.GET.get('user_id')
+
+    users = User.objects.all().order_by('first_name', 'last_name')
+
+    if search:
+        users = users.filter(
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search) |
+            Q(email__icontains=search) |
+            Q(phone__icontains=search)
+        )
+
+    if role:
+        users = users.filter(role=role)
+
+    selected_user = None
+    inventory = []
+    assigned_tasks = []
+    customer_orders = []
+
+    if selected_user_id:
+        selected_user = get_object_or_404(User, id=selected_user_id)
+
+        inventory = EmployeeInventory.objects.filter(
+            employee=selected_user
+        ).select_related('supply')
+
+        assigned_tasks = ProductionTask.objects.filter(
+            employee=selected_user
+        ).select_related(
+            'product__product',
+            'product__general_color',
+            'order_detail__order__user'
+        ).order_by('-assignment_date')
+
+        customer_orders = Order.objects.filter(
+            user=selected_user
+        ).prefetch_related(
+            'details__product',
+            'details__color_product__general_color'
+        ).order_by('-order_date')
+
+    return render(request, 'account/manage_users.html', {
+        'users': users,
+        'roles': User.ROLES,
+        'search': search,
+        'role': role,
+        'selected_user': selected_user,
+        'inventory': inventory,
+        'assigned_tasks': assigned_tasks,
+        'customer_orders': customer_orders,
+    })
 
 
 @require_role('administrador')
 def update_user_role(request, user_id):
-    user = User.objects.get(id=user_id)
+    user = get_object_or_404(User, id=user_id)
     new_role = request.POST.get('role')
+
+    valid_roles = [role[0] for role in User.ROLES]
+
+    if new_role not in valid_roles:
+        messages.error(request, 'Rol no válido.')
+        return redirect('manage_users')
 
     if user.id == request.session.get('user_id') and new_role != 'administrador':
         messages.error(request, 'No puedes cambiar tu propio rol.')
@@ -96,9 +156,8 @@ def update_user_role(request, user_id):
     user.role = new_role
     user.save()
 
-    messages.success(request, f'Rol actualizado para {user.first_name}')
+    messages.success(request, f'Rol actualizado para {user.first_name}.')
     return redirect('manage_users')
-
 
 
 def register(request):
