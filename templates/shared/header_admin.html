@@ -20,16 +20,27 @@
 </head>
 <body>
 
-<nav class="navbar bg-white px-4 py-3 d-flex justify-content-between align-items-center">
-    <a class="navbar-brand fw-bold mb-0" href="{% url 'administrator' %}" style="color: var(--akima-brown);">
+<nav class="navbar bg-white px-4 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <a class="navbar-brand fw-bold mb-0" href="{% url 'home' %}" style="color: var(--akima-brown);">
         Akima
     </a>
-    <div class="d-flex align-items-center gap-1">
-        <a href="{% url 'home' %}" class="nav-link-admin">Tienda Principal</a>
+
+    <div class="d-flex align-items-center gap-1 flex-wrap">
+        <a href="{% url 'administrator' %}" class="nav-link-admin">Dashboard</a>
         <a href="{% url 'new_product' %}" class="nav-link-admin">Productos</a>
         <a href="{% url 'orders' %}" class="nav-link-admin">Órdenes</a>
-        <a href="{% url 'production_panel' %}" class="nav-link-admin">Producción</a>
+        <a href="{% url 'production_panel' %}" class="nav-link-admin">Asignar</a>
         <a href="{% url 'manage_users' %}" class="nav-link-admin">Usuarios</a>
+
+        {% if request.session.user_id %}
+        <a href="{% url 'profile' %}" class="text-muted small ms-2 me-1 text-decoration-none">
+            <i class="bi bi-person-circle me-1"></i>{{ request.session.user_name }}
+        </a>
+
+        <a href="{% url 'logout' %}" class="btn btn-outline-secondary btn-sm rounded-pill ms-1">
+            Cerrar sesión
+        </a>
+        {% endif %}
     </div>
 </nav>
 

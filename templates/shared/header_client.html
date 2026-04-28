@@ -26,10 +26,10 @@
     </a>
     <div class="d-flex align-items-center gap-1">
         <a href="{% url 'home' %}" class="nav-link">Inicio</a>
-        <a href="{% url 'customer_orders_panel' %}" class="nav-link">Órdenes</a>
+        <a href="{% url 'customer_orders_panel' %}" class="nav-link">Mis pedidos</a>
 
         {% if request.session.user_id %}
-            <a href="/profile/" class="text-muted small ms-2 me-1 text-decoration-none">
+            <a href="{% url 'profile' %}" class="text-muted small ms-2 me-1 text-decoration-none">
     <i class="bi bi-person-circle me-1"></i>{{ request.session.user_name }}
 </a>
             <a href="{% url 'logout' %}" class="btn btn-outline-secondary btn-sm rounded-pill ms-1">
