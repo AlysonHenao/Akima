@@ -117,7 +117,7 @@
                         </td>
                         <td>{{ inv.supply.brand }} {{ inv.supply.reference }}</td>
                         <td class="fw-bold inv-qty-{{ inv.supply.id }}">
-                            {{ inv.available_quantity|floatformat:2 }}
+                            {{ inv.available_quantity|floatformat:-2 }}
                         </td>
                         <td class="text-muted small inv-date-{{ inv.supply.id }}">
                             {{ inv.last_update|date:"d/m/Y H:i" }}
@@ -368,6 +368,16 @@
         }
     }
 
+    function formatQuantity(value) {
+        const num = parseFloat(value);
+
+        if (Number.isInteger(num)) {
+            return num.toString();
+        }
+
+        return num.toFixed(2).replace(/\.?0+$/, '');
+    }
+
     function updateInventoryRow(item) {
         let tbody = document.getElementById('inventoryTableBody');
         const emptyMsg = document.getElementById('inventoryEmptyMsg');
@@ -383,7 +393,7 @@
             const qtyCell = row.querySelector(`.inv-qty-${item.supply_id}`);
             const dateCell = row.querySelector(`.inv-date-${item.supply_id}`);
 
-            if (qtyCell) qtyCell.textContent = parseFloat(item.available_quantity).toFixed(2);
+            if (qtyCell) qtyCell.textContent = formatQuantity(item.available_quantity);
             if (dateCell) dateCell.textContent = item.last_update;
         } else {
             row = document.createElement('tr');
@@ -391,7 +401,7 @@
             row.innerHTML = `
                 <td><span class="badge bg-secondary rounded-pill">${item.type_supply}</span></td>
                 <td>${item.supply_name}</td>
-                <td class="fw-bold inv-qty-${item.supply_id}">${parseFloat(item.available_quantity).toFixed(2)}</td>
+                <td class="fw-bold inv-qty-${item.supply_id}">${parseFloat(item.available_quantity).toFixed(0)}</td>
                 <td class="text-muted small inv-date-${item.supply_id}">${item.last_update}</td>
             `;
             tbody.appendChild(row);

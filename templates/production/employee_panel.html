@@ -95,7 +95,7 @@
                                             {{ req.supply.type_supply }} - 
                                             {{ req.supply.brand }} 
                                             {{ req.supply.reference }} 
-                                            ({{ req.required_quantity|floatformat:0 }} g)
+                                            ({{ req.required_quantity|floatformat:-2 }} g)
                                         </li>
                                         {% endfor %}
                                     </ul>
@@ -143,7 +143,7 @@
                                                 Requerido sugerido: {{ item.required.required_quantity|floatformat:0 }} g
                                             </div>
                                             <div class="small text-muted">
-                                                Disponible: {{ item.available_quantity|floatformat:0 }} g
+                                                Disponible: {{ item.available_quantity|floatformat:-2 }} g
                                             </div>
                                         </div>
                                         <div class="col-md-6">
@@ -153,7 +153,7 @@
                                                 min="0"
                                                 name="initial_quantity_{{ item.required.supply.id }}"
                                                 class="form-control rounded-3"
-                                                value="{{ item.required.required_quantity|floatformat:0 }}"
+                                                value="{{ item.required.required_quantity|floatformat:-2 }}"
                                                 required
                                             >
                                         </div>
@@ -214,7 +214,7 @@
                                             {{ supply_task.supply.type_supply }} - {{ supply_task.supply.brand }} {{ supply_task.supply.reference }}
                                         </label>
                                         <div class="small text-muted">
-                                            Cantidad inicial: {{ supply_task.initial_quantity|floatformat:0 }} g
+                                            Cantidad inicial: {{ supply_task.initial_quantity|floatformat:-2 }} g
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -267,7 +267,7 @@
 
                                         <span class="badge rounded-pill"
                                             style="background-color: var(--akima-pink); color: var(--akima-brown);">
-                                            {{ supply_task.initial_quantity|floatformat:0 }} g registrados
+                                            {{ supply_task.initial_quantity|floatformat:-2 }} g registrados
                                         </span>
                                     </div>
                                     {% endfor %}
@@ -289,7 +289,7 @@
                                                 {{ inv.supply.type_supply }} -
                                                 {{ inv.supply.brand }}
                                                 {{ inv.supply.reference }}
-                                                (Disponible: {{ inv.available_quantity|floatformat:0 }} g)
+                                                (Disponible: {{ inv.available_quantity|floatformat:-2 }} g)
                                             </option>
                                             {% endfor %}
                                         </select>
@@ -342,9 +342,9 @@
                                             <td>
                                                 {{ supply_task.supply.type_supply }} - {{ supply_task.supply.brand }} {{ supply_task.supply.reference }}
                                             </td>
-                                            <td>{{ supply_task.initial_quantity|floatformat:0 }} g</td>
-                                            <td>{{ supply_task.final_quantity|floatformat:0 }} g</td>
-                                            <td>{{ supply_task.used_quantity|floatformat:0 }} g</td>
+                                            <td>{{ supply_task.initial_quantity|floatformat:-2 }} g</td>
+                                            <td>{{ supply_task.final_quantity|floatformat:-2 }} g</td>
+                                            <td>{{ supply_task.used_quantity|floatformat:-2 }} g</td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -389,6 +389,16 @@
     function hideAlert(alertId) {
         const el = document.getElementById(alertId);
         if (el) el.classList.add('d-none');
+    }
+
+    function formatQuantity(value) {
+        const num = parseFloat(value);
+
+        if (Number.isInteger(num)) {
+            return num.toString();
+        }
+
+        return num.toFixed(2).replace(/\.?0+$/, '');
     }
 
     function setLoading(btnTextId, btnSpinnerId, loading) {
@@ -463,7 +473,7 @@
                 if (data.updated_inventory) {
                     data.updated_inventory.forEach(upd => {
                         const qtyCell = document.querySelector(`.inv-qty-${upd.supply_id}`);
-                        if (qtyCell) qtyCell.textContent = upd.remaining.toFixed(2);
+                        if (qtyCell) qtyCell.textContent = formatQuantity(item.available_quantity);
                     });
                 }
 

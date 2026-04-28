@@ -116,7 +116,7 @@
                             </div>
                         </div>
                         <p class="fw-bold small mb-0" style="color: var(--akima-brown);">
-                            ${{ item.get_subtotal }}
+                            {{ item.formatted_subtotal }}
                         </p>
                     </div>
                 </div>
@@ -131,7 +131,7 @@
         <div class="border-top pt-3 mt-3">
             <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
                 <span>Total:</span>
-                <span style="color: var(--akima-brown);">${{ carrito_total }}</span>
+                <span style="color: var(--akima-brown);">{{ carrito_total }}</span>
             </div>
             <div class="d-flex flex-column gap-2">
                 <a href="{% url 'home' %}" class="btn btn-outline-secondary w-100 rounded-pill">

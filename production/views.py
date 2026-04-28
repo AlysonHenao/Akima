@@ -268,11 +268,20 @@ def update_inventory_quantity(request):
     if quantity is None or quantity < Decimal('0.00'):
         return JsonResponse({'success': False, 'error': 'La cantidad debe ser un número válido mayor o igual a 0.'}, status=400)
 
-    inventory = get_object_or_404(
-        EmployeeInventory,
-        employee=employee,
-        supply_id=supply_id
-    )
+    supply = get_object_or_404(Supply, id=supply_id)
+
+    if action == 'add':
+        inventory, _ = EmployeeInventory.objects.get_or_create(
+            employee=employee,
+            supply=supply,
+            defaults={'available_quantity': Decimal('0.00')}
+        )
+    else:
+        inventory = get_object_or_404(
+            EmployeeInventory,
+            employee=employee,
+            supply=supply
+        )
 
     if action == 'add':
         inventory.available_quantity += quantity
