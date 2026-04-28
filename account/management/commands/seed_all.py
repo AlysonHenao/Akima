@@ -137,6 +137,27 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('✔ Inventario creado'))
 
+        # MÉTODOS DE PAGO
+        nequi = PaymentMethod.objects.create(
+            name='Nequi',
+            instructions='Realiza el pago al número 3001234567 y sube el comprobante en la plataforma.',
+            active=True
+        )
+
+        daviplata = PaymentMethod.objects.create(
+            name='Daviplata',
+            instructions='Realiza el pago al número 3001234567 y sube el comprobante en la plataforma.',
+            active=True
+        )
+
+        transferencia = PaymentMethod.objects.create(
+            name='Transferencia Bancaria',
+            instructions='Cuenta Bancolombia 123-456789-00 a nombre de Akima. Luego sube el comprobante.',
+            active=True
+        )
+
+        self.stdout.write(self.style.SUCCESS('✔ Métodos de pago creados'))
+
         # ORDEN + DETALLE
         product = Product.objects.first()
         color_product = ColorProduct.objects.filter(product=product).first()
