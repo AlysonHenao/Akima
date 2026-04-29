@@ -1,0 +1,22 @@
+    :root{
+        --ak-pink:  #FFA3BF;
+        --ak-blush: #F9E4ED;
+        --ak-bg:    #FDF6F9;
+    }
+
+    body{
+        background:
+            radial-gradient(circle at top right, rgba(255,163,191,.30), transparent 32%),
+            radial-gradient(circle at bottom left, rgba(249,228,237,.85), transparent 30%),
+            linear-gradient(180deg, #FFA3BF 0%, var(--ak-bg) 45%, #F9E4ED 100%);
+        background-attachment: fixed;
+    }
+
+    .product-detail-card{
+        background: rgba(255,255,255,.82);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,163,191,.18);
+        border-radius: 24px;
+        padding: 2rem;
+        box-shadow: 0 14px 40px rgba(90,58,10,.08);
+    }

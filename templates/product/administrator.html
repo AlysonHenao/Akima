@@ -1,6 +1,10 @@
 {% extends 'shared/base.html' %}
 {% block title %}Panel Admin - Akima{% endblock %}
 
+{% load static %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/administrator.css' %}">
+{% endblock %}
 {% block content %}
 <div class="container py-5">
     <div class="text-center mb-5">

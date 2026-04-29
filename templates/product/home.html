@@ -1,170 +1,536 @@
 {% extends 'shared/base.html' %}
 {% block title %}Inicio - Akima{% endblock %}
+
 {% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+
 <style>
-    .btn-contact {
-        border: 1px solid #f0b6cf;
-        color: #df7faa;
-        border-radius: 8px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        background-color: #fff;
+    :root {
+        --ak-pink:        #FFA3BF;
+        --ak-blush:       #F9E4ED;
+        --ak-brown:       #5A3A0A;
+        --ak-dark:        #391E10;
+        --ak-bg:          #FDF6F9;
+        --ak-radius:      16px;
+        --ak-radius-pill: 50px;
     }
 
-    .btn-contact:hover {
-        color: #fff;
-        background-color: #eaa0bf;
-        border-color: #eaa0bf;
+    body {
+        background-color: var(--ak-bg);
+        font-family: 'DM Sans', sans-serif;
+        color: var(--ak-dark);
+    }
+
+    /* ── Hero ── */
+    .ak-hero {
+        background-color: var(--ak-pink);
+        padding: 4rem 1.5rem 3.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .ak-hero::before,
+    .ak-hero::after {
+        content: '';
+        position: absolute;
+        border-radius: 50%;
+        background: var(--ak-blush);
+        opacity: 0.5;
+        pointer-events: none;
+    }
+    .ak-hero::before { width: 240px; height: 240px; top: -70px; right: -70px; }
+    .ak-hero::after  { width: 160px; height: 160px; bottom: -50px; left: -50px; }
+
+    .ak-hero-eyebrow {
+        font-size: 0.68rem;
+        font-weight: 500;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--ak-brown);
+        opacity: 0.75;
+        margin-bottom: 0.6rem;
+        position: relative; z-index: 1;
+    }
+    .ak-hero-title {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(2.6rem, 8vw, 4rem);
+        font-weight: 700;
+        color: var(--ak-dark);
+        margin: 0 0 0.6rem;
+        line-height: 1.05;
+        position: relative; z-index: 1;
+    }
+    .ak-hero-sub {
+        font-size: 0.95rem;
+        font-weight: 300;
+        color: var(--ak-brown);
+        max-width: 400px;
+        margin: 0 auto;
+        line-height: 1.65;
+        position: relative; z-index: 1;
+    }
+
+    /* ── Layout ── */
+    .ak-section {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem;
+    }
+    .ak-section-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: var(--ak-dark);
+        text-align: center;
+        margin-bottom: 0.4rem;
+    }
+    .ak-section-sub {
+        font-size: 0.875rem;
+        color: var(--ak-brown);
+        text-align: center;
+        opacity: 0.68;
+        margin-bottom: 2rem;
+    }
+
+    /* ── Search ── */
+    .ak-search-wrap {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+    .ak-search-bar {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border: 1.5px solid var(--ak-pink);
+        border-radius: var(--ak-radius-pill);
+        padding: 5px 5px 5px 18px;
+        width: 100%;
+        max-width: 440px;
+        transition: border-color 0.15s;
+    }
+    .ak-search-bar:focus-within { border-color: var(--ak-brown); }
+    .ak-search-bar input {
+        border: none;
+        outline: none;
+        background: transparent;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem;
+        color: var(--ak-dark);
+        flex: 1;
+        min-width: 0;
+    }
+    .ak-search-bar input::placeholder { color: #c9a0b2; }
+    .ak-search-btn {
+        background: var(--ak-pink);
+        border: none;
+        border-radius: var(--ak-radius-pill);
+        width: 36px; height: 36px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background 0.15s;
+    }
+    .ak-search-btn:hover { background: var(--ak-brown); }
+    .ak-search-btn:hover .ak-search-icon { stroke: var(--ak-blush); }
+    .ak-search-icon {
+        width: 15px; height: 15px;
+        stroke: var(--ak-dark);
+        fill: none;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        transition: stroke 0.15s;
+    }
+    .ak-search-clear {
+        font-size: 0.78rem;
+        color: var(--ak-brown);
+        text-decoration: none;
+        margin-left: 10px;
+        opacity: 0.65;
+        white-space: nowrap;
+    }
+    .ak-search-clear:hover { opacity: 1; color: var(--ak-dark); }
+    .ak-results-label {
+        text-align: center;
+        font-size: 0.82rem;
+        color: var(--ak-brown);
+        opacity: 0.65;
+        margin-bottom: 1.25rem;
+    }
+
+    /* ── Product grid ── */
+    .ak-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    .ak-card {
+        background: #fff;
+        border-radius: var(--ak-radius);
+        border: 1px solid var(--ak-blush);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .ak-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(57, 30, 16, 0.08);
+    }
+    .ak-card-img-wrap { position: relative; }
+    .ak-card-img {
+        width: 100%; height: 220px;
+        object-fit: cover;
+        display: block;
+    }
+    .ak-card-placeholder {
+        width: 100%; height: 220px;
+        background: var(--ak-blush);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .ak-badge {
+        position: absolute;
+        top: 10px; right: 10px;
+        background: var(--ak-dark);
+        color: var(--ak-blush);
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.4px;
+        padding: 3px 10px;
+        border-radius: var(--ak-radius-pill);
+    }
+    .ak-card-body {
+        padding: 14px 16px 18px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    .ak-card-name {
+        font-weight: 500;
+        font-size: 0.93rem;
+        color: var(--ak-dark);
+        margin: 0 0 4px;
+    }
+    .ak-card-desc {
+        font-size: 0.8rem;
+        color: var(--ak-brown);
+        opacity: 0.65;
+        margin: 0 0 10px;
+        line-height: 1.5;
+        flex: 1;
+    }
+    .ak-card-price {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--ak-brown);
+        margin-bottom: 14px;
+    }
+
+    /* ── Buttons ── */
+    .btn-akima-solid {
+        display: block;
+        width: 100%;
+        text-align: center;
+        background: var(--ak-dark);
+        color: var(--ak-blush) !important;
+        border: none;
+        border-radius: var(--ak-radius-pill);
+        padding: 9px 0;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.82rem;
+        font-weight: 500;
+        letter-spacing: 0.4px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .btn-akima-solid:hover { background: var(--ak-brown); }
+
+    .btn-akima-outline {
+        display: inline-block;
+        border: 1.5px solid var(--ak-pink);
+        color: var(--ak-brown) !important;
+        background: transparent;
+        border-radius: var(--ak-radius-pill);
+        padding: 7px 22px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-akima-outline:hover {
+        background: var(--ak-pink);
+        border-color: var(--ak-pink);
+        color: var(--ak-dark) !important;
+    }
+
+    /* ── Empty state ── */
+    .ak-empty {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 4rem 1rem;
+        color: var(--ak-brown);
+        opacity: 0.65;
+    }
+    .ak-empty-icon {
+        width: 52px; height: 52px;
+        stroke: var(--ak-pink);
+        fill: none;
+        stroke-width: 1.5;
+        display: block;
+        margin: 0 auto 1rem;
+    }
+
+    /* ── Divider ── */
+    .ak-divider { height: 1px; background: var(--ak-blush); }
+
+    /* ── Contact ── */
+    .ak-contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+        gap: 16px;
+    }
+    .ak-contact-card {
+        background: #fff;
+        border: 1px solid var(--ak-blush);
+        border-radius: var(--ak-radius);
+        padding: 28px 20px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+    .ak-contact-icon {
+        width: 48px; height: 48px;
+        background: var(--ak-pink);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 6px;
+    }
+    .ak-contact-icon svg {
+        width: 22px; height: 22px;
+        fill: var(--ak-dark);
+    }
+    .ak-contact-name {
+        font-weight: 500;
+        font-size: 0.95rem;
+        color: var(--ak-dark);
+    }
+    .ak-contact-handle {
+        font-size: 0.82rem;
+        color: var(--ak-brown);
+        opacity: 0.65;
+        margin-bottom: 6px;
+    }
+
+    /* ── Modal ── */
+    .modal-content {
+        border: none;
+        border-radius: var(--ak-radius);
+        padding: 2rem 1.75rem;
+        text-align: center;
+    }
+    .ak-modal-icon {
+        width: 56px; height: 56px;
+        background: var(--ak-pink);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1rem;
+    }
+    .ak-modal-icon svg {
+        width: 26px; height: 26px;
+        stroke: var(--ak-dark);
+        fill: none;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .modal-content h5 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.25rem;
+        color: var(--ak-dark);
+        margin-bottom: 0.5rem;
+    }
+    .modal-content p {
+        font-size: 0.875rem;
+        color: var(--ak-brown);
+        opacity: 0.7;
+        line-height: 1.6;
+        margin-bottom: 1.4rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="w-100 py-5 text-center" style="background-color: var(--akima-pink);">
-    <h1 class="fw-bold" style="color: var(--akima-brown);">Akima</h1>
-    <p class="text-muted mb-0">Somos un emprendimiento juvenil especializado en crear ropa única a crochet.</p>
+<!-- Hero -->
+<div class="ak-hero">
+    <p class="ak-hero-eyebrow">TEJIDO A MANO · HECHO CON AMOR</p>
+    <h1 class="ak-hero-title">Akima</h1>
+    <p class="ak-hero-sub">Somos un emprendimiento juvenil especializado en crear ropa única a crochet.</p>
 </div>
 
-<div class="container py-5">
-    <h4 class="fw-bold text-center mb-1">Nuestros Productos</h4>
-    <p class="text-center text-muted mb-4">Cada prenda es única y hecha con amor. Personalízala según tu estilo.</p>
+<!-- Products -->
+<div class="ak-section">
+    <h2 class="ak-section-title">Nuestros Productos</h2>
+    <p class="ak-section-sub">Cada prenda es única y hecha con amor. Personalízala según tu estilo.</p>
 
     <!-- Rf-02: Search product catalog -->
-    <form method="GET" action="" class="d-flex justify-content-center mb-4">
-        <div class="input-group" style="max-width: 420px;">
-            <input type="text"
-                   name="q"
-                   value="{{ query }}"
-                   class="form-control rounded-start-pill border-end-0"
-                   placeholder="Buscar producto por nombre..."
-                   style="border-color: var(--akima-pink);">
-            <button class="btn border border-start-0 rounded-end-pill"
-                    type="submit"
-                    style="border-color: var(--akima-pink); color: var(--akima-brown); background: white;">
-                <i class="bi bi-search"></i>
-            </button>
+    <div class="ak-search-wrap">
+        <form method="GET" action="" style="display:flex; align-items:center; width:100%; max-width:480px;">
+            <div class="ak-search-bar">
+                <input type="text"
+                       name="q"
+                       value="{{ query }}"
+                       placeholder="Buscar producto por nombre...">
+                <button class="ak-search-btn" type="submit" aria-label="Buscar">
+                    <svg class="ak-search-icon" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="7"/>
+                        <line x1="16.5" y1="16.5" x2="22" y2="22"/>
+                    </svg>
+                </button>
+            </div>
             {% if query %}
-            <a href="/" class="btn btn-link ms-2 text-decoration-none small"
-               style="color: var(--akima-brown);">Limpiar</a>
+            <a href="/" class="ak-search-clear">Limpiar</a>
             {% endif %}
-        </div>
-    </form>
+        </form>
+    </div>
+
     {% if query %}
-    <p class="text-center text-muted small mb-3">
+    <p class="ak-results-label">
         {{ products|length }} resultado{{ products|length|pluralize }} para
         "<strong>{{ query }}</strong>"
     </p>
     {% endif %}
 
-    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+    <div class="ak-grid">
         {% for product in products %}
-        <div class="col">
-            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="ak-card">
+            <div class="ak-card-img-wrap">
                 {% with img=product.images.first %}
                     {% if img %}
-                        <img src="{{ img.url_image.url }}" class="card-img-top"
-                             alt="{{ product.name }}" style="height: 220px; object-fit: cover;">
+                        <img src="{{ img.url_image.url }}"
+                             class="ak-card-img"
+                             alt="{{ product.name }}">
                     {% else %}
-                        <div class="d-flex align-items-center justify-content-center bg-light"
-                             style="height: 220px;">
-                            <span class="text-muted">Sin imagen</span>
+                        <div class="ak-card-placeholder">
+                            <svg width="36" height="36" viewBox="0 0 24 24"
+                                 fill="none" stroke="#FFA3BF" stroke-width="1.5"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
                         </div>
                     {% endif %}
                 {% endwith %}
-                <span class="badge position-absolute top-0 end-0 m-2"
-                      style="background-color: var(--akima-pink); color: var(--akima-brown);">
-                  
-                    {{ product.category }}
-                </span>
-                <div class="card-body">
-                    <h6 class="fw-bold mb-1">{{ product.name }}</h6>
-                    <p class="text-muted small mb-2">{{ product.description|truncatewords:12 }}</p>
-                    <p class="fw-bold mb-3" style="color: var(--akima-brown);">{{ product.formatted_price }}</p>
-                    <a href="{% url 'product_detail' product.id %}" class="btn btn-akima btn-sm w-100">
-                        Personalizar
-                    </a>
-                </div>
+                <span class="ak-badge">{{ product.category }}</span>
+            </div>
+            <div class="ak-card-body">
+                <h6 class="ak-card-name">{{ product.name }}</h6>
+                <p class="ak-card-desc">{{ product.description|truncatewords:12 }}</p>
+                <p class="ak-card-price">{{ product.formatted_price }}</p>
+                <a href="{% url 'product_detail' product.id %}" class="btn-akima-solid">
+                    Personalizar
+                </a>
             </div>
         </div>
         {% empty %}
-        <div class="col-12 text-center text-muted py-5">
+        <div class="ak-empty">
             {% if query %}
-            <i class="bi bi-search fs-1 d-block mb-2"></i>
+            <svg class="ak-empty-icon" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7"/>
+                <line x1="16.5" y1="16.5" x2="22" y2="22"/>
+            </svg>
             <p>No se encontraron productos con el nombre "<strong>{{ query }}</strong>".</p>
-            <a href="/" class="btn btn-sm btn-outline-secondary rounded-pill">Ver todos los productos</a>
+            <a href="/" class="btn-akima-outline mt-3">Ver todos los productos</a>
             {% else %}
             <p>No hay productos disponibles.</p>
             {% endif %}
         </div>
         {% endfor %}
     </div>
-
-    <section class="contact-section mt-5" aria-label="Canales de comunicacion">
-        <h3 class="text-center fw-bold mb-2" style="color: var(--akima-brown);">Contáctanos</h3>
-        <p class="text-center mb-4" style="color: #8b7a85; font-size: 0.95rem;">¿Tienes alguna pregunta? ¡Nos encantaria
-            escucharte!</p>
-        <div class="row g-4 justify-content-center">
-            <div class="col-12 col-md-4">
-                <div class="text-center p-4 h-100 d-flex flex-column justify-content-center rounded-4 bg-white shadow-sm"
-                    style="min-height: 195px; border: 1px solid #f3d8e5;">
-                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3"
-                        style="width: 36px; height: 36px; background-color: #fdeef5;">
-                        <i class="bi bi-instagram" style="color: #e58ab0; font-size: 1rem;"></i>
-                    </span>
-                    <h6 class="fw-bold mb-1" style="color: var(--akima-brown);">Instagram</h6>
-                    <p class="mb-3" style="color: #867783; font-size: 0.92rem;">@by.akima</p>
-                    <div>
-                        <a href="https://www.instagram.com/by.akima/" target="_blank" rel="noopener noreferrer"
-                            class="btn btn-contact">Síguenos</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-4">
-                <div class="text-center p-4 h-100 d-flex flex-column justify-content-center rounded-4 bg-white shadow-sm"
-                    style="min-height: 195px; border: 1px solid #f3d8e5;">
-                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3"
-                        style="width: 36px; height: 36px; background-color: #fdeef5;">
-                        <i class="bi bi-whatsapp" style="color: #e58ab0; font-size: 1rem;"></i>
-                    </span>
-                    <h6 class="fw-bold mb-1" style="color: var(--akima-brown);">WhatsApp</h6>
-                    <p class="mb-3" style="color: #867783; font-size: 0.92rem;">+57 300 1439 962 </p>
-                    <div>
-                        <a href="https://wa.me/573001439962" target="_blank" rel="noopener noreferrer"
-                            class="btn btn-contact">Chatear</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-4">
-                <div class="text-center p-4 h-100 d-flex flex-column justify-content-center rounded-4 bg-white shadow-sm"
-                    style="min-height: 195px; border: 1px solid #f3d8e5;">
-                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3"
-                        style="width: 36px; height: 36px; background-color: #fdeef5;">
-                        <i class="bi bi-facebook" style="color: #e58ab0; font-size: 1rem;"></i>
-                    </span>
-                    <h6 class="fw-bold mb-1" style="color: var(--akima-brown);">Correo</h6>
-                    <p class="mb-3" style="color: #867783; font-size: 0.92rem;">AkimaCrochet@gmail.com</p>
-                    <div>
-                        <a href="https://www.gmail.com/" target="_blank" rel="noopener noreferrer"
-                            class="btn btn-contact">Visitar</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 </div>
 
+<div class="ak-divider"></div>
+
+<!-- Contact -->
+<div class="ak-section" aria-label="Canales de comunicacion">
+    <h2 class="ak-section-title">Contáctanos</h2>
+    <p class="ak-section-sub">¿Tienes alguna pregunta? ¡Nos encantaría escucharte!</p>
+
+    <div class="ak-contact-grid">
+        <!-- Instagram -->
+        <div class="ak-contact-card">
+            <div class="ak-contact-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </svg>
+            </div>
+            <p class="ak-contact-name">Instagram</p>
+            <p class="ak-contact-handle">@by.akima</p>
+            <a href="https://www.instagram.com/by.akima/"
+               target="_blank" rel="noopener noreferrer"
+               class="btn-akima-outline">Síguenos</a>
+        </div>
+
+        <!-- WhatsApp -->
+        <div class="ak-contact-card">
+            <div class="ak-contact-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+            </div>
+            <p class="ak-contact-name">WhatsApp</p>
+            <p class="ak-contact-handle">+57 300 1439 962</p>
+            <a href="https://wa.me/573001439962"
+               target="_blank" rel="noopener noreferrer"
+               class="btn-akima-outline">Chatear</a>
+        </div>
+
+        <!-- Email -->
+        <div class="ak-contact-card">
+            <div class="ak-contact-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+            </div>
+            <p class="ak-contact-name">Correo</p>
+            <p class="ak-contact-handle">AkimaCrochet@gmail.com</p>
+            <a href="https://www.gmail.com/"
+               target="_blank" rel="noopener noreferrer"
+               class="btn-akima-outline">Escribir</a>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: pedido confirmado -->
 <div class="modal fade" id="modalPedido" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow rounded-4 text-center p-4">
-            <h5 class="fw-bold mb-3">¡Pedido Enviado!</h5>
-            <p class="text-muted mb-4">Tu comprobante ha sido recibido. Verificaremos tu pago pronto.</p>
-            <button type="button" class="btn btn-akima rounded-pill px-4" data-bs-dismiss="modal">
+        <div class="modal-content">
+            <div class="ak-modal-icon">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <h5>¡Pedido Enviado!</h5>
+            <p>Tu comprobante ha sido recibido. Verificaremos tu pago pronto.</p>
+            <button type="button"
+                    class="btn-akima-solid"
+                    style="max-width: 180px; margin: 0 auto;"
+                    data-bs-dismiss="modal">
                 Entendido
             </button>
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}

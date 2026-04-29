@@ -1,15 +1,17 @@
 {% extends 'shared/base.html' %}
 {% block title %}Panel Employee - Akima{% endblock %}
 
+{% load static %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/employee.css' %}">
+{% endblock %}
 {% block content %}
 <div class="container py-5">
-
     <div class="text-center mb-5">
         <h4 class="fw-bold mb-0">Panel de Empleada</h4>
         <p class="text-muted small">Bienvenida {{ employee.first_name }}</p>
     </div>
 
-    <!-- INFO GENERAL -->
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card shadow-sm rounded-4 p-3 text-center">

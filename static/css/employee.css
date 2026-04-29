@@ -1,0 +1,15 @@
+    :root{
+        --ak-pink:#FFA3BF;
+        --ak-blush:#F9E4ED;
+        --ak-brown:#5A3A0A;
+        --ak-dark:#391E10;
+        --ak-bg:#FDF6F9;
+        --ak-radius:18px;
+    }
+
+    body{
+        background:
+            radial-gradient(circle at top right, rgba(255,163,191,.22), transparent 28%),
+            radial-gradient(circle at bottom left, rgba(223, 147, 181, 0.9), transparent 30%),
+            linear-gradient(180deg,#ffc6d7 0%, var(--ak-bg) 55%, #F9E4ED 100%);
+    }
