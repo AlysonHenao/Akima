@@ -1,102 +1,109 @@
-        :root {
-            --ak-pink: #FFA3BF;
-            --ak-blush: #F9E4ED;
-            --ak-brown: #5A3A0A;
-            --ak-dark: #391E10;
-            --ak-bg: #FDF6F9;
-        }
+:root {
+    /* Variables principales */
+    --ak-pink: #FFA3BF;
+    --ak-blush: #F9E4ED;
+    --ak-brown: #5A3A0A;
+    --ak-dark: #391E10;
+    --ak-bg: #FDF6F9;
 
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(180deg, #fff9fc 0%, var(--ak-bg) 55%, #fdf1f6 100%);
-        }
+    /* Aliases para compatibilidad con templates anteriores */
+    --akima-pink: #F9E4ED;
+    --akima-brown: #5A3A0A;
+    --akima-dark: #391E10;
+    --akima-bg: #FDF6F9;
+}
 
-        .navbar {
-            background: linear-gradient(135deg, rgba(255, 255, 255, .96), rgba(249, 228, 237, .95)) !important;
-            border-bottom: 1px solid rgba(255, 163, 191, .28);
-            box-shadow: 0 10px 28px rgba(57, 30, 16, .06);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 1030;
-        }
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(180deg, #fff9fc 0%, var(--ak-bg) 55%, #fdf1f6 100%);
+}
 
-        .navbar-brand {
-            font-size: 1.45rem;
-            font-weight: 700;
-            letter-spacing: .4px;
-            color: var(--ak-dark) !important;
-        }
+.navbar {
+    background: linear-gradient(135deg, rgba(255, 255, 255, .96), rgba(249, 228, 237, .95)) !important;
+    border-bottom: 1px solid rgba(255, 163, 191, .28);
+    box-shadow: 0 10px 28px rgba(57, 30, 16, .06);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
 
-        .role-badge {
-            font-size: 10px;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: linear-gradient(135deg, var(--ak-pink), #ffd1e0);
-            color: var(--ak-dark);
-            font-weight: 700;
-            box-shadow: 0 4px 10px rgba(255, 163, 191, .25);
-        }
+.navbar-brand {
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: .4px;
+    color: var(--ak-dark) !important;
+}
 
-        .nav-lnk {
-            color: var(--ak-brown);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            padding: 8px 14px;
-            border-radius: 999px;
-            transition: all .18s ease;
-        }
+.role-badge {
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--ak-pink), #ffd1e0);
+    color: var(--ak-dark);
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(255, 163, 191, .25);
+}
 
-        .nav-lnk:hover {
-            background: var(--ak-pink);
-            color: var(--ak-dark);
-            transform: translateY(-1px);
-        }
+.nav-lnk {
+    color: var(--ak-brown);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 999px;
+    transition: all .18s ease;
+}
 
-        .nav-lnk.active {
-            background: linear-gradient(135deg, var(--ak-pink), #ffc2d5);
-            color: var(--ak-dark);
-            font-weight: 600;
-        }
+.nav-lnk:hover {
+    background: var(--ak-pink);
+    color: var(--ak-dark);
+    transform: translateY(-1px);
+}
 
-        .btn-akima {
-            background: linear-gradient(135deg, var(--ak-dark), var(--ak-brown));
-            color: #fff;
-            border: none;
-            border-radius: 999px;
-            padding: .42rem 1rem;
-            box-shadow: 0 8px 18px rgba(57, 30, 16, .12);
-            transition: all .18s ease;
-        }
+.nav-lnk.active {
+    background: linear-gradient(135deg, var(--ak-pink), #ffc2d5);
+    color: var(--ak-dark);
+    font-weight: 600;
+}
 
-        .btn-akima:hover {
-            color: #fff;
-            transform: translateY(-1px);
-            box-shadow: 0 12px 24px rgba(57, 30, 16, .18);
-        }
+.btn-akima {
+    background: linear-gradient(135deg, var(--ak-dark), var(--ak-brown));
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: .42rem 1rem;
+    box-shadow: 0 8px 18px rgba(57, 30, 16, .12);
+    transition: all .18s ease;
+}
 
-        .btn-outline-akima,
-        .btn-outline-secondary {
-            border-radius: 999px !important;
-        }
+.btn-akima:hover {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(57, 30, 16, .18);
+}
 
-        .user-link {
-            color: var(--ak-brown) !important;
-            font-weight: 500;
-        }
+.btn-outline-akima,
+.btn-outline-secondary {
+    border-radius: 999px !important;
+}
 
-        @media (max-width: 992px) {
-            .navbar {
-                padding: 1rem !important;
-            }
+.user-link {
+    color: var(--ak-brown) !important;
+    font-weight: 500;
+}
 
-            .nav-lnk {
-                font-size: 13px;
-                padding: 7px 12px;
-            }
+@media (max-width: 992px) {
+    .navbar {
+        padding: 1rem !important;
+    }
 
-            .navbar-brand {
-                font-size: 1.25rem;
-            }
-        }
+    .nav-lnk {
+        font-size: 13px;
+        padding: 7px 12px;
+    }
+
+    .navbar-brand {
+        font-size: 1.25rem;
+    }
+}
