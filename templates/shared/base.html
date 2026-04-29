@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Akima{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --akima-pink: #f9e4ed;
+            --akima-brown: #391E10;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f7f7f7;
+        }
+
+        .btn-akima {
+            background-color: var(--akima-brown);
+            color: white;
+            border-radius: 20px;
+        }
+
+        .btn-akima:hover {
+            background-color: #5a3a0a;
+            color: white;
+        }
+
+        .btn-outline-akima {
+            border: 1px solid var(--akima-brown);
+            color: var(--akima-brown);
+            background-color: transparent;
+            border-radius: 20px;
+        }
+
+        .btn-outline-akima:hover {
+            background-color: var(--akima-brown);
+            color: white;
+        }
+
+        .navbar {
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .nav-lnk {
+            color: #444;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 6px 10px;
+            border-radius: 8px;
+        }
+
+        .nav-lnk:hover {
+            background-color: var(--akima-pink);
+            color: var(--akima-brown);
+        }
+
+        .nav-lnk.active {
+            background-color: var(--akima-pink);
+            color: var(--akima-brown);
+            font-weight: 600;
+        }
+
+        .role-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background-color: var(--akima-pink);
+            color: var(--akima-brown);
+            font-weight: 600;
+            vertical-align: middle;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+    <nav class="navbar bg-white px-4 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+        <a class="navbar-brand fw-bold mb-0" href="{% url 'home' %}" style="color: var(--akima-brown);">
+            Akima
+            {% if request.session.user_role == 'administrador' %}
+            <span class="role-badge ms-1">Admin</span>
+            {% elif request.session.user_role == 'empleada' %}
+            <span class="role-badge ms-1">Empleada</span>
+            {% endif %}
+        </a>
+
+        <div class="d-flex align-items-center gap-1 flex-wrap">
+
+            {% if request.session.user_role == 'administrador' %}
+            <a href="{% url 'administrator' %}" class="nav-lnk">Dashboard</a>
+            <a href="{% url 'new_product' %}" class="nav-lnk">Productos</a>
+            <a href="{% url 'orders' %}" class="nav-lnk">Órdenes</a>
+            <a href="{% url 'production_panel' %}" class="nav-lnk">Producción</a>
+            <a href="{% url 'manage_users' %}" class="nav-lnk">Usuarios</a>
+            {# Acceso a la tienda sin perder el dashboard #}
+            <a href="{% url 'home' %}" class="nav-lnk">
+                <i class="bi bi-shop me-1"></i>Tienda
+            </a>
+
+            {% elif request.session.user_role == 'empleada' %}
+            <a href="{% url 'employee' %}" class="nav-lnk">Dashboard</a>
+            <a href="{% url 'employee_panel' %}" class="nav-lnk">Asignaciones</a>
+            <a href="{% url 'view_inventory' %}" class="nav-lnk">Inventario</a>
+            <a href="{% url 'customer_orders_panel' %}" class="nav-lnk">Mis pedidos</a>
+            {# Acceso a tienda sin perder el dashboard #}
+            <a href="{% url 'home' %}" class="nav-lnk">
+                <i class="bi bi-shop me-1"></i>Tienda
+            </a>
+
+            {% else %}
+            <a href="{% url 'home' %}" class="nav-lnk">Inicio</a>
+            {% if request.session.user_id %}
+            <a href="{% url 'customer_orders_panel' %}" class="nav-lnk">Mis pedidos</a>
+            {% endif %}
+            {% endif %}
+
+            {% if request.session.user_id %}
+            <a href="{% url 'profile' %}" class="text-muted small ms-2 me-1 text-decoration-none">
+                <i class="bi bi-person-circle me-1"></i>{{ request.session.user_name }}
+            </a>
+            <a href="{% url 'logout' %}" class="btn btn-outline-secondary btn-sm rounded-pill ms-1">
+                Cerrar sesión
+            </a>
+            {% else %}
+            <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm rounded-pill ms-2">
+                Iniciar sesión
+            </a>
+            <a href="{% url 'register' %}" class="btn btn-akima btn-sm ms-1">
+                Registrarse
+            </a>
+            {% endif %}
+
+            {% if request.session.user_role == 'cliente' or not request.session.user_role %}
+            <button class="btn btn-akima btn-sm ms-2" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#carritoOffcanvas">
+                <i class="bi bi-cart"></i> Carrito
+            </button>
+            {% endif %}
+
+        </div>
+    </nav>
+
+    {% if messages %}
+    <div class="container mt-2">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="mt-5 py-4 text-center text-white" style="background-color: var(--akima-brown);">
+        <p class="fw-bold mb-1">Akima</p>
+        <p class="small mb-0" style="opacity: 0.8;">Ropa juvenil hecha con amor · © 2024 Akima. Todos los derechos
+            reservados.</p>
+    </footer>
+
+x    {% if request.session.user_role == 'cliente' or not request.session.user_role %}
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="carritoOffcanvas">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title fw-bold">
+                <i class="bi bi-bag me-1"></i> Carrito de compras
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column">
+            <div class="flex-grow-1">
+                {% if carrito_items %}
+                {% for item in carrito_items %}
+                <div class="card border-0 bg-light rounded-3 mb-3 p-2">
+                    <div class="d-flex align-items-center gap-2">
+                        {% if item.product.images.first %}
+                        <img src="{{ item.product.images.first.url_image.url }}" class="rounded-2"
+                            style="width: 60px; height: 60px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-2 bg-white d-flex align-items-center justify-content-center"
+                            style="width: 60px; height: 60px;">
+                            <i class="bi bi-image text-muted"></i>
+                        </div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <p class="fw-bold small mb-0">{{ item.product.name }}</p>
+                            <p class="text-muted small mb-0">{{ item.color_product.general_color.name }} - {{ item.size
+                                }}</p>
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <form method="POST" action="{% url 'remove_cart_item' item.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0"
+                                        style="font-size:11px;">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                                <a href="{% url 'update_cart_item' item.id %}?cantidad={{ item.quantity|add:'-1' }}&next={{ request.path }}"
+                                    class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0">−</a>
+                                <span class="small fw-bold">{{ item.quantity }}</span>
+                                <a href="{% url 'update_cart_item' item.id %}?cantidad={{ item.quantity|add:'1' }}&next={{ request.path }}"
+                                    class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0">+</a>
+                            </div>
+                        </div>
+                        <p class="fw-bold small mb-0" style="color: var(--akima-brown);">{{ item.formatted_subtotal }}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-cart-x fs-1 d-block mb-2"></i>
+                    <p class="small">Tu carrito está vacío</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="border-top pt-3 mt-3">
+                <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
+                    <span>Total:</span>
+                    <span style="color: var(--akima-brown);">{{ carrito_total }}</span>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                    <a href="{% url 'home' %}" class="btn btn-outline-secondary w-100 rounded-pill">Continuar
+                        comprando</a>
+                    <a href="{% url 'payment' %}" class="btn btn-akima w-100 rounded-pill">Realizar pedido</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}
+    <script>
+        if (new URLSearchParams(window.location.search).get('carrito') === 'abierto') {
+            const el = document.getElementById('carritoOffcanvas');
+            if (el) new bootstrap.Offcanvas(el).show();
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    </script>
+    {% endblock %}
+</body>
+
+</html>
