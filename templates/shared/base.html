@@ -121,8 +121,7 @@
                         {% endif %}
                         <div class="flex-grow-1">
                             <p class="fw-bold small mb-0">{{ item.product.name }}</p>
-                            <p class="text-muted small mb-0">{{ item.color_product.general_color.name }} - {{ item.size
-                                }}</p>
+                            <p class="text-muted small mb-0">{{ item.color_product.general_color.name }} - {{ item.size }}</p>
                             <div class="d-flex align-items-center gap-2 mt-1">
                                 <form method="POST" action="{% url 'remove_cart_item' item.id %}">
                                     {% csrf_token %}
