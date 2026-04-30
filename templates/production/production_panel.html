@@ -197,10 +197,7 @@
                 <p class="text-muted small mb-0 fst-italic">{{ task.specification }}</p>
                 {% endif %}
             </div>
-            <span class="badge rounded-pill px-3"
-                style="background-color: var(--akima-pink); color: var(--akima-brown);">
-                {{ task.status }}
-            </span>
+            <span class="badge rounded-pill px-3 py-2 {{ task.status|status_badge }}">{{ task.status }}</span>
         </div>
         {% endfor %}
         {% else %}

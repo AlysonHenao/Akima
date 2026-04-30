@@ -83,8 +83,11 @@ body {
     box-shadow: 0 12px 24px rgba(57, 30, 16, .18);
 }
 
+.btn-sm,
 .btn-outline-akima,
 .btn-outline-secondary {
+    background-color: var(--akima-brown) !important;
+    color: white !important;
     border-radius: 999px !important;
 }
 
@@ -107,3 +110,16 @@ body {
         font-size: 1.25rem;
     }
 }
+
+.badge-status-pendiente        { background-color: #fff3cd; color: #856404; }
+.badge-status-confirmado       { background-color: #d1e7dd; color: #0f5132; }
+.badge-status-produccion       { background-color: #fffd86; color: #000000; }
+.badge-status-completado       { background-color: #d1e7dd; color: #0f5132; }
+.badge-status-enviado          { background-color: #fffd86; color: #000000; }
+.badge-status-entregado        { background-color: #badbcc; color: #0a3622; }
+.badge-status-cancelado        { background-color: #f8d7da; color: #842029; }
+
+.badge-status-en-progreso      { background-color: #cfe2ff; color: #084298; }
+.badge-status-completada       { background-color: #d1e7dd; color: #0f5132; }
+.badge-status-cancelada        { background-color: #f8d7da; color: #842029; }
+

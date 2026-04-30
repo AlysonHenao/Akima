@@ -60,6 +60,9 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'order.context_processors.carrito',
             ],
+            'builtins': [
+                'account.templatetags.status_tags',
+            ],
         },
     },
 ]

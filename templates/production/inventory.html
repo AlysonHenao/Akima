@@ -24,9 +24,8 @@
             <h5 class="fw-bold mb-0" style="color: var(--akima-brown);">
                 <i class="bi bi-sliders me-2"></i>Gestionar inventario
             </h5>
-            <button class="btn btn-sm rounded-pill px-3" type="button"
-                    data-bs-toggle="collapse" data-bs-target="#inventoryForm"
-                    style="background-color: var(--akima-brown); color: white;">
+            <button class="btn btn-sm rounded-pill px-3" type="button" data-bs-toggle="collapse"
+                data-bs-target="#inventoryForm" style="background-color: var(--akima-brown); color: white;">
                 <i class="bi bi-chevron-down me-1"></i>Expandir
             </button>
         </div>
@@ -56,358 +55,359 @@
                         <label class="form-label small fw-bold" for="invQuantityInput">
                             Cantidad (g)
                         </label>
-                        <input type="number" id="invQuantityInput" class="form-control rounded-3"
-                               placeholder="Ej: 500" step="0.01" min="0" max="99999.99">
+                        <input type="text" id="invQuantityInput" class="form-control rounded-3" placeholder="Ej: 55.6"
+                            inputmode="decimal">
                         <div class="invalid-feedback" id="invQuantityError"></div>
                     </div>
 
                     <div class="col-12">
                         <div class="d-flex gap-2 flex-wrap justify-content-end mt-2">
-                            <button type="button"
-                                    class="btn btn-outline-akima rounded-pill px-4"
-                                    onclick="submitInventoryAction('add')">
+                            <button type="button" class="btn btn-outline-akima rounded-pill px-4"
+                                onclick="submitInventoryAction('add')">
                                 Agregar
                             </button>
 
-                            <button type="button"
-                                    class="btn btn-outline-akima rounded-pill px-4"
-                                    onclick="submitInventoryAction('subtract')">
+                            <button type="button" class="btn btn-outline-akima rounded-pill px-4"
+                                onclick="submitInventoryAction('subtract')">
                                 Quitar
                             </button>
 
-                            <button type="button"
-                                    class="btn btn-outline-akima rounded-pill px-4"
-                                    onclick="submitInventoryAction('set')">
+                            <button type="button" class="btn btn-outline-akima rounded-pill px-4"
+                                onclick="submitInventoryAction('set')">
                                 Actualizar
                             </button>
 
-                            <button type="button"
-                                    class="btn btn-outline-akima rounded-pill px-4"
-                                    onclick="deleteSelectedInventorySupply()">
+                            <button type="button" class="btn btn-outline-akima rounded-pill px-4"
+                                onclick="deleteSelectedInventorySupply()">
                                 Eliminar
                             </button>
                         </div>
                     </div>
 
-                <p class="small text-muted mt-3 mb-0">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Agregar suma cantidad, quitar descuenta cantidad, actualizar reemplaza el valor actual y eliminar borra el insumo de tu inventario.
-                </p>
+                    <p class="small text-muted mt-3 mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Agregar suma cantidad, quitar descuenta cantidad, actualizar reemplaza el valor actual y
+                        eliminar borra el insumo de tu inventario.
+                    </p>
+                </div>
+            </div>
+
+            {% if inventory %}
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Insumo</th>
+                            <th>Disponible (g)</th>
+                            <th>Última actualización</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        {% for inv in inventory %}
+                        <tr id="inv-row-{{ inv.supply.id }}">
+                            <td>
+                                <span class="badge bg-secondary rounded-pill">
+                                    {{ inv.supply.type_supply }}
+                                </span>
+                            </td>
+                            <td>{{ inv.supply.brand }} {{ inv.supply.reference }}</td>
+                            <td class="fw-bold inv-qty-{{ inv.supply.id }}">
+                                {{ inv.available_quantity|floatformat:-2 }}
+                            </td>
+                            <td class="text-muted small inv-date-{{ inv.supply.id }}">
+                                {{ inv.last_update|date:"d/m/Y H:i" }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div id="inventoryEmptyMsg" class="text-muted small">
+                <i class="bi bi-inbox me-1"></i>
+                Aún no tienes insumos. Agrega el primero usando el formulario de arriba.
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <h5 class="fw-bold mb-0" style="color: var(--akima-brown);">
+                    <i class="bi bi-tag me-2"></i>Crear nuevo insumo
+                </h5>
+                <button class="btn btn-sm rounded-pill px-3" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#createSupplyForm">
+                    <i class="bi bi-chevron-down me-1"></i>Expandir
+                </button>
+            </div>
+
+            <div class="collapse" id="createSupplyForm">
+                <div class="border rounded-4 p-3 bg-light">
+                    <p class="small text-muted mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Para hilos u otros insumos que aún no están en el sistema.
+                        No se crearán duplicados si ya existe uno con el mismo tipo, marca y referencia.
+                    </p>
+
+                    <form method="post" action="{% url 'create_supply' %}">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">
+                                    Tipo <span class="text-danger">*</span>
+                                </label>
+                                <select name="type_supply" class="form-select rounded-3" required>
+                                    <option value="">Selecciona...</option>
+                                    <option value="Hilo">Hilo</option>
+                                    <option value="Botón">Botón</option>
+                                    <option value="Argolla">Argolla</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">
+                                    Marca <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="brand" class="form-control rounded-3" placeholder="Ej: Anchor"
+                                    maxlength="100" required>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">
+                                    Referencia <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="reference" class="form-control rounded-3"
+                                    placeholder="Ej: N°8 algodón" maxlength="100" required>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">
+                                    Color <span class="text-muted fw-normal">(opcional)</span>
+                                </label>
+                                <input type="text" name="color_name" class="form-control rounded-3"
+                                    placeholder="Ej: Rojo">
+                            </div>
+
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-akima rounded-pill px-4">
+                                    <i class="bi bi-plus-lg me-1"></i>Crear insumo
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
-        {% if inventory %}
-        <div class="table-responsive">
-            <table class="table table-sm align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Tipo</th>
-                        <th>Insumo</th>
-                        <th>Disponible (g)</th>
-                        <th>Última actualización</th>
-                    </tr>
-                </thead>
-                <tbody id="inventoryTableBody">
-                    {% for inv in inventory %}
-                    <tr id="inv-row-{{ inv.supply.id }}">
-                        <td>
-                            <span class="badge bg-secondary rounded-pill">
-                                {{ inv.supply.type_supply }}
-                            </span>
-                        </td>
-                        <td>{{ inv.supply.brand }} {{ inv.supply.reference }}</td>
-                        <td class="fw-bold inv-qty-{{ inv.supply.id }}">
-                            {{ inv.available_quantity|floatformat:-2 }}
-                        </td>
-                        <td class="text-muted small inv-date-{{ inv.supply.id }}">
-                            {{ inv.last_update|date:"d/m/Y H:i" }}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div id="inventoryEmptyMsg" class="text-muted small">
-            <i class="bi bi-inbox me-1"></i>
-            Aún no tienes insumos. Agrega el primero usando el formulario de arriba.
-        </div>
-        {% endif %}
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4 p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-            <h5 class="fw-bold mb-0" style="color: var(--akima-brown);">
-                <i class="bi bi-tag me-2"></i>Crear nuevo insumo
-            </h5>
-            <button class="btn btn-sm rounded-pill px-3" type="button"
-                    data-bs-toggle="collapse" data-bs-target="#createSupplyForm"
-                    style="background-color: var(--akima-brown); color: black;">
-                <i class="bi bi-chevron-down me-1"></i>Expandir
-            </button>
-        </div>
+    <script>
+        const CSRF_TOKEN = '{{ csrf_token }}';
 
-        <div class="collapse" id="createSupplyForm">
-            <div class="border rounded-4 p-3 bg-light">
-                <p class="small text-muted mb-3">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Para hilos u otros insumos que aún no están en el sistema.
-                    No se crearán duplicados si ya existe uno con el mismo tipo, marca y referencia.
-                </p>
-
-                <form method="post" action="{% url 'create_supply' %}">
-                    {% csrf_token %}
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">
-                                Tipo <span class="text-danger">*</span>
-                            </label>
-                            <select name="type_supply" class="form-select rounded-3" required>
-                                <option value="">Selecciona...</option>
-                                <option value="Hilo">Hilo</option>
-                                <option value="Botón">Botón</option>
-                                <option value="Argolla">Argolla</option>
-                                <option value="Otro">Otro</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">
-                                Marca <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" name="brand" class="form-control rounded-3"
-                                   placeholder="Ej: Anchor" maxlength="100" required>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">
-                                Referencia <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" name="reference" class="form-control rounded-3"
-                                   placeholder="Ej: N°8 algodón" maxlength="100" required>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">
-                                Color <span class="text-muted fw-normal">(opcional)</span>
-                            </label>
-                            <input type="text" name="color_name" class="form-control rounded-3" placeholder="Ej: Rojo">
-                        </div>
-
-                        <div class="col-12 text-end">
-                            <button type="submit" class="btn btn-akima rounded-pill px-4">
-                                <i class="bi bi-plus-lg me-1"></i>Crear insumo
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<script>
-    const CSRF_TOKEN = '{{ csrf_token }}';
-
-    function showAlert(id, type, html) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.className = `alert alert-${type} mb-3`;
-        el.innerHTML = html;
-    }
-
-    function hideAlert(id) {
-        const el = document.getElementById(id);
-        if (el) el.className = 'alert d-none mb-3';
-    }
-
-    function clearValidation() {
-        const supplySelect = document.getElementById('invSupplySelect');
-        const quantityInput = document.getElementById('invQuantityInput');
-
-        supplySelect.classList.remove('is-invalid');
-        quantityInput.classList.remove('is-invalid');
-
-        document.getElementById('invSupplyError').textContent = '';
-        document.getElementById('invQuantityError').textContent = '';
-    }
-
-    function validateInventoryForm(action) {
-        clearValidation();
-
-        const supplySelect = document.getElementById('invSupplySelect');
-        const quantityInput = document.getElementById('invQuantityInput');
-        const rawQty = quantityInput.value.trim();
-
-        let valid = true;
-
-        if (!supplySelect.value) {
-            supplySelect.classList.add('is-invalid');
-            document.getElementById('invSupplyError').textContent = 'Debes seleccionar un insumo.';
-            valid = false;
+        function showAlert(id, type, html) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.className = `alert alert-${type} mb-3`;
+            el.innerHTML = html;
         }
 
-        if (!rawQty) {
-            quantityInput.classList.add('is-invalid');
-            document.getElementById('invQuantityError').textContent = 'Debes ingresar una cantidad.';
-            valid = false;
-        } else {
-            const qty = parseFloat(rawQty.replace(',', '.'));
+        function hideAlert(id) {
+            const el = document.getElementById(id);
+            if (el) el.className = 'alert d-none mb-3';
+        }
 
-            if (isNaN(qty)) {
-                quantityInput.classList.add('is-invalid');
-                document.getElementById('invQuantityError').textContent = 'La cantidad debe ser un número válido.';
-                valid = false;
-            } else if (qty < 0) {
-                quantityInput.classList.add('is-invalid');
-                document.getElementById('invQuantityError').textContent = 'La cantidad no puede ser negativa.';
-                valid = false;
-            } else if ((action === 'add' || action === 'subtract') && qty <= 0) {
-                quantityInput.classList.add('is-invalid');
-                document.getElementById('invQuantityError').textContent = 'Para agregar o quitar, la cantidad debe ser mayor a 0.';
+        function clearValidation() {
+            const supplySelect = document.getElementById('invSupplySelect');
+            const quantityInput = document.getElementById('invQuantityInput');
+
+            supplySelect.classList.remove('is-invalid');
+            quantityInput.classList.remove('is-invalid');
+
+            document.getElementById('invSupplyError').textContent = '';
+            document.getElementById('invQuantityError').textContent = '';
+        }
+
+        function validateInventoryForm(action) {
+            clearValidation();
+
+            const supplySelect = document.getElementById('invSupplySelect');
+            const quantityInput = document.getElementById('invQuantityInput');
+            const rawQty = quantityInput.value.trim();
+
+            let valid = true;
+
+            if (!supplySelect.value) {
+                supplySelect.classList.add('is-invalid');
+                document.getElementById('invSupplyError').textContent = 'Debes seleccionar un insumo.';
                 valid = false;
             }
-        }
 
-        return valid;
-    }
-
-    async function submitInventoryAction(action) {
-        hideAlert('inventoryAlert');
-
-        if (!validateInventoryForm(action)) return;
-
-        const supplySelect = document.getElementById('invSupplySelect');
-        const quantityInput = document.getElementById('invQuantityInput');
-
-        const formData = new FormData();
-        formData.append('supply_id', supplySelect.value);
-        formData.append('quantity', quantityInput.value);
-        formData.append('action', action);
-        formData.append('csrfmiddlewaretoken', CSRF_TOKEN);
-
-        try {
-            const response = await fetch("{% url 'update_inventory_quantity' %}", {
-                method: 'POST',
-                body: formData,
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                showAlert('inventoryAlert', 'success',
-                    `<i class="bi bi-check-circle me-1"></i> ${data.message}`);
-
-                updateInventoryRow(data.item);
-
-                supplySelect.value = '';
-                quantityInput.value = '';
+            if (!rawQty) {
+                quantityInput.classList.add('is-invalid');
+                document.getElementById('invQuantityError').textContent = 'Debes ingresar una cantidad.';
+                valid = false;
             } else {
-                showAlert('inventoryAlert', 'danger',
-                    `<i class="bi bi-exclamation-triangle me-1"></i> ${data.error}`);
-            }
-        } catch (err) {
-            showAlert('inventoryAlert', 'danger',
-                '<i class="bi bi-wifi-off me-1"></i> Error de conexión. Intenta de nuevo.');
-        }
-    }
+                const qty = parseFloat(rawQty);
 
-    async function deleteSelectedInventorySupply() {
-        hideAlert('inventoryAlert');
-        clearValidation();
-
-        const supplySelect = document.getElementById('invSupplySelect');
-        const quantityInput = document.getElementById('invQuantityInput');
-
-        if (!supplySelect.value) {
-            supplySelect.classList.add('is-invalid');
-            document.getElementById('invSupplyError').textContent = 'Debes seleccionar un insumo.';
-            return;
-        }
-
-        const selectedText = supplySelect.options[supplySelect.selectedIndex].text.trim();
-
-        if (!confirm(`¿Seguro que quieres eliminar este insumo de tu inventario?\n\n${selectedText}`)) {
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('supply_id', supplySelect.value);
-        formData.append('csrfmiddlewaretoken', CSRF_TOKEN);
-
-        try {
-            const response = await fetch("{% url 'delete_inventory_supply' %}", {
-                method: 'POST',
-                body: formData,
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                showAlert('inventoryAlert', 'success',
-                    `<i class="bi bi-check-circle me-1"></i> ${data.message}`);
-
-                const row = document.getElementById(`inv-row-${data.supply_id}`);
-                if (row) row.remove();
-
-                supplySelect.value = '';
-                quantityInput.value = '';
-
-                const tbody = document.getElementById('inventoryTableBody');
-                if (tbody && tbody.children.length === 0) {
-                    location.reload();
+                if (isNaN(qty)) {
+                    quantityInput.classList.add('is-invalid');
+                    document.getElementById('invQuantityError').textContent = 'La cantidad debe ser un número válido.';
+                    valid = false;
+                } else if (qty < 0) {
+                    quantityInput.classList.add('is-invalid');
+                    document.getElementById('invQuantityError').textContent = 'La cantidad no puede ser negativa.';
+                    valid = false;
+                } else if ((action === 'add' || action === 'subtract') && qty <= 0) {
+                    quantityInput.classList.add('is-invalid');
+                    document.getElementById('invQuantityError').textContent = 'Para agregar o quitar, la cantidad debe ser mayor a 0.';
+                    valid = false;
                 }
-            } else {
-                showAlert('inventoryAlert', 'danger',
-                    `<i class="bi bi-exclamation-triangle me-1"></i> ${data.error}`);
             }
-        } catch (err) {
-            showAlert('inventoryAlert', 'danger',
-                '<i class="bi bi-wifi-off me-1"></i> Error de conexión. Intenta de nuevo.');
-        }
-    }
 
-    function formatQuantity(value) {
-        const num = parseFloat(value);
-
-        if (Number.isInteger(num)) {
-            return num.toString();
+            return valid;
         }
 
-        return num.toFixed(2).replace(/\.?0+$/, '');
-    }
+        async function submitInventoryAction(action) {
+            hideAlert('inventoryAlert');
 
-    function updateInventoryRow(item) {
-        let tbody = document.getElementById('inventoryTableBody');
-        const emptyMsg = document.getElementById('inventoryEmptyMsg');
+            if (!validateInventoryForm(action)) return;
 
-        if (!tbody) {
-            location.reload();
-            return;
+            const supplySelect = document.getElementById('invSupplySelect');
+            const quantityInput = document.getElementById('invQuantityInput');
+
+            const formData = new FormData();
+            formData.append('supply_id', supplySelect.value);
+            formData.append('quantity', quantityInput.value);
+            formData.append('action', action);
+            formData.append('csrfmiddlewaretoken', CSRF_TOKEN);
+
+            try {
+                const response = await fetch("{% url 'update_inventory_quantity' %}", {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('inventoryAlert', 'success',
+                        `<i class="bi bi-check-circle me-1"></i> ${data.message}`);
+
+                    updateInventoryRow(data.item);
+
+                    supplySelect.value = '';
+                    quantityInput.value = '';
+                } else {
+                    showAlert('inventoryAlert', 'danger',
+                        `<i class="bi bi-exclamation-triangle me-1"></i> ${data.error}`);
+                }
+            } catch (err) {
+                showAlert('inventoryAlert', 'danger',
+                    '<i class="bi bi-wifi-off me-1"></i> Error de conexión. Intenta de nuevo.');
+            }
         }
 
-        let row = document.getElementById(`inv-row-${item.supply_id}`);
+        async function deleteSelectedInventorySupply() {
+            hideAlert('inventoryAlert');
+            clearValidation();
 
-        if (row) {
-            const qtyCell = row.querySelector(`.inv-qty-${item.supply_id}`);
-            const dateCell = row.querySelector(`.inv-date-${item.supply_id}`);
+            const supplySelect = document.getElementById('invSupplySelect');
+            const quantityInput = document.getElementById('invQuantityInput');
 
-            if (qtyCell) qtyCell.textContent = formatQuantity(item.available_quantity);
-            if (dateCell) dateCell.textContent = item.last_update;
-        } else {
-            row = document.createElement('tr');
-            row.id = `inv-row-${item.supply_id}`;
-            row.innerHTML = `
+            if (!supplySelect.value) {
+                supplySelect.classList.add('is-invalid');
+                document.getElementById('invSupplyError').textContent = 'Debes seleccionar un insumo.';
+                return;
+            }
+
+            const selectedText = supplySelect.options[supplySelect.selectedIndex].text.trim();
+
+            if (!confirm(`¿Seguro que quieres eliminar este insumo de tu inventario?\n\n${selectedText}`)) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('supply_id', supplySelect.value);
+            formData.append('csrfmiddlewaretoken', CSRF_TOKEN);
+
+            try {
+                const response = await fetch("{% url 'delete_inventory_supply' %}", {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('inventoryAlert', 'success',
+                        `<i class="bi bi-check-circle me-1"></i> ${data.message}`);
+
+                    const row = document.getElementById(`inv-row-${data.supply_id}`);
+                    if (row) row.remove();
+
+                    supplySelect.value = '';
+                    quantityInput.value = '';
+
+                    const tbody = document.getElementById('inventoryTableBody');
+                    if (tbody && tbody.children.length === 0) {
+                        location.reload();
+                    }
+                } else {
+                    showAlert('inventoryAlert', 'danger',
+                        `<i class="bi bi-exclamation-triangle me-1"></i> ${data.error}`);
+                }
+            } catch (err) {
+                showAlert('inventoryAlert', 'danger',
+                    '<i class="bi bi-wifi-off me-1"></i> Error de conexión. Intenta de nuevo.');
+            }
+        }
+
+        function formatQuantity(value) {
+            return parseFloat(value).toFixed(2);
+
+        }
+
+        function updateInventoryRow(item) {
+            let tbody = document.getElementById('inventoryTableBody');
+            const emptyMsg = document.getElementById('inventoryEmptyMsg');
+
+            if (!tbody) {
+                location.reload();
+                return;
+            }
+
+            let row = document.getElementById(`inv-row-${item.supply_id}`);
+
+            if (row) {
+                const qtyCell = row.querySelector(`.inv-qty-${item.supply_id}`);
+                const dateCell = row.querySelector(`.inv-date-${item.supply_id}`);
+
+                if (qtyCell) qtyCell.textContent = formatQuantity(item.available_quantity);
+                if (dateCell) dateCell.textContent = item.last_update;
+            } else {
+                row = document.createElement('tr');
+                row.id = `inv-row-${item.supply_id}`;
+                row.innerHTML = `
                 <td><span class="badge bg-secondary rounded-pill">${item.type_supply}</span></td>
                 <td>${item.supply_name}</td>
-                <td class="fw-bold inv-qty-${item.supply_id}">${parseFloat(item.available_quantity).toFixed(0)}</td>
+                <td class="fw-bold inv-qty-${item.supply_id}">${formatQuantity(item.available_quantity)}</td>
                 <td class="text-muted small inv-date-${item.supply_id}">${item.last_update}</td>
             `;
-            tbody.appendChild(row);
+                tbody.appendChild(row);
 
-            if (emptyMsg) emptyMsg.classList.add('d-none');
+                if (emptyMsg) emptyMsg.classList.add('d-none');
+            }
         }
-    }
-</script>
-{% endblock %}
+
+        const quantityInput = document.getElementById('invQuantityInput');
+
+
+        quantityInput.addEventListener('keypress', function (e) {
+            if (e.key === ',') {
+                e.preventDefault();
+            }
+        });
+    </script>
+    {% endblock %}

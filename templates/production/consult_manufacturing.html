@@ -23,7 +23,7 @@
         <td>
             {{ task.product.product.name }} - {{ task.product.general_color.name }}
         </td>
-        <td>{{ task.status }}</td>
+        <td><span class="badge rounded-pill px-3 py-2 {{ task.status|status_badge_class }}">{{ task.status }}</span></td>
         <td>{{ task.assignment_date }}</td>
     </tr>
     {% endfor %}

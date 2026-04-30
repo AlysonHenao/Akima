@@ -69,7 +69,7 @@
                                     <td>{{ detalle.formatted_subtotal }}</td>
                                     <td>
                                         <a href="{% url 'production_panel' %}?order_detail={{ detalle.id }}"
-                                        class="btn btn-sm rounded-pill fw-bold"
+                                        class="btn btn-sm rounded-pill"
                                         style="background-color: var(--akima-pink); color: var(--akima-brown);">
                                             <i class="bi bi-person-lines-fill me-1"></i> Asignar
                                         </a>
@@ -84,7 +84,7 @@
 
                     <div class="col-md-5">
 
-                        <button class="btn btn-sm rounded-pill mb-2 fw-bold"
+                        <button class="btn btn-sm rounded-pill mb-2"
                                 style="background-color: var(--akima-pink); color: var(--akima-brown);"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#cliente-{{ orden.id }}">

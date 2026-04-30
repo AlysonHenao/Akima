@@ -6,40 +6,37 @@
 
     <div class="card border-0 shadow-sm rounded-4 p-4 mx-auto" style="max-width: 600px;">
         
-        <!-- Header -->
-        <div class="text-center mb-4">
+        <div class="text-center mb-2">
             <i class="bi bi-person-circle" style="font-size: 60px; color: #3a270de0;"></i>
             <h4 class="fw-bold mt-2" style="color: #3a270de0;">Mi perfil</h4>
             <p class="text-muted small">Gestiona tu información personal</p>
         </div>
 
-        <!-- Info -->
-        <div class="mb-3">
+        <div>
             <label class="text-muted small">Nombre</label>
             <p class="fw-semibold">{{ user.first_name }} {{ user.last_name }}</p>
         </div>
 
-        <div class="mb-3">
+        <div>
             <label class="text-muted small">Correo</label>
             <p class="fw-semibold">{{ user.email }}</p>
         </div>
 
-        <div class="mb-3">
+        <div>
             <label class="text-muted small">Teléfono</label>
             <p class="fw-semibold">{{ user.phone }}</p>
         </div>
 
-        <div class="mb-3">
+        <div>
             <label class="text-muted small">Dirección</label>
             <p class="fw-semibold">{{ user.address }}</p>
         </div>
 
-        <div class="mb-4">
+        <div>
             <label class="text-muted small">Ciudad</label>
             <p class="fw-semibold">{{ user.city }}</p>
         </div>
 
-        <!-- Botón -->
         <a href="{% url 'edit_profile' %}" class="btn btn-akima w-100 py-2">
             <i class="bi bi-pencil-square me-1"></i> Editar perfil
         </a>

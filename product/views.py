@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.core.paginator import Paginator
 from django.contrib import messages
 from decimal import Decimal
 
@@ -9,16 +10,19 @@ from account.views import require_role
 
 
 def display_product_catalog(request):
-    """Rf-01 — Muestra el catálogo de productos activos.
-    Rf-02 — Si se recibe GET 'q', filtra los resultados por nombre."""
     query = request.GET.get('q', '').strip()
     products = Product.objects.filter(active=True)
 
     if query:
         products = products.filter(name__icontains=query)
 
+    paginator = Paginator(products, 12)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'product/home.html', {
-        'products': products,
+        'products': page_obj,
+        'page_obj': page_obj,
         'query': query,
     })
 

@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -99,6 +100,10 @@ def manage_users(request):
     if role:
         users = users.filter(role=role)
 
+    paginator = Paginator(users, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
     selected_user = None
     inventory = []
     assigned_tasks = []
@@ -127,7 +132,8 @@ def manage_users(request):
         ).order_by('-order_date')
 
     return render(request, 'account/manage_users.html', {
-        'users': users,
+        'users': page_obj,
+        'page_obj': page_obj,
         'roles': User.ROLES,
         'search': search,
         'role': role,

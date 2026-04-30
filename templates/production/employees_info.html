@@ -148,7 +148,7 @@
                     <tr>
                         <td>{{ task.product.product.name }}</td>
                         <td>{{ task.product.general_color.name }}</td>
-                        <td>{{ task.status }}</td>
+                        <td><span class="badge rounded-pill px-3 py-2 {{ task.status|status_badge }}">{{ task.status }}</span></td>
                         <td>{{ task.assignment_date|date:"d/m/Y" }}</td>
                     </tr>
                     {% endfor %}

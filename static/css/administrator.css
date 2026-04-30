@@ -14,6 +14,12 @@
             linear-gradient(180deg,#FFA3BF 0%, var(--ak-bg) 55%, #F9E4ED 100%);
     }
 
+    body.admin-page {
+    background:
+        radial-gradient(circle at top right, rgba(255,163,191,.22), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(223,147,181,.9), transparent 30%),
+        linear-gradient(180deg,#fdb9cd 0%, var(--ak-bg) 55%, #F9E4ED 100%);
+}
     .admin-wrap{
         max-width:1100px;
     }

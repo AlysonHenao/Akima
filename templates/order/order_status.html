@@ -29,13 +29,7 @@
                 <td>{{ order.order_date }}</td>
                 <td>{{ order.formatted_price }}</td>
                 <td>
-                    {% if order.status == "Confirmado" %}
-                        <span class="badge bg-success">{{ order.status }}</span>
-                    {% elif order.status == "Pendiente confirmacion" %}
-                        <span class="badge bg-warning text-dark">{{ order.status }}</span>
-                    {% else %}
-                        <span class="badge bg-secondary">{{ order.status }}</span>
-                    {% endif %}
+                    <span class="badge rounded-pill px-3 py-2 {{ order.status|status_badge_class }}">{{ order.status }}</span>
                 </td>
             </tr>
             {% empty %}
