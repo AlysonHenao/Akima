@@ -8,9 +8,10 @@ from django.conf import settings
 
 from .models import (
     Order, OrderDetail, ShoppingCart, ItemCart,
-    PaymentMethod, PaymentReceipt, User
+    PaymentMethod, PaymentReceipt, FinancialMovement, FinancialMovementSupply, User
 )
 from product.models import Product, ColorProduct
+from production.models import Supply
 from account.views import require_role
 
 
@@ -302,3 +303,121 @@ def check_order_status(request):
             'orders': orders,
             'is_cliente': True,
         })
+
+
+@require_role('administrador')
+def register_financial_movement(request):
+
+    employees = User.objects.filter(role='empleada')
+    orders = Order.objects.all().order_by('-id')
+    supplies = Supply.objects.all().order_by('brand')
+
+    if request.method == 'POST':
+
+        movement_id = request.POST.get('movement_id')
+
+        movement_type = request.POST.get('type')
+        category = request.POST.get('category')
+        concept = request.POST.get('concept')
+        amount = request.POST.get('amount')
+        note = request.POST.get('note')
+        receipt = request.FILES.get('receipt')
+
+        order_id = request.POST.get('order')
+        employee_id = request.POST.get('employee')
+
+        if movement_id:
+            movement = get_object_or_404(
+                FinancialMovement,
+                id=movement_id
+            )
+        else:
+            movement = FinancialMovement()
+
+        try:
+            amount = int(amount)
+
+            if amount % 100 != 0:
+                messages.error(request, 'El monto debe subir de 100 en 100.')
+                return redirect('register_financial_movement')
+        except:
+            messages.error(request, 'Monto inválido.')
+            return redirect('register_financial_movement')
+
+        movement.type = movement_type
+        movement.category = category
+        movement.concept = concept
+        movement.amount = amount
+        movement.note = note
+
+        user_id = request.session.get('user_id')
+
+        if user_id:
+            movement.user = User.objects.get(id=user_id)
+
+        if receipt:
+            movement.receipt = receipt
+
+        movement.order = None
+
+        if category == 'Venta' and order_id:
+            movement.order = Order.objects.get(id=order_id)
+
+        movement.employee = None
+
+        if category == 'Pago a empleados' and employee_id:
+            movement.employee = User.objects.get(id=employee_id)
+
+        movement.save()
+
+        if category == 'Compra de insumos':
+
+            FinancialMovementSupply.objects.filter(
+                financial_movement=movement
+            ).delete()
+
+            supply_ids = request.POST.getlist('supply_id[]')
+            quantities = request.POST.getlist('quantity[]')
+            unit_costs = request.POST.getlist('unit_cost[]')
+
+            for i in range(len(supply_ids)):
+
+                if not supply_ids[i]:
+                    continue
+
+                supply = Supply.objects.get(id=supply_ids[i])
+
+                FinancialMovementSupply.objects.create(
+                    financial_movement=movement,
+                    supply=supply,
+                    quantity=int(quantities[i]),
+                    unit_cost=int(unit_costs[i]),
+                )
+
+        if movement_id:
+            messages.success(request, 'Movimiento actualizado.')
+        else:
+            messages.success(request, 'Movimiento registrado.')
+
+        return redirect('register_financial_movement')
+
+    movements = FinancialMovement.objects.select_related(
+        'user',
+        'order',
+        'employee'
+    ).prefetch_related(
+        'supplies__supply'
+    ).order_by('-movement_date')
+
+    return render(
+        request,
+        'order/financial_movements.html',
+        {
+            'movements': movements,
+            'categories': FinancialMovement.CATEGORIES,
+            'types': FinancialMovement.TYPES,
+            'employees': employees,
+            'orders': orders,
+            'supplies': supplies,
+        }
+    )

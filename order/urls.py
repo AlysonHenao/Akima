@@ -10,5 +10,6 @@ urlpatterns = [
     path('administrator/orders/', views.view_order_information, name='orders'),
     path('administrator/orders/confirm/<int:receipt_id>/', views.confirm_payment, name='confirm_payment'),
     path('administrator/orders/update-status/<int:order_id>/', views.modify_order_status, name='update_order_status'),
+    path('administrator/financial-movements/', views.register_financial_movement, name='register_financial_movement'),
     path('my-orders/', views.check_order_status, name='customer_orders_panel'),
 ]

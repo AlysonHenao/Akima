@@ -1,0 +1,381 @@
+{% extends 'shared/base.html' %}
+{% load static %}
+{% block title %}Movimientos Financieros{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/administrator.css' %}">
+{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold">Movimientos Financieros</h3>
+            <p class="text-muted small mb-0">
+                Registro manual de ingresos y egresos
+            </p>
+        </div>
+
+        <a href="{% url 'administrator' %}"
+           class="btn rounded-pill"
+           style="background-color: var(--akima-brown); color:white;">
+            Volver
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-5">
+        <h5 class="fw-bold mb-4">Registrar movimiento</h5>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Tipo</label>
+                    <select name="type" class="form-select" required>
+                        {% for value, label in types %}
+                            <option value="{{ value }}">
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Categoría</label>
+                    <select name="category" id="categorySelect" class="form-select" required>
+                        {% for value, label in categories %}
+                            <option value="{{ value }}">
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-12 d-none" id="orderContainer">
+
+                    <label class="form-label">
+                        Orden relacionada
+                    </label>
+
+                    <select name="order" class="form-select">
+
+                        <option value="">
+                            Selecciona una orden
+                        </option>
+
+                        {% for order in orders %}
+                            <option value="{{ order.id }}">
+                                Orden #{{ order.id }}
+                            </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-12 d-none" id="employeeContainer">
+
+                    <label class="form-label">
+                        Empleada relacionada
+                    </label>
+
+                    <select name="employee" class="form-select">
+
+                        <option value="">
+                            Selecciona una empleada
+                        </option>
+
+                        {% for employee in employees %}
+                            <option value="{{ employee.id }}">
+                                {{ employee.first_name }}
+                                {{ employee.last_name }}
+                            </option>
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-12 d-none" id="suppliesContainer">
+
+                    <label class="form-label">
+                        Insumos
+                    </label>
+
+                    <div id="suppliesWrapper"></div>
+
+                    <button
+                        type="button"
+                        class="btn btn-sm mt-2"
+                        onclick="addSupplyRow()"
+                        style="background-color: var(--akima-brown); color:white;"
+                    >
+                        Agregar insumo
+                    </button>
+
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">Concepto</label>
+                    <input
+                        type="text"
+                        name="concept"
+                        class="form-control"
+                        required
+                    >
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Monto</label>
+                    <input
+                        type="number"
+                        name="amount"
+                        id="amountInput"
+                        class="form-control"
+                        min="0"
+                        step="100"
+                        required
+                    >
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Comprobante (opcional)</label>
+                    <input
+                        type="file"
+                        name="receipt"
+                        class="form-control"
+                    >
+                </div>
+
+                <div class="col-md-12">
+                    <label class="form-label">Nota</label>
+                    <textarea
+                        name="note"
+                        class="form-control"
+                        rows="3"
+                    ></textarea>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button
+                    type="submit"
+                    class="btn rounded-pill px-4"
+                    style="background-color: var(--akima-brown); color:white;"
+                >
+                    Registrar movimiento
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <h5 class="fw-bold mb-4">
+            Historial de movimientos
+        </h5>
+        {% if movements %}
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Categoría</th>
+                            <th>Concepto</th>
+                            <th>Monto</th>
+                            <th>Administrador</th>
+                            <th>Comprobante</th>
+                            <th>Editar</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for movement in movements %}
+                        <tr>
+                            <td>
+                                {{ movement.movement_date|date:"d/m/Y H:i" }}
+                            </td>
+
+                            <td>
+                                {% if movement.type == 'Ingreso' %}
+                                    <span class="badge bg-success">
+                                        {{ movement.type }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        {{ movement.type }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ movement.category }}</td>
+                            <td>{{ movement.concept }}</td>
+                            <td>{{ movement.formatted_amount }}</td>
+                            <td>
+                                {% if movement.user %}
+                                    {{ movement.user.first_name }}
+                                    {{ movement.user.last_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if movement.receipt %}
+                                    <a href="{{ movement.receipt.url }}"
+                                       target="_blank"
+                                       class="btn btn-sm rounded-pill"
+                                       style="background-color: var(--akima-brown); color:white;">
+                                        Ver
+                                    </a>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>
+
+                                <button
+                                    type="button"
+                                    class="btn btn-sm rounded-pill edit-movement-btn"
+                                    style="background-color: var(--akima-pink); color: var(--akima-brown);"
+
+                                    data-id="{{ movement.id }}"
+                                    data-type="{{ movement.type }}"
+                                    data-category="{{ movement.category }}"
+                                    data-concept="{{ movement.concept }}"
+                                    data-amount="{{ movement.amount }}"
+                                    data-note="{{ movement.note }}"
+                                >
+                                    Editar
+                                </button>
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">
+                No hay movimientos financieros registrados.
+            </p>
+        {% endif %}
+    </div>
+</div>
+<script>
+
+const categorySelect =
+    document.getElementById('categorySelect');
+
+const orderContainer =
+    document.getElementById('orderContainer');
+
+const employeeContainer =
+    document.getElementById('employeeContainer');
+
+const suppliesContainer =
+    document.getElementById('suppliesContainer');
+
+function toggleCategoryFields() {
+
+    const value = categorySelect.value;
+
+    orderContainer.classList.add('d-none');
+    employeeContainer.classList.add('d-none');
+    suppliesContainer.classList.add('d-none');
+
+    if (value === 'Venta') {
+        orderContainer.classList.remove('d-none');
+    }
+
+    if (value === 'Pago a empleados') {
+        employeeContainer.classList.remove('d-none');
+    }
+
+    if (value === 'Compra de insumos') {
+        suppliesContainer.classList.remove('d-none');
+    }
+}
+
+categorySelect.addEventListener(
+    'change',
+    toggleCategoryFields
+);
+
+toggleCategoryFields();
+
+function addSupplyRow() {
+
+    const wrapper =
+        document.getElementById('suppliesWrapper');
+
+    wrapper.insertAdjacentHTML(
+        'beforeend',
+        `
+        <div class="row g-2 mb-2">
+
+            <div class="col-md-5">
+
+                <select
+                    name="supply_id[]"
+                    class="form-select"
+                >
+
+                    <option value="">
+                        Selecciona insumo
+                    </option>
+
+                    {% for supply in supplies %}
+
+                    <option value="{{ supply.id }}">
+                        {{ supply.brand }}
+                        {{ supply.reference }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <input
+                    type="number"
+                    step="1"
+                    min="1"
+                    name="quantity[]"
+                    class="form-control"
+                    placeholder="Cantidad"
+                >
+
+            </div>
+
+            <div class="col-md-3">
+
+                <input
+                    type="number"
+                    step="100"
+                    min="0"
+                    name="unit_cost[]"
+                    class="form-control"
+                    placeholder="Costo unitario"
+                >
+
+            </div>
+
+            <div class="col-md-1">
+
+                <button
+                    type="button"
+                    class="btn btn-danger"
+                    onclick="this.parentElement.parentElement.remove()"
+                >
+                    X
+                </button>
+
+            </div>
+
+        </div>
+        `
+    );
+}
+
+</script>
+{% endblock %}
