@@ -251,6 +251,15 @@ class FinancialMovement(models.Model):
         verbose_name='Orden',
         related_name='financial_movements'
     )
+    employee = models.ForeignKey(
+        'account.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Employee',
+        related_name='employee_financial_movements',
+        limit_choices_to={'role': 'empleada'}
+    )
     user = models.ForeignKey(
         'account.User',
         on_delete=models.SET_NULL,
@@ -276,3 +285,44 @@ class FinancialMovement(models.Model):
 
     def __str__(self):
         return f"{self.type} - {self.category} - ${self.amount}"
+
+
+
+class FinancialMovementSupply(models.Model):
+
+    financial_movement = models.ForeignKey(
+        FinancialMovement,
+        on_delete=models.CASCADE,
+        related_name='supplies'
+    )
+
+    supply = models.ForeignKey(
+        'production.Supply',
+        on_delete=models.PROTECT,
+        related_name='financial_movements'
+    )
+
+    quantity = models.IntegerField(
+        'Quantity',
+        validators=[MinValueValidator(1)]
+    )
+
+    unit_cost = models.IntegerField(
+        'Unit Cost',
+        validators=[MinValueValidator(0)]
+    )
+
+    subtotal = models.IntegerField(
+        'Subtotal',
+        default=0
+    )
+
+    class Meta:
+        db_table = 'financial_movement_supply'
+
+    def save(self, *args, **kwargs):
+        self.subtotal = self.quantity * self.unit_cost
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.supply} - {self.quantity}"

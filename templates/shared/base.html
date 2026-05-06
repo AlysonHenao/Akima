@@ -40,6 +40,7 @@
                 <a href="{% url 'orders' %}" class="nav-lnk">Órdenes</a>
                 <a href="{% url 'production_panel' %}" class="nav-lnk">Producción</a>
                 <a href="{% url 'manage_users' %}" class="nav-lnk">Usuarios</a>
+                <a href="{% url 'register_financial_movement' %}" class="nav-lnk">Finanzas</a>
                 
 
                 {% elif request.session.user_role == 'empleada' %}
