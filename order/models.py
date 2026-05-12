@@ -295,27 +295,14 @@ class FinancialMovementSupply(models.Model):
         on_delete=models.CASCADE,
         related_name='supplies'
     )
-
     supply = models.ForeignKey(
         'production.Supply',
         on_delete=models.PROTECT,
         related_name='financial_movements'
     )
-
-    quantity = models.IntegerField(
-        'Quantity',
-        validators=[MinValueValidator(1)]
-    )
-
-    unit_cost = models.IntegerField(
-        'Unit Cost',
-        validators=[MinValueValidator(0)]
-    )
-
-    subtotal = models.IntegerField(
-        'Subtotal',
-        default=0
-    )
+    quantity = models.IntegerField('Quantity', validators=[MinValueValidator(1)])
+    unit_cost = models.IntegerField('Unit Cost', validators=[MinValueValidator(0)])
+    subtotal = models.IntegerField('Subtotal', default=0)
 
     class Meta:
         db_table = 'financial_movement_supply'
