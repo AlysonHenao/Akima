@@ -11,10 +11,25 @@ from account.views import require_role
 
 def display_product_catalog(request):
     query = request.GET.get('q', '').strip()
-    products = Product.objects.filter(active=True)
+    color_filter = request.GET.get('color', '').strip()
+    category_filter = request.GET.get('category', '').strip()
+
+    products = Product.objects.filter(active=True).prefetch_related('colors__general_color')
 
     if query:
         products = products.filter(name__icontains=query)
+
+    if color_filter:
+        products = products.filter(
+            colors__general_color__name__iexact=color_filter,
+            colors__available=True
+        ).distinct()
+
+    if category_filter:
+        products = products.filter(category=category_filter)
+
+    all_colors = GeneralColor.objects.order_by('name')
+    categories = [{'value': v, 'label': l} for v, l in Product.CATEGORIES]
 
     paginator = Paginator(products, 12)
     page_number = request.GET.get('page', 1)
@@ -24,6 +39,10 @@ def display_product_catalog(request):
         'products': page_obj,
         'page_obj': page_obj,
         'query': query,
+        'color_filter': color_filter,
+        'category_filter': category_filter,
+        'all_colors': all_colors,
+        'categories': categories,
     })
 
 

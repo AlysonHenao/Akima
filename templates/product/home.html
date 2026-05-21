@@ -160,6 +160,60 @@
         margin-bottom: 1.25rem;
     }
 
+    /* ── Filters ── */
+    .ak-filters-wrap {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    .ak-filter-select {
+        appearance: none;
+        -webkit-appearance: none;
+        background-color: #fff;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235A3A0A' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        border: 1.5px solid var(--ak-pink);
+        border-radius: var(--ak-radius-pill);
+        padding: 8px 36px 8px 16px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.85rem;
+        color: var(--ak-dark);
+        cursor: pointer;
+        transition: border-color 0.15s;
+        min-width: 160px;
+    }
+    .ak-filter-select:focus { outline: none; border-color: var(--ak-brown); }
+    .ak-filter-select.active { border-color: var(--ak-brown); background-color: var(--ak-blush); font-weight: 500; }
+    .ak-active-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    .ak-filter-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--ak-dark);
+        color: var(--ak-blush);
+        border-radius: var(--ak-radius-pill);
+        font-size: 0.78rem;
+        font-weight: 500;
+        padding: 5px 12px;
+    }
+    .ak-filter-tag a {
+        color: var(--ak-blush);
+        text-decoration: none;
+        opacity: 0.7;
+        font-size: 1rem;
+        line-height: 1;
+    }
+    .ak-filter-tag a:hover { opacity: 1; }
+
     /* ── Product grid ── */
     .ak-grid {
         display: grid;
@@ -383,9 +437,9 @@
     <h2 class="ak-section-title">Nuestros Productos</h2>
     <p class="ak-section-sub">Cada prenda es única y hecha con amor. Personalízala según tu estilo.</p>
 
-    <!-- Rf-02: Search product catalog -->
-    <div class="ak-search-wrap">
-        <form method="GET" action="" style="display:flex; align-items:center; width:100%; max-width:480px;">
+    <!-- Rf-02: Search & filter product catalog -->
+    <form method="GET" action="" id="filter-form">
+        <div class="ak-search-wrap">
             <div class="ak-search-bar">
                 <input type="text"
                        name="q"
@@ -398,16 +452,60 @@
                     </svg>
                 </button>
             </div>
-            {% if query %}
-            <a href="/" class="ak-search-clear">Limpiar</a>
-            {% endif %}
-        </form>
-    </div>
+        </div>
 
-    {% if query %}
+        <div class="ak-filters-wrap">
+            <select name="color" class="ak-filter-select {% if color_filter %}active{% endif %}" onchange="this.form.submit()">
+                <option value="">🎨 Todos los colores</option>
+                {% for color in all_colors %}
+                <option value="{{ color.name }}" {% if color_filter == color.name %}selected{% endif %}>
+                    {{ color.name|capfirst }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <select name="category" class="ak-filter-select {% if category_filter %}active{% endif %}" onchange="this.form.submit()">
+                <option value="">👕 Todos los tipos</option>
+                {% for cat in categories %}
+                <option value="{{ cat.value }}" {% if category_filter == cat.value %}selected{% endif %}>
+                    {{ cat.label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    <!-- Active filter tags -->
+    {% if query or color_filter or category_filter %}
+    <div class="ak-active-filters">
+        {% if query %}
+        <span class="ak-filter-tag">
+            🔍 {{ query }}
+            <a href="?{% if color_filter %}color={{ color_filter }}&{% endif %}{% if category_filter %}category={{ category_filter }}{% endif %}" title="Quitar filtro de nombre">&times;</a>
+        </span>
+        {% endif %}
+        {% if color_filter %}
+        <span class="ak-filter-tag">
+            🎨 {{ color_filter|capfirst }}
+            <a href="?{% if query %}q={{ query }}&{% endif %}{% if category_filter %}category={{ category_filter }}{% endif %}" title="Quitar filtro de color">&times;</a>
+        </span>
+        {% endif %}
+        {% if category_filter %}
+        <span class="ak-filter-tag">
+            👕 {{ category_filter }}
+            <a href="?{% if query %}q={{ query }}&{% endif %}{% if color_filter %}color={{ color_filter }}{% endif %}" title="Quitar filtro de tipo">&times;</a>
+        </span>
+        {% endif %}
+        <a href="/" class="ak-search-clear" style="opacity:0.85;">Limpiar todo</a>
+    </div>
+    {% endif %}
+
+    {% if query or color_filter or category_filter %}
     <p class="ak-results-label">
-        {{ products|length }} resultado{{ products|length|pluralize }} para
-        "<strong>{{ query }}</strong>"
+        {{ page_obj.paginator.count }} resultado{{ page_obj.paginator.count|pluralize }}
+        {% if query %} con nombre "<strong>{{ query }}</strong>"{% endif %}
+        {% if color_filter %} en color <strong>{{ color_filter|capfirst }}</strong>{% endif %}
+        {% if category_filter %} de tipo <strong>{{ category_filter }}</strong>{% endif %}
     </p>
     {% endif %}
 
@@ -445,12 +543,12 @@
         </div>
         {% empty %}
         <div class="ak-empty">
-            {% if query %}
+            {% if query or color_filter or category_filter %}
             <svg class="ak-empty-icon" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="7"/>
                 <line x1="16.5" y1="16.5" x2="22" y2="22"/>
             </svg>
-            <p>No se encontraron productos con el nombre "<strong>{{ query }}</strong>".</p>
+            <p>No se encontraron productos con los filtros aplicados.</p>
             <a href="/" class="btn-akima-outline mt-3">Ver todos los productos</a>
             {% else %}
             <p>No hay productos disponibles.</p>
@@ -461,19 +559,19 @@
         <div style="grid-column: 1 / -1;">
             <div class="d-flex justify-content-center align-items-center gap-2 mt-4 flex-wrap">
                 {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="btn-akima-outline">← Anterior</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if color_filter %}&color={{ color_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" class="btn-akima-outline">← Anterior</a>
                 {% endif %}
 
                 {% for num in page_obj.paginator.page_range %}
                     {% if page_obj.number == num %}
                     <span style="background:var(--ak-dark);color:var(--ak-blush);border-radius:999px;padding:7px 16px;font-size:0.85rem;font-weight:600;">{{ num }}</span>
                     {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}" class="btn-akima-outline">{{ num }}</a>
+                    <a href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if color_filter %}&color={{ color_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" class="btn-akima-outline">{{ num }}</a>
                     {% endif %}
                 {% endfor %}
 
                 {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="btn-akima-outline">Siguiente →</a>
+                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if color_filter %}&color={{ color_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" class="btn-akima-outline">Siguiente →</a>
                 {% endif %}
             </div>
             <p style="text-align:center;font-size:0.8rem;color:var(--ak-brown);opacity:0.65;margin-top:0.75rem;">
