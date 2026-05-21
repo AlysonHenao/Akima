@@ -711,13 +711,25 @@ def finish_task_supplies(request, task_id):
     task.final_date = timezone.now()
     task.save()
 
+    stock_updated = False
     if task.order_detail:
         order = task.order_detail.order
         order.status = 'Completado'
         order.save()
+    elif task.product and task.product.product:
+        product = task.product.product
+        product.stock += 1
+        product.save()
+        stock_updated = True
 
     return JsonResponse({
         'success': True,
-        'message': 'Sobrantes registrados, inventario actualizado y tarea finalizada.',
+        'message': (
+            'Sobrantes registrados, inventario actualizado, tarea finalizada '
+            'y producto añadido al stock disponible.'
+            if stock_updated else
+            'Sobrantes registrados, inventario actualizado y tarea finalizada.'
+        ),
         'updated_inventory': updated_inventory,
+        'stock_updated': stock_updated,
     })
